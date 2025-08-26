@@ -6,12 +6,12 @@
 {% endblock %}
 
 {% block content %}
-<!-- HERO -->
-<section class="hero" style="--hero-image: url('{{ url_for('static', filename='img/fondoprincipal.jpg') }}');">
+<!-- HERO (usa tu imagen hero.jpg en /static/img/) -->
+<section class="hero" style="background-image: url('{{ url_for('static', filename='img/fondoprincipal.jpg') }}');">
   <div class="hero-overlay"></div>
   <div class="container hero-content">
-    <h1 class="hero-title">Hotel San Eduardo</h1>
-    <p class="hero-subtitle">Reserva más, paga menos</p>
+    <h1>Hotel San Eduardo</h1>
+    <p>Reserva más, paga menos</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="#">Reservar</a>
       <!--<a class="btn btn-secondary" href="#tabs">Ver más</a>-->
@@ -19,69 +19,39 @@
   </div>
 </section>
 
-<!-- TABS (Qué ofrece / Ubicación) -->
+<!-- Tabs -->
 <section id="tabs" class="tabs container">
   <div class="tabs-header">
     <button class="tab-button active" data-tab="features">Qué ofrece el hotel</button>
     <button class="tab-button" data-tab="ubicacion">Ubicación</button>
   </div>
+
   <div class="tabs-body">
-    <!-- FEATURES -->
     <div id="features" class="tab-panel active">
-      <div class="grid">
-        <article class="card feature"><div class="icon">🛏️</div><h3>Habitaciones confort</h3><p>Simples, dobles y suites con climatización, TV y Wi-Fi.</p></article>
-        <article class="card feature"><div class="icon">🍳</div><h3>Desayuno incluido</h3><p>Opciones locales y saludables cada mañana.</p></article>
-        <article class="card feature"><div class="icon">🚗</div><h3>Traslado y parking</h3><p>Movilidad y estacionamiento seguro.</p></article>
-        <article class="card feature"><div class="icon">📍</div><h3>Céntrico</h3><p>A pasos de la Plaza de Armas.</p></article>
-      </div>
-      <div class="cta-centered">
-        <a class="btn btn-primary" href="#">Comenzar</a>
+      <div class="features-grid">
+        <div class="card"><div class="icon">🛏️</div><h3>Habitaciones confort</h3><p>Simples, dobles y suites con climatización, TV y Wi-Fi.</p></div>
+        <div class="card"><div class="icon">🍳</div><h3>Desayuno incluido</h3><p>Opciones locales y saludables cada mañana.</p></div>
+        <div class="card"><div class="icon">🚗</div><h3>Traslado y parking</h3><p>Movilidad y estacionamiento seguro.</p></div>
+        <div class="card"><div class="icon">📍</div><h3>Céntrico</h3><p>A pasos de la Plaza de Armas.</p></div>
       </div>
     </div>
 
-    <!-- UBICACIÓN -->
     <div id="ubicacion" class="tab-panel">
       <div class="map-wrap">
         <iframe title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.919746565865!2d-79.8372528!3d-6.779621699999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x904cef2ef5a82835%3A0x7a336404394faee7!2sHotel%20San%20Eduardo!5e0!3m2!1ses!2spe!4v1756224845689!5m2!1ses!2spe"></iframe>
-      </div>
-      <div class="map-info">
-        <h3>¿Cómo llegar?</h3>
-        <ul>
-          <li>10 min del Aeropuerto José A. Quiñones.</li>
-          <li>Cerca de la Plaza de Armas.</li>
-          <li>Transporte 24/7.</li>
-        </ul>
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.919746565865!2d-79.8372528!3d-6.779621699999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x904cef2ef5a82835%3A0x7a336404394faee7!2sHotel%20San%20Eduardo!5e0!3m2!1ses!2spe!4v1756224845689!5m2!1ses!2spe"></iframe>
       </div>
     </div>
   </div>
 </section>
 
-<!-- TESTIMONIOS -->
+<!-- Testimonios -->
 <section class="testimonials container">
   <h2>Lo que dicen nuestros huéspedes</h2>
   <div class="t-grid">
-    <article class="t-card">
-      <p class="t-text">“Ubicación perfecta y el personal muy amable.”</p>
-      <div class="t-user">
-        <img src="{{ url_for('static', filename='img/guest1.png') }}" alt="Avatar">
-        <div><strong>María L.</strong><small>Estadía en Suite</small></div>
-      </div>
-    </article>
-    <article class="t-card">
-      <p class="t-text">“Desayuno riquísimo y camas muy cómodas.”</p>
-      <div class="t-user">
-        <img src="{{ url_for('static', filename='img/guest2.png') }}" alt="Avatar">
-        <div><strong>Carlos R.</strong><small>Viaje de negocios</small></div>
-      </div>
-    </article>
-    <article class="t-card">
-      <p class="t-text">“Volvería sin dudar, excelente relación calidad-precio.”</p>
-      <div class="t-user">
-        <img src="{{ url_for('static', filename='img/guest3.png') }}" alt="Avatar">
-        <div><strong>Gisella P.</strong><small>Vacaciones</small></div>
-      </div>
-    </article>
+    <article class="t-card"><p>“Ubicación perfecta y el personal muy amable.”</p><div class="t-user"><img src="{{ url_for('static', filename='img/guest1.png') }}"><div><strong>María L.</strong><br><small>Estadía en Suite</small></div></div></article>
+    <article class="t-card"><p>“Desayuno riquísimo y camas muy cómodas.”</p><div class="t-user"><img src="{{ url_for('static', filename='img/guest2.png') }}"><div><strong>Carlos R.</strong><br><small>Viaje de negocios</small></div></div></article>
+    <article class="t-card"><p>“Excelente relación calidad-precio.”</p><div class="t-user"><img src="{{ url_for('static', filename='img/guest3.png') }}"><div><strong>Gisella P.</strong><br><small>Vacaciones</small></div></div></article>
   </div>
 </section>
 {% endblock %}

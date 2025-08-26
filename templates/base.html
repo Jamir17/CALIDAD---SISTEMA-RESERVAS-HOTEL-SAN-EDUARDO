@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}Hotel San Eduardo{% endblock %}</title>
 
-  <!-- Global -->
+  <!-- Global primero -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   {% block extra_css %}{% endblock %}
 </head>
@@ -16,6 +16,7 @@
       <nav class="topnav" id="topnav">
         <a href="#features">Qué ofrece</a>
         <a href="#ubicacion">Ubicación</a>
+        <a class="btn btn-ghost" href="#">Registrarme</a>
         <a class="btn btn-ghost" href="#">Iniciar sesión</a>
       </nav>
       <button class="burger" aria-label="Abrir menú" onclick="toggleMenu()">☰</button>
@@ -26,11 +27,10 @@
 
   <footer class="footer">
     <div class="container">
-      <small>© {{ 2025 }} Hotel San Eduardo • Chiclayo</small>
+      <small>© 2025 Hotel San Eduardo • Chiclayo</small>
     </div>
   </footer>
 
-  <!-- Global -->
   <script src="{{ url_for('static', filename='js/base.js') }}"></script>
   {% block extra_js %}{% endblock %}
 </body>
