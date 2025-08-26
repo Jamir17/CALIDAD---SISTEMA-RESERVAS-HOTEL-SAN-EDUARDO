@@ -1,5 +1,6 @@
 ### 1. Crear un entorno virtual (recomendado)
 python -m venv venv
+
 .\venv\Scripts\Activate
 
 
