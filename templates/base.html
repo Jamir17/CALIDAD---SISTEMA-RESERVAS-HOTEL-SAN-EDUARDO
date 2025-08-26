@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}Hotel San Eduardo{% endblock %}</title>
+
+  <!-- Global -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <a class="brand" href="{{ url_for('index') }}">Hotel San Eduardo</a>
+      <nav class="topnav" id="topnav">
+        <a href="#features">Qué ofrece</a>
+        <a href="#ubicacion">Ubicación</a>
+        <a class="btn btn-ghost" href="#">Iniciar sesión</a>
+      </nav>
+      <button class="burger" aria-label="Abrir menú" onclick="toggleMenu()">☰</button>
+    </div>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    <div class="container">
+      <small>© {{ 2025 }} Hotel San Eduardo • Chiclayo</small>
+    </div>
+  </footer>
+
+  <!-- Global -->
+  <script src="{{ url_for('static', filename='js/base.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
