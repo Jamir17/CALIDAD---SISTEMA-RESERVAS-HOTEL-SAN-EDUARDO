@@ -6,52 +6,97 @@
 {% endblock %}
 
 {% block content %}
-<!-- HERO (usa tu imagen hero.jpg en /static/img/) -->
+
 <section class="hero" style="background-image: url('{{ url_for('static', filename='img/fondoprincipal.jpg') }}');">
   <div class="hero-overlay"></div>
   <div class="container hero-content">
-    <h1>Hotel San Eduardo</h1>
-    <p>Reserva más, paga menos</p>
+    <h1>Bienvenido a Hotel San Eduardo</h1>
+    <p>Experiencia única en el corazón de Chiclayo</p>
     <div class="hero-actions">
-      <a class="btn btn-primary" href="#">Reservar</a>
-      <!--<a class="btn btn-secondary" href="#tabs">Ver más</a>-->
+      <a class="btn btn-primary" href="{{ url_for('registro') }}">Reservar ahora</a>
+      <a class="btn btn-outline" href="#features">Descubrir más</a>
     </div>
   </div>
 </section>
 
-<!-- Tabs -->
+
 <section id="tabs" class="tabs container">
   <div class="tabs-header">
-    <button class="tab-button active" data-tab="features">Qué ofrece el hotel</button>
+    <button class="tab-button active" data-tab="features">Nuestros Servicios</button>
     <button class="tab-button" data-tab="ubicacion">Ubicación</button>
   </div>
 
   <div class="tabs-body">
     <div id="features" class="tab-panel active">
       <div class="features-grid">
-        <div class="card"><div class="icon">🛏️</div><h3>Habitaciones confort</h3><p>Simples, dobles y suites con climatización, TV y Wi-Fi.</p></div>
-        <div class="card"><div class="icon">🍳</div><h3>Desayuno incluido</h3><p>Opciones locales y saludables cada mañana.</p></div>
-        <div class="card"><div class="icon">🚗</div><h3>Traslado y parking</h3><p>Movilidad y estacionamiento seguro.</p></div>
-        <div class="card"><div class="icon">📍</div><h3>Céntrico</h3><p>A pocos minutos de la Plaza de Armas.</p></div>
+        <div class="card">
+          <div class="icon">🛏️</div>
+          <h3>Habitaciones Confort</h3>
+          <p>Simples, dobles y suites con climatización, TV y Wi-Fi de alta velocidad.</p>
+        </div>
+        <div class="card">
+          <div class="icon">🍳</div>
+          <h3>Desayuno Incluido</h3>
+          <p>Opciones locales y saludables preparadas cada mañana con ingredientes frescos.</p>
+        </div>
+        <div class="card">
+          <div class="icon">🚗</div>
+          <h3>Traslado y Parking</h3>
+          <p>Servicio de movilidad y estacionamiento seguro para su tranquilidad.</p>
+        </div>
+        <div class="card">
+          <div class="icon">📍</div>
+          <h3>Ubicación Céntrica</h3>
+          <p>A pocos minutos de la Plaza de Armas y principales atractivos de Chiclayo.</p>
+        </div>
       </div>
     </div>
 
     <div id="ubicacion" class="tab-panel">
       <div class="map-wrap">
-        <iframe title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        <iframe title="Mapa Hotel San Eduardo" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.919746565865!2d-79.8372528!3d-6.779621699999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x904cef2ef5a82835%3A0x7a336404394faee7!2sHotel%20San%20Eduardo!5e0!3m2!1ses!2spe!4v1756224845689!5m2!1ses!2spe"></iframe>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Testimonios -->
-<section class="testimonials container">
-  <h2>Lo que dicen nuestros huéspedes</h2>
-  <div class="t-grid">
-    <article class="t-card"><p>“Ubicación perfecta y el personal muy amable.”</p><div class="t-user"><img src="{{ url_for('static', filename='img/guest1.png') }}"><div><strong>María L.</strong><br><small>Estadía en Suite</small></div></div></article>
-    <article class="t-card"><p>“Desayuno riquísimo y camas muy cómodas.”</p><div class="t-user"><img src="{{ url_for('static', filename='img/guest2.png') }}"><div><strong>Carlos R.</strong><br><small>Viaje de negocios</small></div></div></article>
-    <article class="t-card"><p>“Excelente relación calidad-precio.”</p><div class="t-user"><img src="{{ url_for('static', filename='img/guest3.png') }}"><div><strong>Gisella P.</strong><br><small>Vacaciones</small></div></div></article>
+
+<section class="testimonials">
+  <div class="container">
+    <h2>Lo que dicen nuestros huéspedes</h2>
+    <div class="t-grid">
+      <article class="t-card">
+        <p>"Ubicación perfecta y el personal muy amable. La atención fue excepcional durante toda nuestra estadía."</p>
+        <div class="t-user">
+          <img src="{{ url_for('static', filename='img/guest1.png') }}" alt="María L.">
+          <div>
+            <strong>María L.</strong>
+            <small>Estadía en Suite</small>
+          </div>
+        </div>
+      </article>
+      <article class="t-card">
+        <p>"Desayuno riquísimo y camas muy cómodas. Perfecto para viajes de negocios, volvería sin dudarlo."</p>
+        <div class="t-user">
+          <img src="{{ url_for('static', filename='img/guest2.png') }}" alt="Carlos R.">
+          <div>
+            <strong>Carlos R.</strong>
+            <small>Viaje de negocios</small>
+          </div>
+        </div>
+      </article>
+      <article class="t-card">
+        <p>"Excelente relación calidad-precio. Las instalaciones están impecables y el servicio es de primera."</p>
+        <div class="t-user">
+          <img src="{{ url_for('static', filename='img/guest3.png') }}" alt="Gisella P.">
+          <div>
+            <strong>Gisella P.</strong>
+            <small>Vacaciones</small>
+          </div>
+        </div>
+      </article>
+    </div>
   </div>
 </section>
 {% endblock %}

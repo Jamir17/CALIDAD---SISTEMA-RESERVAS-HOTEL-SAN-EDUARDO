@@ -4,8 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}Hotel San Eduardo{% endblock %}</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Global primero -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   {% block extra_css %}{% endblock %}
 </head>
@@ -14,20 +17,57 @@
     <div class="container">
       <a class="brand" href="{{ url_for('index') }}">Hotel San Eduardo</a>
       <nav class="topnav" id="topnav">
-        <a href="#features">Qué ofrece</a>
+        <a href="#features">Servicios</a>
         <a href="#ubicacion">Ubicación</a>
-        <a class="btn btn-ghost" href="#">Registrarme</a>
-        <a class="btn btn-ghost" href="#">Iniciar sesión</a>
+        {% if session.user_id %}
+          <a href="{{ url_for('mis_reservas') }}">Mis Reservas</a>
+          <a class="btn btn-primary" href="{{ url_for('reservas') }}">Reservar</a>
+          <a class="btn btn-ghost" href="{{ url_for('logout') }}">Cerrar sesión</a>
+        {% else %}
+          <a class="btn btn-ghost" href="{{ url_for('registro') }}">Registrarse</a>
+          <a class="btn btn-primary" href="{{ url_for('iniciosesion') }}">Iniciar sesión</a>
+        {% endif %}
       </nav>
       <button class="burger" aria-label="Abrir menú" onclick="toggleMenu()">☰</button>
     </div>
   </header>
 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" style="margin: 20px auto; max-width: 1200px; padding: 0 24px;">
+          <div style="background: {% if category == 'success' %}#efe{% elif category == 'error' %}#fee{% else %}#eef{% endif %}; 
+                      color: {% if category == 'success' %}#3c3{% elif category == 'error' %}#c33{% else %}#33c{% endif %}; 
+                      border: 1px solid {% if category == 'success' %}#cfc{% elif category == 'error' %}#fcc{% else %}#ccf{% endif %}; 
+                      padding: 12px 16px; border-radius: 8px; font-size: 14px;">
+            {{ message }}
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
   {% block content %}{% endblock %}
 
   <footer class="footer">
     <div class="container">
-      <small>© 2025 Hotel San Eduardo • Chiclayo</small>
+      <div class="footer-content">
+        <div class="footer-brand">Hotel San Eduardo</div>
+        <div class="footer-links">
+          <a href="#features">Servicios</a>
+          <a href="#ubicacion">Ubicación</a>
+          {% if session.user_id %}
+            <a href="{{ url_for('mis_reservas') }}">Mis Reservas</a>
+            <a href="{{ url_for('reservas') }}">Reservar</a>
+          {% else %}
+            <a href="{{ url_for('registro') }}">Registrarse</a>
+            <a href="{{ url_for('iniciosesion') }}">Iniciar sesión</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="footer-bottom">
+        © 2025 Hotel San Eduardo • Chiclayo, Perú • Reserva más, paga menos
+      </div>
     </div>
   </footer>
 
