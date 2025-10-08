@@ -7,14 +7,14 @@ app.secret_key = "cambia-esto-por-uno-seguro"
 def index():
     return render_template("index.html")
 
-# endpoint = 'iniciosesion' para que coincida con tu base.html
+
 @app.route("/iniciar-sesion", methods=["GET", "POST"], endpoint="iniciosesion")
 def login():
     if request.method == "POST":
         # TODO: validar credenciales
         flash("Has iniciado sesión (demo).", "success")
         return redirect(url_for("index"))
-    # ⬇️ aquí el nombre REAL del archivo que tienes
+
     return render_template("iniciosesion.html")
 
 @app.route("/registro", methods=["GET", "POST"], endpoint="registro")
@@ -23,7 +23,7 @@ def registro():
         # TODO: registrar usuario
         flash("Registro enviado (demo).", "success")
         return redirect(url_for("index"))
-    # ⬇️ aquí el nombre REAL del archivo que tienes
+    
     return render_template("registro.html")
 
 if __name__ == "__main__":
