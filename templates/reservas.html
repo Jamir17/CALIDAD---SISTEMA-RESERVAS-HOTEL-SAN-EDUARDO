@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Reservas - Admin - Hotel San Eduardo{% endblock %}
+{% block page_title %}Gestión de Reservas{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+  <div class="admin-section-header">
+    <h2 class="admin-section-title">Todas las Reservas</h2>
+  </div>
+
+  {% if reservas %}
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Email</th>
+        <th>Teléfono</th>
+        <th>Habitación</th>
+        <th>Entrada</th>
+        <th>Salida</th>
+        <th>Huéspedes</th>
+        <th>Total</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for reserva in reservas %}
+      <tr>
+        <td>#{{ reserva.id }}</td>
+        <td>{{ reserva.cliente_nombre }}</td>
+        <td>{{ reserva.cliente_email }}</td>
+        <td>{{ reserva.cliente_telefono }}</td>
+        <td>{{ reserva.tipo_habitacion }}</td>
+        <td>{{ reserva.fecha_entrada }}</td>
+        <td>{{ reserva.fecha_salida }}</td>
+        <td>{{ reserva.num_huespedes }}</td>
+        <td>S/ {{ "%.2f"|format(reserva.precio_total) }}</td>
+        <td>
+          {% if reserva.estado == 'confirmada' %}
+            <span class="badge badge-success">Confirmada</span>
+          {% elif reserva.estado == 'pendiente' %}
+            <span class="badge badge-warning">Pendiente</span>
+          {% elif reserva.estado == 'cancelada' %}
+            <span class="badge badge-danger">Cancelada</span>
+          {% else %}
+            <span class="badge badge-info">{{ reserva.estado }}</span>
+          {% endif %}
+        </td>
+        <td>
+          <form method="POST" action="{{ url_for('admin_actualizar_estado_reserva', reserva_id=reserva.id) }}" style="display: inline;">
+            <select name="estado" onchange="this.form.submit()" class="form-input" style="padding: 6px 12px; font-size: 13px;">
+              <option value="pendiente" {% if reserva.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+              <option value="confirmada" {% if reserva.estado == 'confirmada' %}selected{% endif %}>Confirmada</option>
+              <option value="cancelada" {% if reserva.estado == 'cancelada' %}selected{% endif %}>Cancelada</option>
+              <option value="completada" {% if reserva.estado == 'completada' %}selected{% endif %}>Completada</option>
+            </select>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📅</div>
+    <div class="empty-state-text">No hay reservas registradas</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
