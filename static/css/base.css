@@ -255,6 +255,12 @@ h6 {
   font-size: 14px;
 }
 
+.header-content .logo{
+  display: flex;
+  align-items: center; /* Para alinear verticalmente */
+  left: -20px; /* Ajusta este valor según sea necesario */
+}
+
 @media (max-width: 768px) {
   .footer-content {
     flex-direction: column;
