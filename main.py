@@ -26,9 +26,9 @@ def registro():
     
     return render_template("registro.html")
 
-@app.route("/reservas", methods=["GET"], endpoint="reservas")
+@app.route("/reserva_cliente", methods=["GET"], endpoint="reservas")
 def reservas():
-    return render_template("reservas.html")
+    return render_template("reserva_cliente.html")
 
 
 if __name__ == "__main__":

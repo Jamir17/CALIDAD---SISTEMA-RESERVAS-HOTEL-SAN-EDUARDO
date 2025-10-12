@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Reservar Habitación - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reserva_cliente.css') }}">
+{% endblock %}
+
+{% block content %}
+  <main class="reservas-page">
+    <div class="reservas-hero">
+      <div class="container">
+        <h1>Reservar Habitación</h1>
+        <p>Complete el formulario para reservar su estadía en Hotel San Eduardo</p>
+      </div>
+    </div>
+
+    <div class="container reservas-container">
+      <div class="reservas-content">
+        <div class="reservas-form-section">
+          <div class="reservas-card">
+            <h2>Datos de Reserva</h2>
+            <form id="reservasForm" class="reservas-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="nombre">Nombre Completo *</label>
+                  <input type="text" id="nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                  <label for="email">Correo Electrónico *</label>
+                  <input type="email" id="email" name="email" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="telefono">Teléfono *</label>
+                  <input type="tel" id="telefono" name="telefono" required>
+                </div>
+                <div class="form-group">
+                  <label for="documento">Documento de Identidad *</label>
+                  <input type="text" id="documento" name="documento" required>
+                </div>
+              </div>
+
+              <div class="form-section-title">Detalles de la Estadía</div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="checkin">Fecha de Llegada *</label>
+                  <input type="date" id="checkin" name="checkin" required>
+                </div>
+                <div class="form-group">
+                  <label for="checkout">Fecha de Salida *</label>
+                  <input type="date" id="checkout" name="checkout" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="habitacion">Tipo de Habitación *</label>
+                  <select id="habitacion" name="habitacion" required>
+                    <option value="">Seleccione una opción</option>
+                    <option value="standard">Habitación Standard - S/. 120/noche</option>
+                    <option value="junior">Habitación Junior - S/. 180/noche</option>
+                    <option value="presidential">Suite Presidential - S/. 280/noche</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="huespedes">Número de Huéspedes *</label>
+                  <select id="huespedes" name="huespedes" required>
+                    <option value="">Seleccione</option>
+                    <option value="1">1 Huésped</option>
+                    <option value="2">2 Huéspedes</option>
+                    <option value="3">3 Huéspedes</option>
+                    <option value="4">4 Huéspedes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="comentarios">Comentarios o Peticiones Especiales</label>
+                <textarea id="comentarios" name="comentarios" rows="4" placeholder="Ejemplo: Cama extra, habitación en piso alto, cuna para bebé, etc."></textarea>
+              </div>
+
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="terminos" name="terminos" required>
+                  <span>Acepto los <a href="#" class="link">términos y condiciones</a> y la <a href="#" class="link">política de cancelación</a> *</span>
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large">Confirmar Reserva</button>
+                <a href="index.html" class="btn btn-outline btn-large">Cancelar</a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="reservas-sidebar">
+          <div class="summary-card">
+            <h3>Resumen de Reserva</h3>
+            <div class="summary-item">
+              <span class="summary-label">Llegada:</span>
+              <span class="summary-value" id="summaryCheckin">--/--/----</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Salida:</span>
+              <span class="summary-value" id="summaryCheckout">--/--/----</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Noches:</span>
+              <span class="summary-value" id="summaryNoches">0</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Habitación:</span>
+              <span class="summary-value" id="summaryHabitacion">No seleccionada</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Huéspedes:</span>
+              <span class="summary-value" id="summaryHuespedes">0</span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="summary-item summary-total">
+              <span class="summary-label">Total:</span>
+              <span class="summary-value" id="summaryTotal">S/. 0.00</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h4>Información Importante</h4>
+            <ul class="info-list">
+              <li>✓ Check-in: 2:00 PM</li>
+              <li>✓ Check-out: 12:00 PM</li>
+              <li>✓ Desayuno incluido</li>
+              <li>✓ Wi-Fi gratuito</li>
+              <li>✓ Cancelación gratuita hasta 24h antes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/reserva_cliente.js') }}"></script>
+{% endblock %}
