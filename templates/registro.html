@@ -5,65 +5,41 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/registro.css') }}">
 <style>
 /* ==============================
-   🎨 ESTILOS DE MODALES & FIXES
+   🎨 ESTILOS DE MODALES Y BOTÓN
    ============================== */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.5);
+  display:none; justify-content:center; align-items:center; z-index:2000;
 }
-.modal-overlay.open { display: flex; }
+.modal-overlay.open{ display:flex; }
+.modal-content{
+  background:#fff; border-radius:8px; padding:24px; width:90%; max-width:640px;
+  box-shadow:0 8px 32px rgba(0,0,0,.25); animation:fadeIn .25s ease;
+}
+@keyframes fadeIn{ from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-content h2{ margin:0 0 8px; color:#2c3e50; }
+.modal-footer{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+.modal-footer button{ padding:8px 16px; border:0; border-radius:6px; cursor:pointer; }
+.btn-aceptar{ background:#2ecc71; color:#fff; }
+.btn-cerrar{ background:#e74c3c; color:#fff; }
+body.modal-open{ overflow:hidden; }
 
-.modal-content {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  width: 90%;
-  max-width: 640px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-  animation: fadeIn 0.25s ease;
-}
-@keyframes fadeIn {
-  from { transform: translateY(-8px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
-}
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-}
-.modal-footer button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.btn-aceptar { background-color: #2ecc71; color: #fff; }
-.btn-cerrar  { background-color: #e74c3c; color: #fff; }
-body.modal-open { overflow: hidden; }
-
-/* Botón desactivado */
+/* ----- Estado desactivado ----- */
 #btnRegistrar[disabled],
-.disabled-btn {
-  background-color: #9ca3af !important;
-  color: #ffffff !important;
-  cursor: not-allowed !important;
-  opacity: 0.8 !important;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+.disabled-btn{
+  background-color:#9ca3af !important;
+  color:#ffffff !important;
+  cursor:not-allowed !important;
+  opacity:0.8 !important;
+  transition:background-color .3s ease, opacity .3s ease;
 }
-
-/* Botón activado */
-.enabled-btn {
-  background-color: #1d4ed8 !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  opacity: 1 !important;
-  transition: background-color 0.2s ease, opacity 0.2s ease;
+/* ----- Estado activado ----- */
+.enabled-btn{
+  background-color:#1d4ed8 !important;
+  color:#ffffff !important;
+  cursor:pointer !important;
+  opacity:1 !important;
+  transition:background-color .3s ease, opacity .3s ease;
 }
 </style>
 {% endblock %}
@@ -76,6 +52,7 @@ body.modal-open { overflow: hidden; }
       <p>Únete a Hotel San Eduardo y disfruta de beneficios exclusivos</p>
     </div>
 
+    <!-- Flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -84,15 +61,16 @@ body.modal-open { overflow: hidden; }
       {% endif %}
     {% endwith %}
 
-    <form id="frmRegistro" method="POST" action="{{ url_for('usuarios.registro') }}" novalidate>
+    <!-- FORMULARIO -->
+    <form id="frmRegistro" method="POST" action="{{ url_for('usuarios.registro') }}">
       <div class="form-row">
         <div class="form-group">
           <label for="nombre">Nombre</label>
-          <input type="text" id="nombre" name="nombre" class="form-input" required>
+          <input id="nombre" name="nombre" class="form-input" required>
         </div>
         <div class="form-group">
           <label for="apellido">Apellido</label>
-          <input type="text" id="apellido" name="apellido" class="form-input" required>
+          <input id="apellido" name="apellido" class="form-input" required>
         </div>
       </div>
 
@@ -107,13 +85,13 @@ body.modal-open { overflow: hidden; }
         </div>
         <div class="form-group">
           <label for="num_documento">N° de documento</label>
-          <input type="text" id="num_documento" name="num_documento" class="form-input" required>
+          <input id="num_documento" name="num_documento" class="form-input" required>
         </div>
       </div>
 
       <div class="form-group">
         <label for="email">Correo electrónico</label>
-        <input type="email" id="email" name="email" class="form-input" required>
+        <input type="email" id="email" name="correo" class="form-input" required>
       </div>
 
       <div class="form-group">
@@ -123,14 +101,14 @@ body.modal-open { overflow: hidden; }
 
       <div class="form-group">
         <label for="direccion">Dirección</label>
-        <input type="text" id="direccion" name="direccion" class="form-input">
+        <input id="direccion" name="direccion" class="form-input">
       </div>
 
       <div class="form-group">
         <label>Teléfono</label>
         <div class="form-row" style="gap:12px;">
           <select id="codigo_pais" name="codigo_pais" class="form-input" style="max-width:180px" required></select>
-          <input type="tel" id="telefono" name="telefono" class="form-input" required>
+          <input id="telefono" name="telefono" class="form-input" required>
         </div>
       </div>
 
@@ -153,19 +131,17 @@ body.modal-open { overflow: hidden; }
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary disabled-btn" id="btnRegistrar" disabled>Crear cuenta</button>
+        <button type="submit" id="btnRegistrar" class="btn btn-primary disabled-btn" disabled>Crear cuenta</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ==============================
-     🧾 MODAL TÉRMINOS
-     ============================== -->
+<!-- ===== MODALES ===== -->
 <div class="modal-overlay" id="modalTerminos">
   <div class="modal-content">
     <h2>Términos y Condiciones</h2>
-    <p>Al crear una cuenta en Hotel San Eduardo, usted acepta nuestras políticas de uso responsable, reserva y cancelación.</p>
+    <p>Al crear una cuenta en Hotel San Eduardo, usted acepta las políticas internas del establecimiento y el uso responsable del sistema.</p>
     <div class="modal-footer">
       <button class="btn-cerrar" data-close="modalTerminos">Cerrar</button>
       <button class="btn-aceptar" id="btnAceptarTerminos">Aceptar</button>
@@ -173,13 +149,10 @@ body.modal-open { overflow: hidden; }
   </div>
 </div>
 
-<!-- ==============================
-     🔒 MODAL PRIVACIDAD
-     ============================== -->
 <div class="modal-overlay" id="modalPrivacidad">
   <div class="modal-content">
     <h2>Política de Privacidad</h2>
-    <p>Hotel San Eduardo protege sus datos conforme a la Ley N° 29733. Sus datos se usan solo para fines de registro y reservas.</p>
+    <p>Hotel San Eduardo protege sus datos conforme a la Ley N° 29733. Sus datos se usan solo para reservas y comunicaciones.</p>
     <div class="modal-footer">
       <button class="btn-cerrar" data-close="modalPrivacidad">Cerrar</button>
       <button class="btn-aceptar" id="btnAceptarPrivacidad">Aceptar</button>
@@ -187,128 +160,230 @@ body.modal-open { overflow: hidden; }
   </div>
 </div>
 
-<!-- ==============================
-     🧠 SCRIPTS (CORREGIDOS)
-     ============================== -->
+<!-- ===== SCRIPT ===== -->
 <script>
-/* ---------- Utilidades modales ---------- */
+/* ==========================================
+   🔧 LÓGICA ROBUSTA, COMPLETA Y FUNCIONAL
+   ========================================== */
+
+// ====== VARIABLES BASE ======
 const body = document.body;
-const modalIds = ["modalTerminos","modalPrivacidad"];
-function closeAllModals(){
-  modalIds.forEach(id=>{
-    const el=document.getElementById(id);
+const MODALS = ["modalTerminos", "modalPrivacidad"];
+const chkTerms = document.getElementById("terms");
+const btnSubmit = document.getElementById("btnRegistrar");
+const tipo = document.getElementById("tipo_documento");
+const num = document.getElementById("num_documento");
+
+// ====== MODALES (abrir / cerrar correctamente) ======
+function openModal(id) {
+  closeAllModals();
+  const el = document.getElementById(id);
+  el.classList.add("open");
+  el.setAttribute("aria-hidden", "false");
+  body.classList.add("modal-open");
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("open");
+  el.setAttribute("aria-hidden", "true");
+  const anyOpen = MODALS.some(mid => document.getElementById(mid).classList.contains("open"));
+  if (!anyOpen) body.classList.remove("modal-open");
+}
+function closeAllModals() {
+  MODALS.forEach(id => {
+    const el = document.getElementById(id);
     el.classList.remove("open");
+    el.setAttribute("aria-hidden", "true");
   });
   body.classList.remove("modal-open");
 }
-function openModal(id){
-  closeAllModals();
-  document.getElementById(id).classList.add("open");
-  body.classList.add("modal-open");
-}
-function closeModal(id){
-  document.getElementById(id).classList.remove("open");
-  const anyOpen = modalIds.some(mid=>document.getElementById(mid).classList.contains("open"));
-  if(!anyOpen) body.classList.remove("modal-open");
-}
-modalIds.forEach(id=>{
-  const overlay=document.getElementById(id);
-  overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal(id);});
+
+// Cerrar con clic en fondo o ESC
+MODALS.forEach(id => {
+  const overlay = document.getElementById(id);
+  overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(id); });
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAllModals();});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeAllModals(); });
 
-/* ---------- Documentos ---------- */
-const tipo=document.getElementById("tipo_documento");
-const num=document.getElementById("num_documento");
-function validarDocumento(){
-  const tipoDoc=tipo.value;
-  num.value=(num.value||"").toUpperCase();
-  if(tipoDoc==="DNI"){
-    num.value=num.value.replace(/\D/g,"").slice(0,8);
-  }
-}
-tipo.addEventListener("change",validarDocumento);
-num.addEventListener("input",validarDocumento);
-
-/* ---------- Nacionalidad y teléfono ---------- */
-const NACIONALIDADES=["Perú","Argentina","Bolivia","Brasil","Chile","Colombia","Ecuador","México","Uruguay","Venezuela","España","Estados Unidos"];
-const PHONE_CODES={"Perú":"51","Argentina":"54","Bolivia":"591","Brasil":"55","Chile":"56","Colombia":"57","Ecuador":"593","México":"52","Uruguay":"598","Venezuela":"58","España":"34","Estados Unidos":"1"};
-const selNac=document.getElementById("nacionalidad");
-const selCod=document.getElementById("codigo_pais");
-(function cargarDatos(){
-  selNac.innerHTML="<option disabled selected>Selecciona tu nacionalidad</option>";
-  NACIONALIDADES.forEach(n=>selNac.add(new Option(n,n)));
-  selCod.innerHTML="";
-  Object.entries(PHONE_CODES).forEach(([pais,code])=>{
-    selCod.add(new Option(`${pais} (+${code})`,code,pais==="Perú"));
-  });
-})();
-
-/* ---------- Términos & Privacidad ---------- */
-let terminosAceptados=false;
-let privacidadAceptada=false;
-const chk=document.getElementById("terms");
-const btn=document.getElementById("btnRegistrar");
-
-// botón inicia gris
-window.addEventListener("DOMContentLoaded",()=>{
-  btn.disabled=true;
-  btn.classList.add("disabled-btn");
-  btn.classList.remove("enabled-btn");
+// Cerrar con botón data-close (ya lo tenías, lo restauro)
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-close]");
+  if (btn) closeModal(btn.getAttribute("data-close"));
 });
 
-// abrir modales
-document.getElementById("btnAbrirTerminos").addEventListener("click",e=>{
-  e.preventDefault();openModal("modalTerminos");
+// ====== ABRIR MODALES DESDE LOS ENLACES ======
+document.getElementById("btnAbrirTerminos").addEventListener("click", e => {
+  e.preventDefault(); e.stopPropagation();
+  openModal("modalTerminos");
 });
-document.getElementById("btnAbrirPrivacidad").addEventListener("click",e=>{
-  e.preventDefault();openModal("modalPrivacidad");
+document.getElementById("btnAbrirPrivacidad").addEventListener("click", e => {
+  e.preventDefault(); e.stopPropagation();
+  openModal("modalPrivacidad");
 });
 
-// aceptar modales
-document.getElementById("btnAceptarTerminos").addEventListener("click",()=>{
-  terminosAceptados=true;
+// ====== ACEPTAR TÉRMINOS Y PRIVACIDAD ======
+let terminosAceptados = false;
+let privacidadAceptada = false;
+
+document.getElementById("btnAceptarTerminos").addEventListener("click", () => {
+  terminosAceptados = true;
   closeModal("modalTerminos");
   openModal("modalPrivacidad");
 });
-document.getElementById("btnAceptarPrivacidad").addEventListener("click",()=>{
-  privacidadAceptada=true;
+document.getElementById("btnAceptarPrivacidad").addEventListener("click", () => {
+  privacidadAceptada = true;
   closeModal("modalPrivacidad");
-  chk.checked=true;
+  chkTerms.checked = true;
   actualizarBoton();
 });
 
-// check manual
-chk.addEventListener("change",()=>{
-  if(!chk.checked){terminosAceptados=false;privacidadAceptada=false;}
+// ====== CAMBIOS EN EL CHECKBOX ======
+chkTerms.addEventListener("change", () => {
+  if (!chkTerms.checked) {
+    terminosAceptados = false;
+    privacidadAceptada = false;
+  }
   actualizarBoton();
 });
 
-// actualizar estado visual
-function actualizarBoton(){
-  const ok=chk.checked&&terminosAceptados&&privacidadAceptada;
-  if(ok){
-    btn.disabled=false;
-    btn.classList.remove("disabled-btn");
-    btn.classList.add("enabled-btn");
-  }else{
-    btn.disabled=true;
-    btn.classList.add("disabled-btn");
-    btn.classList.remove("enabled-btn");
+// ====== BOTÓN HABILITADO / DESHABILITADO ======
+function actualizarBoton() {
+  const ok = chkTerms.checked && terminosAceptados && privacidadAceptada;
+  if (ok) {
+    btnSubmit.disabled = false;
+    btnSubmit.classList.remove("disabled-btn");
+    btnSubmit.classList.add("enabled-btn");
+  } else {
+    btnSubmit.disabled = true;
+    btnSubmit.classList.add("disabled-btn");
+    btnSubmit.classList.remove("enabled-btn");
   }
 }
 
-/* ---------- Validación de envío ---------- */
-const form=document.getElementById("frmRegistro");
-form.addEventListener("submit",e=>{
+// Estado inicial
+window.addEventListener("DOMContentLoaded", () => {
+  btnSubmit.disabled = true;
+  btnSubmit.classList.add("disabled-btn");
+});
+
+// ====== VALIDACIÓN DE DOCUMENTOS ======
+function configurarDocumento() {
+  const tipoDoc = tipo.value;
+  if (tipoDoc === "DNI") {
+    num.maxLength = 8;
+    num.pattern = "\\d{8}";
+    num.placeholder = "8 dígitos (DNI)";
+    num.title = "DNI: exactamente 8 dígitos numéricos";
+    num.value = num.value.replace(/\D/g, "").slice(0, 8);
+  } else if (tipoDoc === "CE") {
+    num.maxLength = 9;
+    num.pattern = "[A-Za-z0-9]{6,9}";
+    num.placeholder = "6–9 alfanumérico (CE)";
+    num.title = "Carné de extranjería: 6 a 9 caracteres alfanuméricos";
+    num.value = num.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 9);
+  } else if (tipoDoc === "Pasaporte") {
+    num.maxLength = 12;
+    num.pattern = "[A-Za-z0-9]{6,12}";
+    num.placeholder = "6–12 alfanumérico (Pasaporte)";
+    num.title = "Pasaporte: 6 a 12 caracteres alfanuméricos";
+    num.value = num.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+  }
+  validarNumero();
+}
+
+function validarNumero() {
+  const tipoDoc = tipo.value;
+  const val = num.value.trim();
+  let valido = true;
+  let msg = "";
+
+  if (tipoDoc === "DNI" && !/^\d{8}$/.test(val)) {
+    valido = false; msg = "El DNI debe tener exactamente 8 dígitos.";
+  } else if (tipoDoc === "CE" && !/^[A-Za-z0-9]{6,9}$/.test(val)) {
+    valido = false; msg = "El CE debe tener entre 6 y 9 caracteres alfanuméricos.";
+  } else if (tipoDoc === "Pasaporte" && !/^[A-Za-z0-9]{6,12}$/.test(val)) {
+    valido = false; msg = "El Pasaporte debe tener entre 6 y 12 caracteres alfanuméricos.";
+  }
+
+  num.setCustomValidity(valido ? "" : msg);
+}
+
+tipo.addEventListener("change", configurarDocumento);
+num.addEventListener("input", () => {
+  configurarDocumento();
+  validarNumero();
+});
+configurarDocumento(); // inicialización al cargar
+
+// ====== TELÉFONO ======
+const tel = document.getElementById("telefono");
+tel.addEventListener("input", () => {
+  tel.value = tel.value.replace(/[^0-9]/g, "").slice(0, 15);
+});
+
+// ====== CONTRASEÑAS ======
+const pass = document.getElementById("password");
+const cpass = document.getElementById("confirm_password");
+
+function validarPasswords() {
+  if (cpass.value !== pass.value) {
+    cpass.setCustomValidity("Las contraseñas no coinciden.");
+  } else {
+    cpass.setCustomValidity("");
+  }
+}
+pass.addEventListener("input", validarPasswords);
+cpass.addEventListener("input", validarPasswords);
+
+// ====== NACIONALIDADES Y CÓDIGOS DE TELÉFONO ======
+const NACIONALIDADES = ["Perú","Argentina","Bolivia","Brasil","Chile","Colombia","Ecuador","México","Uruguay","Venezuela","España","Estados Unidos"];
+const PHONE_CODES = {"Perú":"51","Argentina":"54","Bolivia":"591","Brasil":"55","Chile":"56","Colombia":"57","Ecuador":"593","México":"52","Uruguay":"598","Venezuela":"58","España":"34","Estados Unidos":"1"};
+const selNac = document.getElementById("nacionalidad");
+const selCod = document.getElementById("codigo_pais");
+
+(function cargarNacionalidades() {
+  selNac.innerHTML = "";
+  const def = new Option("Selecciona tu nacionalidad", "", true, true);
+  def.disabled = true;
+  selNac.add(def);
+  NACIONALIDADES.forEach(n => selNac.add(new Option(n, n)));
+  selNac.value = "Perú";
+})();
+(function cargarCodigos() {
+  selCod.innerHTML = "";
+  const def = new Option("Perú (+51)", "51", true, true);
+  selCod.add(def);
+  Object.entries(PHONE_CODES).forEach(([pais, code]) => {
+    if (!(pais === "Perú" && code === "51")) {
+      selCod.add(new Option(`${pais} (+${code})`, code));
+    }
+  });
+})();
+selNac.addEventListener("change", () => {
+  const pais = selNac.value;
+  if (PHONE_CODES[pais]) selCod.value = PHONE_CODES[pais];
+});
+
+// ====== SUBMIT FINAL ======
+const form = document.getElementById("frmRegistro");
+form.addEventListener("submit", e => {
   actualizarBoton();
-  if(btn.disabled){
+  validarPasswords();
+  validarNumero();
+
+  if (btnSubmit.disabled) {
     e.preventDefault();
-    alert("Debe aceptar los Términos y la Política de Privacidad para continuar.");
+    alert("Debe aceptar los Términos y la Política de Privacidad.");
     return;
   }
-  btn.disabled=true;
-  btn.textContent="Enviando...";
+  if (!form.reportValidity()) {
+    e.preventDefault();
+    return;
+  }
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = "Enviando...";
 });
 </script>
+
 {% endblock %}
