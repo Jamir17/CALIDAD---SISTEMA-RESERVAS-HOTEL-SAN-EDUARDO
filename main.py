@@ -1,35 +1,16 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, session
+from controladores.controlador_usuarios import usuarios_bp
 
 app = Flask(__name__)
-app.secret_key = "cambia-esto-por-uno-seguro"
+app.secret_key = "clave-super-segura"
 
+# Registrar los Blueprints
+app.register_blueprint(usuarios_bp)
+
+# Ruta principal
 @app.route("/")
 def index():
-    return render_template("index.html")
-
-
-@app.route("/iniciar-sesion", methods=["GET", "POST"], endpoint="iniciosesion")
-def login():
-    if request.method == "POST":
-        # TODO: validar credenciales
-        flash("Has iniciado sesión (demo).", "success")
-        return redirect(url_for("index"))
-
-    return render_template("iniciosesion.html")
-
-@app.route("/registro", methods=["GET", "POST"], endpoint="registro")
-def registro():
-    if request.method == "POST":
-        # TODO: registrar usuario
-        flash("Registro enviado (demo).", "success")
-        return redirect(url_for("index"))
-    
-    return render_template("registro.html")
-
-@app.route("/reserva_cliente", methods=["GET"], endpoint="reservas")
-def reservas():
-    return render_template("reserva_cliente.html")
-
+    return render_template("index.html", nombre=session.get("nombre"))
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -17,7 +17,8 @@
     <div class="alert alert-error">{{ error }}</div>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('iniciosesion') }}">
+    <form method="POST" action="{{ url_for('usuarios.iniciosesion') }}">
+
       <div class="form-group">
         <label class="form-label" for="email">Correo electrónico</label>
         <input 
@@ -53,7 +54,7 @@
     </form>
 
     <div class="form-footer">
-      ¿No tienes una cuenta? <a href="{{ url_for('registro') }}">Regístrate aquí</a>
+      ¿No tienes una cuenta? <a href="{{ url_for('usuarios.registro') }}">Regístrate aquí</a>
     </div>
   </div>
 </div>
