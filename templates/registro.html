@@ -5,38 +5,37 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/registro.css') }}">
 <style>
 /* ==============================
-   🎨 ESTILOS DE MODALES
+   🎨 ESTILOS DE MODALES & FIXES
    ============================== */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  inset: 0;
   background: rgba(0,0,0,0.5);
   display: none;
   justify-content: center;
   align-items: center;
   z-index: 2000;
 }
+.modal-overlay.open { display: flex; }
+
 .modal-content {
   background: #fff;
   border-radius: 8px;
-  padding: 25px;
+  padding: 24px;
   width: 90%;
-  max-width: 600px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-  animation: fadeIn 0.3s ease;
+  max-width: 640px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  animation: fadeIn 0.25s ease;
 }
 @keyframes fadeIn {
-  from { transform: translateY(-10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.modal-content h2 {
-  margin-top: 0;
-  color: #2c3e50;
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
 .modal-footer {
-  text-align: right;
-  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
 }
 .modal-footer button {
   padding: 8px 16px;
@@ -44,28 +43,27 @@
   border-radius: 6px;
   cursor: pointer;
 }
-.btn-aceptar {
-  background-color: #2ecc71;
-  color: white;
-}
-.btn-cerrar {
-  background-color: #e74c3c;
-  color: white;
-  margin-right: 8px;
-}
+.btn-aceptar { background-color: #2ecc71; color: #fff; }
+.btn-cerrar  { background-color: #e74c3c; color: #fff; }
+body.modal-open { overflow: hidden; }
 
-/* Estado desactivado */
+/* Botón desactivado */
+#btnRegistrar[disabled],
 .disabled-btn {
-  background-color: #9ca3af !important; /* gris */
+  background-color: #9ca3af !important;
+  color: #ffffff !important;
   cursor: not-allowed !important;
   opacity: 0.8 !important;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
-/* Estado activado (normal) */
+/* Botón activado */
 .enabled-btn {
-  background-color: #1d4ed8 !important; /* azul */
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
   cursor: pointer !important;
   opacity: 1 !important;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 </style>
 {% endblock %}
@@ -78,7 +76,6 @@
       <p>Únete a Hotel San Eduardo y disfruta de beneficios exclusivos</p>
     </div>
 
-    <!-- Mensajes flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -87,92 +84,76 @@
       {% endif %}
     {% endwith %}
 
-    <!-- FORMULARIO DE REGISTRO -->
-    <form id="frmRegistro" method="POST" action="{{ url_for('usuarios.registro') }}">
-
-      <!-- Nombre y Apellido -->
+    <form id="frmRegistro" method="POST" action="{{ url_for('usuarios.registro') }}" novalidate>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="nombre">Nombre</label>
-          <input type="text" id="nombre" name="nombre" class="form-input" placeholder="Juan" required>
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" name="nombre" class="form-input" required>
         </div>
-
         <div class="form-group">
-          <label class="form-label" for="apellido">Apellido</label>
-          <input type="text" id="apellido" name="apellido" class="form-input" placeholder="Pérez" required>
+          <label for="apellido">Apellido</label>
+          <input type="text" id="apellido" name="apellido" class="form-input" required>
         </div>
       </div>
 
-      <!-- Tipo y N° de Documento -->
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="tipo_documento">Tipo de documento</label>
+          <label for="tipo_documento">Tipo de documento</label>
           <select id="tipo_documento" name="tipo_documento" class="form-input" required>
             <option value="DNI" selected>DNI</option>
             <option value="Pasaporte">Pasaporte</option>
             <option value="CE">Carné de Extranjería</option>
           </select>
         </div>
-
         <div class="form-group">
-          <label class="form-label" for="num_documento">N° de documento</label>
+          <label for="num_documento">N° de documento</label>
           <input type="text" id="num_documento" name="num_documento" class="form-input" required>
         </div>
       </div>
 
-      <!-- Correo -->
       <div class="form-group">
-        <label class="form-label" for="email">Correo electrónico</label>
-        <input type="email" id="email" name="correo" class="form-input" placeholder="ejemplo@correo.com" required>
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" name="email" class="form-input" required>
       </div>
 
-      <!-- Nacionalidad -->
       <div class="form-group">
-        <label class="form-label" for="nacionalidad">Nacionalidad</label>
+        <label for="nacionalidad">Nacionalidad</label>
         <select id="nacionalidad" name="nacionalidad" class="form-input" required></select>
       </div>
 
-      <!-- Dirección -->
       <div class="form-group">
-        <label class="form-label" for="direccion">Dirección</label>
-        <input type="text" id="direccion" name="direccion" class="form-input" placeholder="Calle, número, ciudad">
+        <label for="direccion">Dirección</label>
+        <input type="text" id="direccion" name="direccion" class="form-input">
       </div>
 
-      <!-- Teléfono -->
       <div class="form-group">
-        <label class="form-label">Teléfono</label>
-        <div class="form-row" style="gap:12px; align-items:center;">
-          <select id="codigo_pais" name="codigo_pais" class="form-input" style="max-width:160px" required></select>
-          <input type="tel" id="telefono" name="telefono" class="form-input" placeholder="999 999 999" required>
+        <label>Teléfono</label>
+        <div class="form-row" style="gap:12px;">
+          <select id="codigo_pais" name="codigo_pais" class="form-input" style="max-width:180px" required></select>
+          <input type="tel" id="telefono" name="telefono" class="form-input" required>
         </div>
-        <small class="muted">Formato internacional (E.164): +51XXXXXXXXX</small>
-      </div>
-
-      <!-- Contraseña -->
-      <div class="form-group">
-        <label class="form-label" for="password">Contraseña</label>
-        <input type="password" id="password" name="password" class="form-input" minlength="8" required placeholder="Mínimo 8 caracteres">
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="confirm_password">Confirmar contraseña</label>
-        <input type="password" id="confirm_password" name="confirm_password" class="form-input" required placeholder="Repite tu contraseña">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" name="password" class="form-input" minlength="8" required>
+      </div>
+      <div class="form-group">
+        <label for="confirm_password">Confirmar contraseña</label>
+        <input type="password" id="confirm_password" name="confirm_password" class="form-input" required>
       </div>
 
-      <!-- Checkbox de términos -->
-      <div class="checkbox-group" style="margin-top: 20px;">
+      <div class="checkbox-group">
         <input type="checkbox" id="terms" name="terms">
         <label for="terms">
           He leído y acepto los 
-          <a href="#" id="linkTerminos">términos y condiciones</a> 
-          y la 
-          <a href="#" id="linkPrivacidad">política de privacidad</a>.
+          <a href="#" id="btnAbrirTerminos">términos y condiciones</a> y la 
+          <a href="#" id="btnAbrirPrivacidad">política de privacidad</a>.
         </label>
       </div>
 
-      <!-- Botón inicialmente desactivado -->
       <div class="form-actions">
-        <button type="submit" id="btnCrearCuenta" class="btn btn-primary disabled-btn" disabled>Crear cuenta</button>
+        <button type="submit" class="btn btn-primary disabled-btn" id="btnRegistrar" disabled>Crear cuenta</button>
       </div>
     </form>
   </div>
@@ -183,15 +164,11 @@
      ============================== -->
 <div class="modal-overlay" id="modalTerminos">
   <div class="modal-content">
-    <h2>Términos y condiciones</h2>
-    <p>
-      Al registrarse en Hotel San Eduardo, el usuario acepta cumplir con las normas de conducta del establecimiento,
-      el uso responsable de los servicios, y las políticas de cancelación y reservas.
-      El incumplimiento de las mismas puede derivar en la suspensión de los beneficios de cliente.
-    </p>
+    <h2>Términos y Condiciones</h2>
+    <p>Al crear una cuenta en Hotel San Eduardo, usted acepta nuestras políticas de uso responsable, reserva y cancelación.</p>
     <div class="modal-footer">
-      <button class="btn-cerrar" onclick="cerrarModal('modalTerminos')">Cerrar</button>
-      <button class="btn-aceptar" onclick="aceptarTerminos()">Aceptar</button>
+      <button class="btn-cerrar" data-close="modalTerminos">Cerrar</button>
+      <button class="btn-aceptar" id="btnAceptarTerminos">Aceptar</button>
     </div>
   </div>
 </div>
@@ -201,150 +178,137 @@
      ============================== -->
 <div class="modal-overlay" id="modalPrivacidad">
   <div class="modal-content">
-    <h2>Política de privacidad</h2>
-    <p>
-      Hotel San Eduardo garantiza la confidencialidad de los datos personales según la Ley N° 29733.
-      La información proporcionada será utilizada únicamente para fines de registro, comunicación y servicios hoteleros.
-      El usuario podrá solicitar la eliminación o modificación de sus datos en cualquier momento.
-    </p>
+    <h2>Política de Privacidad</h2>
+    <p>Hotel San Eduardo protege sus datos conforme a la Ley N° 29733. Sus datos se usan solo para fines de registro y reservas.</p>
     <div class="modal-footer">
-      <button class="btn-cerrar" onclick="cerrarModal('modalPrivacidad')">Cerrar</button>
-      <button class="btn-aceptar" onclick="aceptarPrivacidad()">Aceptar</button>
+      <button class="btn-cerrar" data-close="modalPrivacidad">Cerrar</button>
+      <button class="btn-aceptar" id="btnAceptarPrivacidad">Aceptar</button>
     </div>
   </div>
 </div>
 
 <!-- ==============================
-     🧠 SCRIPTS
+     🧠 SCRIPTS (CORREGIDOS)
      ============================== -->
 <script>
-  const check = document.getElementById('terms');
-  const btn = document.getElementById('btnCrearCuenta');
-
-  // Iniciar con botón desactivado visualmente
-  btn.classList.add('disabled-btn');
-
-  check.addEventListener('change', () => {
-    if (check.checked) {
-      btn.disabled = false;
-      btn.classList.remove('disabled-btn');
-      btn.classList.add('enabled-btn');
-    } else {
-      btn.disabled = true;
-      btn.classList.remove('enabled-btn');
-      btn.classList.add('disabled-btn');
-    }
+/* ---------- Utilidades modales ---------- */
+const body = document.body;
+const modalIds = ["modalTerminos","modalPrivacidad"];
+function closeAllModals(){
+  modalIds.forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove("open");
   });
-</script>
+  body.classList.remove("modal-open");
+}
+function openModal(id){
+  closeAllModals();
+  document.getElementById(id).classList.add("open");
+  body.classList.add("modal-open");
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove("open");
+  const anyOpen = modalIds.some(mid=>document.getElementById(mid).classList.contains("open"));
+  if(!anyOpen) body.classList.remove("modal-open");
+}
+modalIds.forEach(id=>{
+  const overlay=document.getElementById(id);
+  overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal(id);});
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAllModals();});
 
-<script>
-// ===== VALIDACIÓN DE DOCUMENTOS =====
-const tipo = document.getElementById("tipo_documento");
-const num = document.getElementById("num_documento");
-
-function validarDocumento() {
-  const tipoDoc = tipo.value;
-  num.value = num.value.toUpperCase();
-
-  if (tipoDoc === "DNI") {
-    num.value = num.value.replace(/\D/g, '').slice(0, 8);
-    num.maxLength = 8;
-    num.pattern = "\\d{8}";
-    num.title = "Debe contener exactamente 8 dígitos.";
-  } else if (tipoDoc === "Pasaporte") {
-    num.maxLength = 12;
-    num.pattern = "[A-Za-z0-9]{6,12}";
-    num.title = "6 a 12 caracteres alfanuméricos.";
-  } else if (tipoDoc === "CE") {
-    num.maxLength = 9;
-    num.pattern = "[A-Za-z0-9]{6,9}";
-    num.title = "6 a 9 caracteres alfanuméricos.";
+/* ---------- Documentos ---------- */
+const tipo=document.getElementById("tipo_documento");
+const num=document.getElementById("num_documento");
+function validarDocumento(){
+  const tipoDoc=tipo.value;
+  num.value=(num.value||"").toUpperCase();
+  if(tipoDoc==="DNI"){
+    num.value=num.value.replace(/\D/g,"").slice(0,8);
   }
 }
-tipo.addEventListener("change", validarDocumento);
-num.addEventListener("input", validarDocumento);
-validarDocumento();
+tipo.addEventListener("change",validarDocumento);
+num.addEventListener("input",validarDocumento);
 
-// ===== MODALES =====
-let terminosAceptados = false;
-let privacidadAceptada = false;
-
-document.getElementById("btnAbrirTerminos").addEventListener("click", (e) => {
-  e.preventDefault();
-  abrirModal("modalTerminos");
-});
-document.getElementById("btnAbrirPrivacidad").addEventListener("click", (e) => {
-  e.preventDefault();
-  abrirModal("modalPrivacidad");
-});
-
-function abrirModal(id) {
-  document.body.style.overflow = "hidden";
-  document.getElementById(id).style.display = "flex";
-}
-function cerrarModal(id) {
-  document.body.style.overflow = "auto";
-  document.getElementById(id).style.display = "none";
-}
-function aceptarTerminos() {
-  terminosAceptados = true;
-  cerrarModal("modalTerminos");
-  abrirModal("modalPrivacidad");
-}
-function aceptarPrivacidad() {
-  privacidadAceptada = true;
-  cerrarModal("modalPrivacidad");
-  document.getElementById("terms").checked = true;
-  document.getElementById("btnRegistrar").disabled = false;
-}
-
-// ===== VALIDACIÓN ANTES DE ENVIAR =====
-document.getElementById("frmRegistro").addEventListener("submit", function (e) {
-  if (!terminosAceptados || !privacidadAceptada) {
-    e.preventDefault();
-    alert("Debe aceptar los términos y la política de privacidad para continuar.");
-  } else if (!this.reportValidity()) {
-    e.preventDefault();
-  }
-});
-</script>
-
-<!-- ==============================
-     🌎 NACIONALIDADES Y TELÉFONOS
-     ============================== -->
-<script>
-const NACIONALIDADES = ["Perú","Argentina","Bolivia","Brasil","Chile","Colombia","Ecuador","México","Uruguay","Venezuela","España","Estados Unidos"];
-const PHONE_CODES = {"Perú":"51","Argentina":"54","Bolivia":"591","Brasil":"55","Chile":"56","Colombia":"57","Ecuador":"593","México":"52","Uruguay":"598","Venezuela":"58","España":"34","Estados Unidos":"1"};
-
-const selNac = document.getElementById("nacionalidad");
-const selCod = document.getElementById("codigo_pais");
-
-// Cargar nacionalidades
-(function cargarNacionalidades() {
-  const empty = new Option("Selecciona tu nacionalidad", "", true, true);
-  empty.disabled = true;
-  selNac.add(empty);
-  NACIONALIDADES.forEach(n => selNac.add(new Option(n, n)));
-  selNac.value = "Perú";
-})();
-
-// Cargar prefijos
-(function buildCodes() {
-  selCod.innerHTML = "";
-  const def = new Option("Perú (+51)", "51", true, true);
-  selCod.add(def);
-  Object.entries(PHONE_CODES).forEach(([pais, code]) => {
-    if (!(pais === "Perú" && code === "51")) {
-      selCod.add(new Option(`${pais} (+${code})`, code));
-    }
+/* ---------- Nacionalidad y teléfono ---------- */
+const NACIONALIDADES=["Perú","Argentina","Bolivia","Brasil","Chile","Colombia","Ecuador","México","Uruguay","Venezuela","España","Estados Unidos"];
+const PHONE_CODES={"Perú":"51","Argentina":"54","Bolivia":"591","Brasil":"55","Chile":"56","Colombia":"57","Ecuador":"593","México":"52","Uruguay":"598","Venezuela":"58","España":"34","Estados Unidos":"1"};
+const selNac=document.getElementById("nacionalidad");
+const selCod=document.getElementById("codigo_pais");
+(function cargarDatos(){
+  selNac.innerHTML="<option disabled selected>Selecciona tu nacionalidad</option>";
+  NACIONALIDADES.forEach(n=>selNac.add(new Option(n,n)));
+  selCod.innerHTML="";
+  Object.entries(PHONE_CODES).forEach(([pais,code])=>{
+    selCod.add(new Option(`${pais} (+${code})`,code,pais==="Perú"));
   });
 })();
 
-// Sincronizar
-selNac.addEventListener("change", () => {
-  const pais = selNac.value;
-  if (PHONE_CODES[pais]) selCod.value = PHONE_CODES[pais];
+/* ---------- Términos & Privacidad ---------- */
+let terminosAceptados=false;
+let privacidadAceptada=false;
+const chk=document.getElementById("terms");
+const btn=document.getElementById("btnRegistrar");
+
+// botón inicia gris
+window.addEventListener("DOMContentLoaded",()=>{
+  btn.disabled=true;
+  btn.classList.add("disabled-btn");
+  btn.classList.remove("enabled-btn");
+});
+
+// abrir modales
+document.getElementById("btnAbrirTerminos").addEventListener("click",e=>{
+  e.preventDefault();openModal("modalTerminos");
+});
+document.getElementById("btnAbrirPrivacidad").addEventListener("click",e=>{
+  e.preventDefault();openModal("modalPrivacidad");
+});
+
+// aceptar modales
+document.getElementById("btnAceptarTerminos").addEventListener("click",()=>{
+  terminosAceptados=true;
+  closeModal("modalTerminos");
+  openModal("modalPrivacidad");
+});
+document.getElementById("btnAceptarPrivacidad").addEventListener("click",()=>{
+  privacidadAceptada=true;
+  closeModal("modalPrivacidad");
+  chk.checked=true;
+  actualizarBoton();
+});
+
+// check manual
+chk.addEventListener("change",()=>{
+  if(!chk.checked){terminosAceptados=false;privacidadAceptada=false;}
+  actualizarBoton();
+});
+
+// actualizar estado visual
+function actualizarBoton(){
+  const ok=chk.checked&&terminosAceptados&&privacidadAceptada;
+  if(ok){
+    btn.disabled=false;
+    btn.classList.remove("disabled-btn");
+    btn.classList.add("enabled-btn");
+  }else{
+    btn.disabled=true;
+    btn.classList.add("disabled-btn");
+    btn.classList.remove("enabled-btn");
+  }
+}
+
+/* ---------- Validación de envío ---------- */
+const form=document.getElementById("frmRegistro");
+form.addEventListener("submit",e=>{
+  actualizarBoton();
+  if(btn.disabled){
+    e.preventDefault();
+    alert("Debe aceptar los Términos y la Política de Privacidad para continuar.");
+    return;
+  }
+  btn.disabled=true;
+  btn.textContent="Enviando...";
 });
 </script>
-
 {% endblock %}
