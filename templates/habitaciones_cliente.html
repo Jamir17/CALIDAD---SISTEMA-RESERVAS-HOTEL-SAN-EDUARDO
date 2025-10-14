@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}Habitaciones Disponibles - Hotel San Eduardo{% endblock %}
+
+{% block content %}
+<div class="habitaciones-container">
+  <!-- 🔹 FILTROS -->
+  <aside class="filtros">
+    <h2>Buscar</h2>
+    <form method="GET" action="{{ url_for('habitaciones.habitaciones_cliente') }}">
+      <label>Fecha de entrada</label>
+      <input type="date" name="fecha_entrada">
+
+      <label>Fecha de salida</label>
+      <input type="date" name="fecha_salida">
+
+      <label>Tipo de habitación</label>
+      <select name="tipo">
+        <option value="">Todas</option>
+        {% for h in habitaciones|unique(attribute='tipo') %}
+          <option value="{{ h.tipo }}">{{ h.tipo }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Huéspedes</label>
+      <input type="number" name="huespedes" min="1" value="1">
+
+      <button type="submit" class="btn-buscar">Buscar</button>
+    </form>
+  </aside>
+
+  <!-- 🔹 LISTA -->
+  <section class="habitaciones-list">
+    {% set disponibles = habitaciones|selectattr('estado', 'equalto', 'Disponible')|list %}
+    {% if disponibles %}
+      {% for h in disponibles %}
+      <div class="habitacion-card fade-in">
+        <div class="habitacion-img">
+          <img src="{{ url_for('static', filename=h.portada) }}"
+               alt="Habitación {{ h.numero }}"
+               onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/default_room.jpg') }}';">
+        </div>
+
+        <div class="habitacion-info">
+          <h3>{{ h.tipo }} Nº {{ h.numero }}</h3>
+          <p class="descripcion">{{ h.descripcion }}</p>
+          <p><strong>Capacidad:</strong> 👥 {{ h.capacidad }} personas</p>
+          <p><strong>Precio:</strong> <span class="precio">S/. {{ '%.2f'|format(h.precio_base) }}</span> / noche</p>
+
+          <div class="acciones">
+            <button class="btn-ver" data-open="modal-{{ h.id_habitacion }}">Ver más</button>
+            <button class="btn-reservar" onclick="agregarReserva('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }})">Reservar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔹 MODAL -->
+      <div id="modal-{{ h.id_habitacion }}" class="modal">
+        <div class="modal-content">
+          <span class="close" data-close>&times;</span>
+          <h2>{{ h.tipo }} Nº {{ h.numero }}</h2>
+          <p>{{ h.descripcion }}</p>
+
+          <div class="modal-carousel">
+            {% for img in h.galeria %}
+              <img src="{{ url_for('static', filename=img) }}" alt="Foto {{ loop.index }}">
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="no-habitaciones">No hay habitaciones disponibles.</p>
+    {% endif %}
+  </section>
+
+  <!-- 🔹 RESUMEN -->
+  <aside class="resumen">
+    <h2>Tu Reserva</h2>
+    <div id="resumenContenido">
+      <p>No has seleccionado ninguna habitación.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ======== Layout general ======== */
+.habitaciones-container {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 25px;
+  padding: 90px 40px;
+  background: #f7faff;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* ======== Panel lateral ======== */
+.filtros {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.filtros h2 {
+  color: #004aad;
+  margin-bottom: 12px;
+}
+.filtros label {
+  font-weight: 600;
+  margin-top: 10px;
+  display: block;
+}
+.filtros input, .filtros select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d1e0ff;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+.btn-buscar {
+  margin-top: 15px;
+  width: 100%;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+.btn-buscar:hover { background: #0056b3; }
+
+/* ======== Cards ======== */
+.habitacion-card {
+  display: flex;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  margin-bottom: 22px;
+  transition: transform 0.2s ease, box-shadow 0.3s;
+}
+.habitacion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+}
+.habitacion-img img {
+  width: 260px;
+  height: 180px;
+  object-fit: cover;
+}
+.habitacion-info {
+  padding: 16px 20px;
+  flex: 1;
+}
+.habitacion-info h3 {
+  color: #004aad;
+  margin-bottom: 8px;
+}
+.habitacion-info .descripcion {
+  color: #555;
+  margin-bottom: 10px;
+}
+.precio {
+  color: #00a650;
+  font-weight: 700;
+}
+.acciones {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+.btn-reservar, .btn-ver {
+  padding: 9px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-reservar {
+  background: #007bff;
+  color: white;
+  border: none;
+}
+.btn-reservar:hover { background: #0056b3; }
+.btn-ver {
+  background: #e8f0ff;
+  color: #004aad;
+  border: 1px solid #bcd2ff;
+}
+.btn-ver:hover { background: #d2e3ff; }
+
+/* ======== Modal ======== */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+.modal.show { display: flex; }
+.modal-content {
+  background: #fff;
+  border-radius: 14px;
+  padding: 25px;
+  width: 90%;
+  max-width: 850px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  position: relative;
+  text-align: center;
+}
+.close {
+  position: absolute;
+  right: 16px;
+  top: 10px;
+  font-size: 26px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.modal-carousel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+.modal-carousel img {
+  width: 240px;
+  height: 180px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+/* ======== Resumen ======== */
+.resumen {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-size: 15px;
+}
+.resumen h2 { color: #004aad; }
+.no-habitaciones { color: #777; text-align: center; margin-top: 40px; }
+
+/* Animación entrada */
+.fade-in {
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('click', (e)=>{
+  const openBtn = e.target.closest('[data-open]');
+  if(openBtn){
+    const id = openBtn.getAttribute('data-open');
+    const m = document.getElementById(id);
+    if(m){ m.classList.add('show'); }
+  }
+  if(e.target.matches('[data-close]') || e.target.classList.contains('modal')){
+    const m = e.target.closest('.modal') || document.querySelector('.modal.show');
+    if(m){ m.classList.remove('show'); }
+  }
+});
+
+// ===========================
+// ✅ Pre-cuenta de reserva
+// ===========================
+function agregarReserva(tipo, numero, precio){
+  const entrada = document.querySelector('[name="fecha_entrada"]').value;
+  const salida = document.querySelector('[name="fecha_salida"]').value;
+
+  if (!entrada || !salida) {
+    alert("Por favor selecciona las fechas de entrada y salida.");
+    return;
+  }
+
+  const fechaInicio = new Date(entrada);
+  const fechaFin = new Date(salida);
+
+  if (fechaFin <= fechaInicio) {
+    alert("La fecha de salida debe ser posterior a la de entrada.");
+    return;
+  }
+
+  const diffTime = fechaFin - fechaInicio;
+  const noches = diffTime / (1000 * 60 * 60 * 24);
+  const total = precio * noches;
+
+  document.getElementById('resumenContenido').innerHTML = `
+    <p><strong>${tipo} Nº ${numero}</strong></p>
+    <p><strong>Fechas:</strong><br>${entrada} → ${salida}</p>
+    <p><strong>Noches:</strong> ${noches}</p>
+    <p><strong>Precio por noche:</strong> S/. ${precio.toFixed(2)}</p>
+    <p><strong>Total estimado:</strong> <span style="color:#00a650;font-weight:bold">S/. ${total.toFixed(2)}</span></p>
+    <button class="btn-buscar" onclick="window.location.href='/reservas'">Continuar</button>`;
+}
+</script>
+{% endblock %}

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from bd import obtener_conexion
 from argon2 import PasswordHasher
 import re
+from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
 usuarios_bp = Blueprint("usuarios", __name__)
 ph = PasswordHasher()
@@ -112,7 +113,7 @@ def registro():
 def iniciosesion():
     if request.method == "POST":
         correo = (request.form.get("email") or "").strip().lower()
-        password = request.form.get("password") or ""
+        password = (request.form.get("password") or "").strip()
 
         con = obtener_conexion()
         with con.cursor() as cur:
@@ -124,20 +125,19 @@ def iniciosesion():
             return render_template("iniciosesion.html")
 
         try:
-            if not ph.verify(usuario["password_hash"], password):
-                flash("Contraseña incorrecta.", "error")
-                return render_template("iniciosesion.html")
+            ph.verify(usuario["password_hash"].strip(), password)
         except Exception:
-            flash("Error verificando contraseña.", "error")
+            flash("Contraseña incorrecta o hash inválido.", "error")
             return render_template("iniciosesion.html")
 
+        # Guardar datos de sesión
         session["usuario_id"] = usuario["id_usuario"]
         session["nombre"] = usuario["nombres"]
-        session["rol"] = usuario["id_rol"]
-        return redirect(url_for("index"))
+
+        # ✅ Ahora redirige a habitaciones_cliente
+        return redirect(url_for("reservas.habitaciones_cliente"))
 
     return render_template("iniciosesion.html")
-
 
 # =========================================================
 # CERRAR SESIÓN
