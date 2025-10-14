@@ -2,307 +2,384 @@
 {% block title %}Habitaciones Disponibles - Hotel San Eduardo{% endblock %}
 
 {% block content %}
-<div class="habitaciones-container">
-  <!-- 🔹 FILTROS -->
-  <aside class="filtros">
+<div class="layout-rooms">
+  <!-- Lado izquierdo: filtros -->
+  <aside class="panel filtros">
     <h2>Buscar</h2>
     <form method="GET" action="{{ url_for('habitaciones.habitaciones_cliente') }}">
       <label>Fecha de entrada</label>
-      <input type="date" name="fecha_entrada">
+      <input type="date" name="fecha_entrada" value="{{ fecha_entrada or '' }}">
 
       <label>Fecha de salida</label>
-      <input type="date" name="fecha_salida">
+      <input type="date" name="fecha_salida" value="{{ fecha_salida or '' }}">
 
       <label>Tipo de habitación</label>
       <select name="tipo">
         <option value="">Todas</option>
-        {% for h in habitaciones|unique(attribute='tipo') %}
-          <option value="{{ h.tipo }}">{{ h.tipo }}</option>
+        {% for t in tipos_unicos %}
+          <option value="{{ t.nombre }}" {% if t.nombre == (tipo or '') %}selected{% endif %}>{{ t.nombre }}</option>
         {% endfor %}
       </select>
 
       <label>Huéspedes</label>
-      <input type="number" name="huespedes" min="1" value="1">
+      <input type="number" name="huespedes" min="1" value="{{ huespedes or 1 }}">
 
       <button type="submit" class="btn-buscar">Buscar</button>
     </form>
   </aside>
 
-  <!-- 🔹 LISTA -->
-  <section class="habitaciones-list">
-    {% set disponibles = habitaciones|selectattr('estado', 'equalto', 'Disponible')|list %}
-    {% if disponibles %}
-      {% for h in disponibles %}
-      <div class="habitacion-card fade-in">
-        <div class="habitacion-img">
+  <!-- Centro: lista con scroll -->
+  <section class="listado">
+    {% if habitaciones %}
+      {% for h in habitaciones %}
+      <article class="card fade-in">
+        <div class="card-media">
           <img src="{{ url_for('static', filename=h.portada) }}"
                alt="Habitación {{ h.numero }}"
-               onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/default_room.jpg') }}';">
+               onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
         </div>
 
-        <div class="habitacion-info">
-          <h3>{{ h.tipo }} Nº {{ h.numero }}</h3>
-          <p class="descripcion">{{ h.descripcion }}</p>
-          <p><strong>Capacidad:</strong> 👥 {{ h.capacidad }} personas</p>
-          <p><strong>Precio:</strong> <span class="precio">S/. {{ '%.2f'|format(h.precio_base) }}</span> / noche</p>
+        <div class="card-body">
+          <div class="card-head">
+            <h3>{{ h.tipo }} Nº {{ h.numero }}</h3>
+            <div class="price">
+              <span class="currency">S/</span>
+              <span class="amount">{{ '%.0f'|format(h.precio_base) }}</span>
+              <small>por noche</small>
+            </div>
+          </div>
 
-          <div class="acciones">
-            <button class="btn-ver" data-open="modal-{{ h.id_habitacion }}">Ver más</button>
-            <button class="btn-reservar" onclick="agregarReserva('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }})">Reservar</button>
+          <p class="desc">{{ h.descripcion }}</p>
+
+          <div class="meta">
+            <span>👥 {{ h.capacidad }} personas</span>
+          </div>
+
+          {% if h.comodidades %}
+          <div class="chips">
+            {% for c in h.comodidades %}
+              <span class="chip">{{ c }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="actions">
+            <button class="btn-outline" data-open="modal-{{ h.id_habitacion }}">Ver Detalles</button>
+            <button class="btn-primary"
+                    onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }})">
+              Seleccionar
+            </button>
           </div>
         </div>
-      </div>
+      </article>
 
-      <!-- 🔹 MODAL -->
+      <!-- Modal de detalles con carrusel -->
       <div id="modal-{{ h.id_habitacion }}" class="modal">
         <div class="modal-content">
           <span class="close" data-close>&times;</span>
           <h2>{{ h.tipo }} Nº {{ h.numero }}</h2>
-          <p>{{ h.descripcion }}</p>
+          <p class="modal-sub">{{ h.descripcion }}</p>
 
-          <div class="modal-carousel">
+          <div class="carousel">
             {% for img in h.galeria %}
-              <img src="{{ url_for('static', filename=img) }}" alt="Foto {{ loop.index }}">
+              <img src="{{ url_for('static', filename=img) }}"
+                   alt="Foto {{ loop.index }}"
+                   onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
             {% endfor %}
           </div>
         </div>
       </div>
       {% endfor %}
     {% else %}
-      <p class="no-habitaciones">No hay habitaciones disponibles.</p>
+      <p class="empty">No hay habitaciones disponibles con los criterios seleccionados.</p>
     {% endif %}
   </section>
 
-  <!-- 🔹 RESUMEN -->
-  <aside class="resumen">
+  <!-- Derecha: Tu Reserva (sticky) -->
+  <aside class="panel resumen">
     <h2>Tu Reserva</h2>
     <div id="resumenContenido">
       <p>No has seleccionado ninguna habitación.</p>
     </div>
   </aside>
 </div>
+
+<!-- Modal Servicios Adicionales -->
+<div id="modal-servicios" class="modal">
+  <div class="modal-content">
+    <span class="close" data-close>&times;</span>
+    <h3>Servicios Adicionales</h3>
+    {% if servicios %}
+      <form id="formServicios">
+        <div class="servicios-list">
+          {% for s in servicios %}
+          <div class="serv-item">
+            <label>
+              <input type="checkbox" name="srv" value="{{ s.id_servicio }}" data-precio="{{ '%.2f'|format(s.precio) }}">
+              <strong>{{ s.nombre }}</strong>
+              <small>S/. {{ '%.2f'|format(s.precio) }}</small>
+            </label>
+            <input type="number" class="qty" name="qty_{{ s.id_servicio }}" value="1" min="1" disabled>
+          </div>
+          {% endfor %}
+        </div>
+      </form>
+      <div class="modal-actions">
+        <button class="btn-primary" id="aplicarServicios">Aplicar</button>
+      </div>
+    {% else %}
+      <p>No hay servicios disponibles por ahora.</p>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-/* ======== Layout general ======== */
-.habitaciones-container {
+/* ====== Layout general (col-izq, centro con scroll, col-der sticky) */
+.layout-rooms {
   display: grid;
   grid-template-columns: 280px 1fr 320px;
-  gap: 25px;
-  padding: 90px 40px;
-  background: #f7faff;
+  gap: 24px;
+  padding: 90px 40px 40px;
+  background: #f6f9ff;
   min-height: 100vh;
-  font-family: 'Poppins', sans-serif;
 }
 
-/* ======== Panel lateral ======== */
-.filtros {
+/* Paneles laterales */
+.panel {
   background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, .06);
+  padding: 18px;
+  height: fit-content;
+  position: sticky;
+  top: 84px;
 }
-.filtros h2 {
-  color: #004aad;
-  margin-bottom: 12px;
-}
-.filtros label {
-  font-weight: 600;
-  margin-top: 10px;
-  display: block;
-}
+
+/* Filtros */
+.filtros h2 { margin-bottom: 8px; color:#0f2a63; }
+.filtros label { display:block; font-weight:600; margin-top:10px; }
 .filtros input, .filtros select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #d1e0ff;
-  border-radius: 6px;
-  margin-top: 4px;
+  width: 100%; padding: 9px 10px; margin-top: 4px;
+  border: 1px solid #d5e0ff; border-radius: 8px;
 }
 .btn-buscar {
-  margin-top: 15px;
-  width: 100%;
-  background: #007bff;
-  color: #fff;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s;
+  margin-top: 14px; width: 100%;
+  background:#0d6efd; color:#fff; border:none;
+  padding:10px; border-radius:10px; font-weight:700; cursor:pointer
 }
-.btn-buscar:hover { background: #0056b3; }
+.btn-buscar:hover { background:#0b5ed7; }
 
-/* ======== Cards ======== */
-.habitacion-card {
-  display: flex;
-  background: #fff;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-  margin-bottom: 22px;
-  transition: transform 0.2s ease, box-shadow 0.3s;
+/* Centro con scroll */
+.listado {
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding-right: 8px;
 }
-.habitacion-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.1);
-}
-.habitacion-img img {
-  width: 260px;
-  height: 180px;
-  object-fit: cover;
-}
-.habitacion-info {
-  padding: 16px 20px;
-  flex: 1;
-}
-.habitacion-info h3 {
-  color: #004aad;
-  margin-bottom: 8px;
-}
-.habitacion-info .descripcion {
-  color: #555;
-  margin-bottom: 10px;
-}
-.precio {
-  color: #00a650;
-  font-weight: 700;
-}
-.acciones {
-  margin-top: 12px;
-  display: flex;
-  gap: 10px;
-}
-.btn-reservar, .btn-ver {
-  padding: 9px 15px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-reservar {
-  background: #007bff;
-  color: white;
-  border: none;
-}
-.btn-reservar:hover { background: #0056b3; }
-.btn-ver {
-  background: #e8f0ff;
-  color: #004aad;
-  border: 1px solid #bcd2ff;
-}
-.btn-ver:hover { background: #d2e3ff; }
+.listado::-webkit-scrollbar { width: 8px; }
+.listado::-webkit-scrollbar-thumb { background: #0d6efd; border-radius: 6px; }
 
-/* ======== Modal ======== */
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 1050;
+/* Card de habitación */
+.card {
+  display:flex; gap:18px; align-items: stretch;
+  background:#fff; border-radius:14px; padding:12px;
+  box-shadow: 0 2px 8px rgba(16,24,40,.06);
+  margin-bottom: 18px;
 }
-.modal.show { display: flex; }
+.card:hover { box-shadow:0 6px 16px rgba(16,24,40,.1); }
+
+.card-media img {
+  width: 320px; height: 200px; object-fit: cover; border-radius:10px;
+}
+
+.card-body { flex: 1; display:flex; flex-direction:column; }
+.card-head {
+  display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+}
+.card-head h3 { margin:0; color:#0f2a63; }
+.price { text-align:right; min-width: 150px; }
+.price .currency { font-size: 18px; color:#0f2a63; }
+.price .amount { font-size: 34px; font-weight:800; color:#0f2a63; }
+.price small { display:block; color:#6b7280; }
+
+.desc { color:#4b5563; margin:6px 0 10px; }
+.meta { color:#111827; margin-bottom:8px; }
+
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.chip {
+  padding:5px 10px; border-radius:9999px; background:#eef2ff; color:#3442b9;
+  border:1px solid #d4d9ff; font-size:12px; font-weight:600;
+}
+
+.actions { display:flex; gap:12px; margin-top:auto; }
+.btn-outline, .btn-primary {
+  padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; border:none;
+}
+.btn-outline { background:#ecf2ff; color:#0f2a63; border:1px solid #d5e0ff; }
+.btn-outline:hover { background:#dfe8ff; }
+.btn-primary { background:#0d6efd; color:#fff; }
+.btn-primary:hover { background:#0b5ed7; }
+
+/* Resumen */
+.resumen h2 { color:#0f2a63; margin-bottom:10px; }
+#resumenContenido p { margin:6px 0; }
+.btn-accion {
+  width: 100%; margin-top:10px; padding:10px; border:none; border-radius:10px;
+  font-weight:800; cursor:pointer;
+}
+.btn-accion.serv { background:#f0ad4e; color:#fff; }
+.btn-accion.serv:hover { background:#ea9a2b; }
+.btn-accion.pago { background:#28a745; color:#fff; }
+.btn-accion.pago:hover { background:#218838; }
+
+/* Modal genérico */
+.modal { display:none; position: fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000;
+  place-items: center; padding:16px; }
+.modal.show { display:grid; }
 .modal-content {
-  background: #fff;
-  border-radius: 14px;
-  padding: 25px;
-  width: 90%;
-  max-width: 850px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  position: relative;
-  text-align: center;
+  background:#fff; border-radius:14px; padding:18px; width:min(900px, 96vw);
+  max-height: 92vh; overflow:auto; position:relative;
+  box-shadow: 0 8px 22px rgba(16,24,40,.25);
 }
-.close {
-  position: absolute;
-  right: 16px;
-  top: 10px;
-  font-size: 26px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.modal-carousel {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 10px 0;
-}
-.modal-carousel img {
-  width: 240px;
-  height: 180px;
-  border-radius: 10px;
-  object-fit: cover;
-}
+.close { position:absolute; right:14px; top:8px; font-size:26px; cursor:pointer; }
+.modal-sub { color:#4b5563; margin:4px 0 10px; }
+.carousel { display:flex; gap:10px; overflow-x:auto; }
+.carousel img { width:260px; height:180px; object-fit:cover; border-radius:10px; }
 
-/* ======== Resumen ======== */
-.resumen {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  font-size: 15px;
+/* Modal servicios */
+.servicios-list { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+.serv-item {
+  display:flex; justify-content:space-between; align-items:center;
+  border:1px solid #e5e7eb; border-radius:10px; padding:10px;
 }
-.resumen h2 { color: #004aad; }
-.no-habitaciones { color: #777; text-align: center; margin-top: 40px; }
+.serv-item label { display:flex; gap:10px; align-items:center; }
+.serv-item .qty { width:70px; padding:6px; border:1px solid #d1d5db; border-radius:8px; }
+.modal-actions { display:flex; justify-content:flex-end; margin-top:10px; }
+.empty { color:#6b7280; }
 
-/* Animación entrada */
-.fade-in {
-  animation: fadeIn 0.4s ease;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* Animación */
+.fade-in { animation:fade .25s ease; }
+@keyframes fade { from { opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// ===== Modales (detalles y servicios) =====
 document.addEventListener('click', (e)=>{
   const openBtn = e.target.closest('[data-open]');
   if(openBtn){
     const id = openBtn.getAttribute('data-open');
     const m = document.getElementById(id);
-    if(m){ m.classList.add('show'); }
+    if(m) m.classList.add('show');
   }
-  if(e.target.matches('[data-close]') || e.target.classList.contains('modal')){
+  if (e.target.matches('[data-close]') || e.target.classList.contains('modal')) {
     const m = e.target.closest('.modal') || document.querySelector('.modal.show');
-    if(m){ m.classList.remove('show'); }
+    if(m) m.classList.remove('show');
   }
 });
 
-// ===========================
-// ✅ Pre-cuenta de reserva
-// ===========================
-function agregarReserva(tipo, numero, precio){
+// ===== Estado temporal de la reserva seleccionada (solo front) =====
+let reserva = {
+  tipo: null,
+  numero: null,
+  precio: 0,
+  noches: 0,
+  entrada: null,
+  salida: null,
+  id_habitacion: null,
+  servicios: []  // {id, nombre, precio, qty}
+};
+
+function seleccionarHabitacion(tipo, numero, precio, idHabitacion){
   const entrada = document.querySelector('[name="fecha_entrada"]').value;
-  const salida = document.querySelector('[name="fecha_salida"]').value;
+  const salida  = document.querySelector('[name="fecha_salida"]').value;
 
   if (!entrada || !salida) {
-    alert("Por favor selecciona las fechas de entrada y salida.");
+    alert('Selecciona las fechas de entrada y salida.');
+    return;
+  }
+  const d1 = new Date(entrada);
+  const d2 = new Date(salida);
+  if (d2 <= d1) { alert('La fecha de salida debe ser posterior a la de entrada.'); return; }
+
+  const noches = (d2 - d1) / (1000*60*60*24);
+
+  reserva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, servicios: [] };
+  renderResumen();
+}
+
+function renderResumen(){
+  const cont = document.getElementById('resumenContenido');
+  if (!reserva.id_habitacion) {
+    cont.innerHTML = '<p>No has seleccionado ninguna habitación.</p>';
     return;
   }
 
-  const fechaInicio = new Date(entrada);
-  const fechaFin = new Date(salida);
+  // total base
+  let total = reserva.precio * reserva.noches;
 
-  if (fechaFin <= fechaInicio) {
-    alert("La fecha de salida debe ser posterior a la de entrada.");
-    return;
+  // total servicios
+  let totalServ = 0;
+  reserva.servicios.forEach(s => totalServ += (s.precio * s.qty));
+
+  cont.innerHTML = `
+    <p><strong>${reserva.tipo} Nº ${reserva.numero}</strong></p>
+    <p><strong>Fechas:</strong> ${reserva.entrada} → ${reserva.salida}</p>
+    <p><strong>Noches:</strong> ${reserva.noches}</p>
+    <p><strong>Precio por noche:</strong> S/. ${reserva.precio.toFixed(2)}</p>
+    <p><strong>Servicios:</strong> S/. ${totalServ.toFixed(2)}</p>
+    <p><strong>Total:</strong> <span style="color:#0f9d58; font-weight:800">S/. ${(total+totalServ).toFixed(2)}</span></p>
+    <button class="btn-accion serv" onclick="abrirServicios()">🧾 Agregar Servicios Adicionales</button>
+    <button class="btn-accion pago" onclick="continuarPago()">💳 Continuar Reserva</button>
+  `;
+}
+
+function abrirServicios(){
+  const m = document.getElementById('modal-servicios');
+  if(!m){ alert('No hay servicios configurados.'); return; }
+  // Reset checkboxes / qty
+  document.querySelectorAll('#formServicios input[name="srv"]').forEach(chk=>{
+    chk.checked = false;
+  });
+  document.querySelectorAll('#formServicios .qty').forEach(q=>{ q.value = 1; q.disabled = true; });
+
+  m.classList.add('show');
+}
+
+// habilitar cantidad al marcar
+document.addEventListener('change', (e)=>{
+  if(e.target.matches('#formServicios input[name="srv"]')){
+    const row = e.target.closest('.serv-item');
+    const qty = row.querySelector('.qty');
+    qty.disabled = !e.target.checked;
   }
+});
 
-  const diffTime = fechaFin - fechaInicio;
-  const noches = diffTime / (1000 * 60 * 60 * 24);
-  const total = precio * noches;
+// aplicar servicios a la reserva
+const btnAplicar = document.getElementById('aplicarServicios');
+if(btnAplicar){
+  btnAplicar.addEventListener('click', ()=>{
+    const seleccionados = [];
+    document.querySelectorAll('#formServicios input[name="srv"]:checked').forEach(chk=>{
+      const row = chk.closest('.serv-item');
+      const qty = parseInt(row.querySelector('.qty').value || '1', 10);
+      const precio = parseFloat(chk.dataset.precio);
+      const id = parseInt(chk.value, 10);
+      const nombre = row.querySelector('strong').textContent.trim();
+      seleccionados.push({ id, nombre, precio, qty });
+    });
+    reserva.servicios = seleccionados;
+    document.getElementById('modal-servicios').classList.remove('show');
+    renderResumen();
+  });
+}
 
-  document.getElementById('resumenContenido').innerHTML = `
-    <p><strong>${tipo} Nº ${numero}</strong></p>
-    <p><strong>Fechas:</strong><br>${entrada} → ${salida}</p>
-    <p><strong>Noches:</strong> ${noches}</p>
-    <p><strong>Precio por noche:</strong> S/. ${precio.toFixed(2)}</p>
-    <p><strong>Total estimado:</strong> <span style="color:#00a650;font-weight:bold">S/. ${total.toFixed(2)}</span></p>
-    <button class="btn-buscar" onclick="window.location.href='/reservas'">Continuar</button>`;
+// avanzar a pago (ruta de ejemplo)
+function continuarPago(){
+  // Puedes guardar en sesión/POST… aquí solo redirijo:
+  window.location.href = "{{ url_for('index') if false else '/pago_reserva' }}";
 }
 </script>
 {% endblock %}
