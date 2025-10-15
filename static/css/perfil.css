@@ -1,163 +1,118 @@
-/* Estilos para la página de perfil */
-
+/* =========================================
+   🌿 Estilos para la página de perfil
+   ========================================= */
 .profile-section {
-    padding: 120px 24px 60px; /* Espacio superior para el header fijo */
-    background-color: #f8f9fa;
-    min-height: calc(100vh - 140px); /* Ajustar altura mínima */
+  padding: 120px 24px 60px; /* Espacio superior para el header fijo */
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 140px);
+}
+
+.page-sub {
+  text-align: center;
+  color: #666;
+  margin-top: -40px;
+  margin-bottom: 40px;
+  font-size: 1.1rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-title {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 40px;
-    color: #333;
+  text-align: center;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 50px;
 }
 
-.profile-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 30px;
-    margin-bottom: 40px;
+/* =========================================
+   🧩 Grid principal
+   ========================================= */
+.grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 30px;
 }
 
-/* Card de perfil */
-.profile-card, .profile-form-card, .activity-card {
-    background-color: #fff;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+/* =========================================
+   💳 Tarjetas base
+   ========================================= */
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  margin-bottom: 30px;
 }
 
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
+/* =========================================
+   👤 Perfil (lado izquierdo)
+   ========================================= */
+.avatar {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.avatar .profile-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background-color: #b8764f;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0 auto;
+}
+.profile-name { font-size: 1.4rem; font-weight: 700; text-align: center; }
+.profile-mail { font-size: 0.9rem; color: #666; text-align: center; margin-bottom: 12px; }
+.badge { background: #e9f5ff; color: #007bff; padding: 4px 10px; border-radius: 99px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin: 0 auto; text-align: center; width: fit-content; display: block; }
+.divider { height: 1px; background: #eee; margin: 16px 0; }
+.list .li { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #444; }
+.stats .row { display: flex; justify-content: space-between; align-items: baseline; }
+.stats .key { color: #555; }
+.stats .val { font-weight: 700; font-size: 1.1rem; }
+.stats .val.big { font-size: 1.5rem; color: #b8764f; }
+
+/* =========================================
+   🧾 Formulario (lado derecho)
+   ========================================= */
+.form-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.card-title { margin: 0; font-size: 1.3rem; font-weight: 700; }
+.form-sub, .card-sub { font-size: 0.9rem; color: #666; margin: 4px 0 0; }
+.grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.field label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+.field input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+.field input:disabled { background: #f5f5f5; color: #888; cursor: not-allowed; }
+.actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.btn { padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; }
+.btn-primary { background: #007bff; color: #fff; }
+.btn-secondary { background: #f0f0f0; color: #333; }
+.btn-ghost { background: transparent; color: #007bff; }
+.btn:disabled { background: #ccc; color: #888; cursor: not-allowed; }
+
+/* =========================================
+   🔔 Preferencias
+   ========================================= */
+.pref { display: flex; justify-content: space-between; align-items: center; }
+.pref p { margin: 0; font-size: 0.9rem; color: #666; }
+.pref input[type="checkbox"] { width: 20px; height: 20px; accent-color: #b8764f; }
+
+/* =========================================
+   📱 Responsive
+   ========================================= */
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
 }
 
-.profile-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: #b8764f;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    font-weight: bold;
-}
-
-.profile-header h2 {
-    margin: 0;
-    font-size: 1.8rem;
-}
-
-.profile-email {
-    color: #666;
-    margin: 0;
-}
-
-.profile-stats {
-    display: flex;
-    justify-content: space-around;
-    text-align: center;
-}
-
-.stat-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    color: #777;
-}
-
-/* Formulario de edición */
-.profile-form-card h3 {
-    margin-top: 0;
-    margin-bottom: 25px;
-    font-size: 1.5rem;
-}
-
-.profile-form .form-group {
-    margin-bottom: 20px;
-}
-
-.profile-form label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #555;
-}
-
-.profile-form .form-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-    box-sizing: border-box;
-}
-
-.profile-form .btn {
-    width: auto;
-    padding: 12px 25px;
-    margin-top: 10px;
-}
-
-/* Actividad reciente */
-.activity-card h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-}
-
-.activity-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.activity-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.activity-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-}
-
-.activity-title {
-    font-weight: 600;
-}
-
-.activity-date {
-    color: #777;
-    font-size: 0.9rem;
-}
-
-/* Responsive */
-@media (max-width: 992px) {
-    .profile-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ===============================
-   🌿 Modal de confirmación éxito
-   =============================== */
+/* =========================================
+   ✅ Modal de confirmación de éxito
+   ========================================= */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -166,36 +121,50 @@
   justify-content: center;
   align-items: center;
   z-index: 3000;
+  backdrop-filter: blur(3px);
 }
+
 .modal-overlay.open {
   display: flex;
 }
+
 .modal-success {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 30px 36px;
+  border-radius: 14px;
+  padding: 34px 38px;
   text-align: center;
   max-width: 420px;
+  width: 90%;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
   animation: fadeInModal 0.3s ease-out;
 }
+
 @keyframes fadeInModal {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .modal-success h2 {
   color: #047857;
-  margin-top: 12px;
+  margin-top: 14px;
   font-weight: 700;
 }
+
 .modal-success p {
   color: #374151;
-  margin: 8px 0 16px;
+  margin: 8px 0 18px;
   font-size: 15px;
 }
+
 .modal-success .checkmark {
-  width: 70px;
-  height: 70px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: #10b981;
   display: flex;
@@ -203,6 +172,7 @@
   align-items: center;
   margin: 0 auto;
 }
+
 .modal-success .checkmark svg {
   width: 36px;
   height: 36px;
