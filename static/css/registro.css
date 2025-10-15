@@ -153,6 +153,102 @@
   border: 1px solid #cfc;
 }
 
+/* =================================
+   👁️ Estilos para campos de contraseña
+   ================================= */
+.password-wrapper {
+  position: relative; /* Contenedor para el posicionamiento absoluto del ícono */
+}
+
+.password-wrapper .form-input {
+  /* Añade espacio a la derecha para que el texto no se solape con el ícono */
+  padding-right: 45px;
+  box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 16px; /* Distancia del ícono al borde derecho del input */
+  top: 50%;
+  transform: translateY(-50%); /* Centrado vertical perfecto */
+  cursor: pointer;
+  z-index: 2; /* Asegura que esté sobre el input */
+  color: #666;
+  font-size: 1em;
+}
+
+/* ==============================
+   🎨 ESTILOS DE MODALES Y BOTÓN
+   ============================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 640px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .25);
+  animation: fadeIn .25s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: translateY(-8px);
+    opacity: 0
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1
+  }
+}
+
+.modal-content h2 {
+  margin: 0 0 8px;
+  color: #2c3e50;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.modal-footer button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-aceptar {
+  background: #2ecc71;
+  color: #fff;
+}
+
+.btn-cerrar {
+  background: #e74c3c;
+  color: #fff;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
 @media (max-width: 640px) {
   .auth-container {
     padding: 32px 24px;
@@ -165,33 +261,4 @@
   .form-row {
     grid-template-columns: 1fr;
   }
-
-  .form-group {
-    position: relative;
-  }
-
-  .password-wrapper {
-    position: relative !important;
-    width: 100% !important;
-    display: block !important;
-  }
-
-  .password-wrapper .form-input {
-    padding-right: 40px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    display: block !important;
-  }
-
-  .toggle-password {
-    position: absolute !important;
-    right: 15px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    cursor: pointer !important;
-    z-index: 10 !important;
-    color: #333 !important;
-    font-size: 1.1em !important;
-  }
-
 }
