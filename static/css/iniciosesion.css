@@ -159,6 +159,28 @@
   border: 1px solid #cfc;
 }
 
+/* =================================
+   👁️ Estilos para campo de contraseña
+   ================================= */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-input {
+  /* Añade espacio a la derecha para que el texto no se solape con el ícono */
+  padding-right: 45px;
+  box-sizing: border-box;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+}
+
 @media (max-width: 640px) {
   .auth-container {
     padding: 32px 24px;
