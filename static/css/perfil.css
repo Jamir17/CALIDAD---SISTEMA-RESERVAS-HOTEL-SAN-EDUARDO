@@ -1,0 +1,212 @@
+/* Estilos para la página de perfil */
+
+.profile-section {
+    padding: 120px 24px 60px; /* Espacio superior para el header fijo */
+    background-color: #f8f9fa;
+    min-height: calc(100vh - 140px); /* Ajustar altura mínima */
+}
+
+.page-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 40px;
+    color: #333;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Card de perfil */
+.profile-card, .profile-form-card, .activity-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #b8764f;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.profile-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.profile-email {
+    color: #666;
+    margin: 0;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+/* Formulario de edición */
+.profile-form-card h3 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+}
+
+.profile-form .form-group {
+    margin-bottom: 20px;
+}
+
+.profile-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.profile-form .form-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.profile-form .btn {
+    width: auto;
+    padding: 12px 25px;
+    margin-top: 10px;
+}
+
+/* Actividad reciente */
+.activity-card h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.activity-title {
+    font-weight: 600;
+}
+
+.activity-date {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===============================
+   🌿 Modal de confirmación éxito
+   =============================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+.modal-overlay.open {
+  display: flex;
+}
+.modal-success {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 30px 36px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  animation: fadeInModal 0.3s ease-out;
+}
+@keyframes fadeInModal {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.modal-success h2 {
+  color: #047857;
+  margin-top: 12px;
+  font-weight: 700;
+}
+.modal-success p {
+  color: #374151;
+  margin: 8px 0 16px;
+  font-size: 15px;
+}
+.modal-success .checkmark {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #10b981;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+.modal-success .checkmark svg {
+  width: 36px;
+  height: 36px;
+  stroke: #fff;
+  stroke-width: 3;
+  fill: none;
+}
