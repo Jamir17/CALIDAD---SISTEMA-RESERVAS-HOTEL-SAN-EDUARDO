@@ -129,7 +129,7 @@
         <div class="rooms-grid">
           <article class="room-card">
             <div class="room-image">
-              <img src="../static/img/habitacion_1.jpg" alt="Habitación Estándar">
+              <img src="{{ url_for('static', filename='img/habitacion_1.jpg') }}" alt="Habitación Estándar">
               <div class="room-price">120/noche</div>
             </div>
             <div class="room-content">
@@ -147,7 +147,7 @@
 
           <article class="room-card">
             <div class="room-image">
-              <img src="../static/img/habitacion_2.jpg" alt="Suite Junior">
+              <img src="{{ url_for('static', filename='img/habitacion_2.jpg') }}" alt="Suite Junior">
               <div class="room-price">280/noche</div>
             </div>
             <div class="room-content">
@@ -166,7 +166,7 @@
 
           <article class="room-card">
             <div class="room-image">
-              <img src="../static/img/habitacion_3.jpg" alt="Suite Presidencial">
+              <img src="{{ url_for('static', filename='img/habitacion_3.jpg') }}" alt="Suite Presidencial">
               <div class="room-price">€450/noche</div>
             </div>
             <div class="room-content">
@@ -183,7 +183,7 @@
           </article>
            <article class="room-card">
             <div class="room-image">
-              <img src="../static/img/habitacion_4.jpg" alt="Suite Presidencial">
+              <img src="{{ url_for('static', filename='img/habitacion_4.jpg') }}" alt="Suite Presidencial">
               <div class="room-price">550/noche</div>
             </div>
             <div class="room-content">
@@ -200,7 +200,7 @@
           </article>
               <article class="room-card">
             <div class="room-image">
-              <img src="../static/img/habitacion_5.jpg" alt="Suite Presidencial">
+              <img src="{{ url_for('static', filename='img/habitacion_5.jpg') }}" alt="Suite Presidencial">
               <div class="room-price">450/noche</div>
             </div>
             <div class="room-content">
@@ -220,7 +220,7 @@
           </article>
               <article class="room-card">
             <div class="room-image">
-              <img src="../static/img/habitacion_6.jpg" alt="Suite Presidencial">
+              <img src="{{ url_for('static', filename='img/habitacion_6.jpg') }}" alt="Suite Presidencial">
               <div class="room-price">80/noche</div>
             </div>
             <div class="room-content">
@@ -251,13 +251,13 @@
 
         <div class="gallery-grid">
           <div class="gallery-item">
-            <img src="../static/img/habitacion_7.jpg" alt="Galería 1">
+            <img src="{{ url_for('static', filename='img/habitacion_7.jpg') }}" alt="Galería 1">
           </div>
           <div class="gallery-item">
-            <img src="../static/img/habitacion_8.jpg" alt="Galería 2">
+            <img src="{{ url_for('static', filename='img/habitacion_8.jpg') }}" alt="Galería 2">
           </div>
-          <div class="gallery-item1">
-            <video src="../static/videos/Video.mp4" alt="Galería 3"></video>
+          <div class="gallery-item">
+            <img src="{{ url_for('static', filename='img/habitacion_9.jpg') }}" alt="Galería 3">
           </div>
         </div>
       </div>
@@ -321,4 +321,3 @@
       </div>
     </section>
 {% endblock %}
-
