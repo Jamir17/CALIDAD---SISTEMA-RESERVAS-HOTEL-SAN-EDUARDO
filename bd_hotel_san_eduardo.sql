@@ -137,6 +137,19 @@ INSERT INTO `imagenes_habitacion` (`id_imagen`, `id_habitacion`, `ruta_imagen`) 
 	(26, 5, 'static/img/habitaciones/familiar_2.jpg'),
 	(27, 5, 'static/img/habitaciones/familiar_3.jpg');
 
+-- Volcando estructura para tabla bd_hotel_san_eduardo.mensajes_contacto
+CREATE TABLE IF NOT EXISTS `contacto` (
+  `id_mensaje` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `correo` varchar(100) NOT NULL,
+  `mensaje` text NOT NULL,
+  `fecha_envio` datetime DEFAULT CURRENT_TIMESTAMP,
+  `estado` enum('Pendiente','Leído','Respondido') DEFAULT 'Pendiente',
+  PRIMARY KEY (`id_mensaje`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla bd_hotel_san_eduardo.mensajes_contacto: ~0 rows (aproximadamente)
+
 -- Volcando estructura para tabla bd_hotel_san_eduardo.incidencias
 CREATE TABLE IF NOT EXISTS `incidencias` (
   `id_incidencia` int NOT NULL AUTO_INCREMENT,

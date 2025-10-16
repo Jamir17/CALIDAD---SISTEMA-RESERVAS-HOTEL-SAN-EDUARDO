@@ -147,3 +147,38 @@ def logout():
     session.clear()
     flash("Sesión cerrada correctamente.", "info")
     return redirect(url_for("usuarios.iniciosesion"))
+
+# =========================================================
+# PÁGINA DE CONTACTO
+# =========================================================
+@usuarios_bp.route("/contacto", methods=["GET", "POST"])
+def contacto():
+    if request.method == "POST":
+        nombre = request.form.get("name", "").strip()
+        correo = request.form.get("email", "").strip()
+        mensaje = request.form.get("message", "").strip()
+
+        if not all([nombre, correo, mensaje]):
+            flash("Por favor, completa todos los campos del formulario.", "error")
+            return render_template("contacto.html")
+
+        if "@" not in correo or "." not in correo:
+            flash("Por favor, ingresa un correo electrónico válido.", "error")
+            return render_template("contacto.html")
+
+        try:
+            con = obtener_conexion()
+            with con.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO contacto (nombre, correo, mensaje)
+                    VALUES (%s, %s, %s)
+                """, (nombre, correo, mensaje))
+            con.commit()
+            flash("¡Gracias por tu mensaje! Nos pondremos en contacto contigo pronto.", "success")
+        except Exception as e:
+            flash(f"Hubo un error al enviar tu mensaje: {e}", "error")
+        finally:
+            con.close()
+        return redirect(url_for("usuarios.contacto"))
+
+    return render_template("contacto.html")
