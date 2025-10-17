@@ -6,7 +6,8 @@
   <!-- Lado izquierdo: filtros -->
   <aside class="panel filtros">
     <h2>Buscar</h2>
-    <form method="GET" action="{{ url_for('habitaciones.habitaciones_cliente') }}">
+    <form method="GET" action="{{ request.path }}">
+
       <label>Fecha de entrada</label>
       <input type="date" name="fecha_entrada" value="{{ fecha_entrada or '' }}">
 

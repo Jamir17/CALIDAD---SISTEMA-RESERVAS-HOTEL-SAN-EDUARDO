@@ -71,7 +71,7 @@ INSERT INTO `clientes` (`id_cliente`, `tipo_documento`, `num_documento`, `nombre
 	(3, 'CE', '111111112', 'LILIANA', 'MAYRA', 'Estados Unidos', 'Carlos Castañeda 637', '+1111111111111111', 'lorena@lsp.com', 4),
 	(4, 'CE', '123456789', 'Jose', 'Fiestas', 'Venezuela', 'San Pucta 123', '+58123456789', 'josefiestas@gmail.com', 5),
 	(5, 'DNI', '16712223', 'Liliana', 'Mayra', 'Perú', 'Carlos Castañeda 637', '+51971868785', 'lorena_yjl@hotmail.com', 6),
-	(6, 'DNI', '72318705', 'Jamir', 'Merino Mayra', 'Perú', 'Carlos Castañeda 637', '+51942030088', 'jamir@gmail.com', 7);
+	(6, 'DNI', '72318705', 'Jamir', 'Merino Mayra', 'Perú', 'Carlos Castañeda 640', '+51942030088', 'jamir@gmail.com', 7);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.facturacion
 CREATE TABLE IF NOT EXISTS `facturacion` (
@@ -137,19 +137,6 @@ INSERT INTO `imagenes_habitacion` (`id_imagen`, `id_habitacion`, `ruta_imagen`) 
 	(26, 5, 'static/img/habitaciones/familiar_2.jpg'),
 	(27, 5, 'static/img/habitaciones/familiar_3.jpg');
 
--- Volcando estructura para tabla bd_hotel_san_eduardo.mensajes_contacto
-CREATE TABLE IF NOT EXISTS `contacto` (
-  `id_mensaje` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL,
-  `correo` varchar(100) NOT NULL,
-  `mensaje` text NOT NULL,
-  `fecha_envio` datetime DEFAULT CURRENT_TIMESTAMP,
-  `estado` enum('Pendiente','Leído','Respondido') DEFAULT 'Pendiente',
-  PRIMARY KEY (`id_mensaje`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Volcando datos para la tabla bd_hotel_san_eduardo.mensajes_contacto: ~0 rows (aproximadamente)
-
 -- Volcando estructura para tabla bd_hotel_san_eduardo.incidencias
 CREATE TABLE IF NOT EXISTS `incidencias` (
   `id_incidencia` int NOT NULL AUTO_INCREMENT,
@@ -170,6 +157,19 @@ CREATE TABLE IF NOT EXISTS `incidencias` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.incidencias: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla bd_hotel_san_eduardo.mensajes_contacto
+CREATE TABLE IF NOT EXISTS `mensajes_contacto` (
+  `id_mensaje` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `correo` varchar(100) NOT NULL,
+  `mensaje` text NOT NULL,
+  `fecha_envio` datetime DEFAULT CURRENT_TIMESTAMP,
+  `estado` enum('Pendiente','Leído','Respondido') DEFAULT 'Pendiente',
+  PRIMARY KEY (`id_mensaje`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla bd_hotel_san_eduardo.mensajes_contacto: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.promociones
 CREATE TABLE IF NOT EXISTS `promociones` (
@@ -288,6 +288,7 @@ CREATE TABLE IF NOT EXISTS `tipo_habitacion` (
   `descripcion` varchar(255) DEFAULT NULL,
   `capacidad` int DEFAULT NULL,
   `precio_base` decimal(10,2) NOT NULL,
+  `comodidades` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_tipo`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

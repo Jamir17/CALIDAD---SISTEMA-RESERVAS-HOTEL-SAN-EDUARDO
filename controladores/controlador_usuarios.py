@@ -135,7 +135,8 @@ def iniciosesion():
         session["nombre"] = usuario["nombres"]
 
         # ✅ Redirigir a la página de habitaciones para clientes logueados
-        return redirect(url_for("reservas.habitaciones_cliente"))
+        return redirect(url_for("habitaciones.habitaciones_cliente"))
+
 
     return render_template("iniciosesion.html")
 
