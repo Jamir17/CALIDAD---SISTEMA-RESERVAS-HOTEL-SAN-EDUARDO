@@ -1,78 +1,76 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="dashboard-container">
-  <!-- Sidebar -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel - Hotel San Eduardo</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+  <!-- ======= SIDEBAR ======= -->
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <h2>👤 {{ session['nombre'] }}</h2>
+    <div class="logo">
+      <h2>🏨 Hotel San Eduardo</h2>
     </div>
 
-    <ul class="sidebar-menu">
-      <li><a href="{{ url_for('reservas.habitaciones_cliente') }}" class="sidebar-link">🏨 Habitaciones</a></li>
-      <li><a href="#" class="sidebar-link">📅 Mis Reservas</a></li>
-      <li><a href="#" class="sidebar-link">💬 Servicios Adicionales</a></li>
-      <li><a href="#" class="sidebar-link">👤 Perfil</a></li>
-      <li><a href="{{ url_for('usuarios.logout') }}" class="sidebar-link logout">🚪 Cerrar Sesión</a></li>
-    </ul>
+    <nav class="menu">
+      <a href="#" class="active">🏠 Dashboard</a>
+      <a href="#" id="linkReservas">📅 Reservas</a>
+      <a href="#" id="linkClientes">👥 Clientes</a>
+      <a href="#" id="linkHabitaciones" class="admin-only">🛏️ Habitaciones</a>
+      <a href="#" id="linkReportes" class="admin-only">📊 Reportes</a>
+      <a href="#" id="linkSeguridad" class="admin-only">🔐 Seguridad</a>
+      <a href="#" id="linkServicios" class="recep-only">🧾 Servicios Adicionales</a>
+    </nav>
+
+    <div class="logout">
+      <a href="{{ url_for('usuarios.cerrar_sesion') }}">🚪 Cerrar sesión</a>
+    </div>
   </aside>
 
-  <!-- Contenido dinámico -->
-  <main class="dashboard-content">
-    {% block dashboard_content %}{% endblock %}
+  <!-- ======= CONTENIDO PRINCIPAL ======= -->
+  <main class="main-content">
+    <header>
+      <h1>Bienvenido/a, {{ session['nombre'] }}</h1>
+      <p>Rol actual: 
+        {% if session['rol'] == 1 %}
+          <span class="rol admin">Administrador</span>
+        {% elif session['rol'] == 2 %}
+          <span class="rol recep">Recepcionista</span>
+        {% endif %}
+      </p>
+    </header>
+
+    <section class="dashboard-section">
+      <div class="card">
+        <h3>Reservas activas</h3>
+        <p>{{ reservas_activas }}</p>
+      </div>
+      <div class="card">
+        <h3>Habitaciones disponibles</h3>
+        <p>{{ habitaciones_disponibles }}</p>
+      </div>
+      <div class="card">
+        <h3>Clientes registrados</h3>
+        <p>{{ clientes_registrados }}</p>
+      </div>
+      {% if session['rol'] == 1 %}
+      <div class="card admin-only">
+        <h3>Ingresos totales</h3>
+        <p>S/ {{ ingresos_totales }}</p>
+      </div>
+      {% endif %}
+    </section>
   </main>
-</div>
 
-{% block extra_css %}
-<style>
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.sidebar {
-  width: 260px;
-  background-color: #1b263b;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-}
-
-.sidebar-header {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
-.sidebar-menu {
-  list-style: none;
-  padding: 0;
-}
-
-.sidebar-link {
-  display: block;
-  color: #fff;
-  text-decoration: none;
-  padding: 12px 15px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  transition: background 0.3s;
-}
-
-.sidebar-link:hover {
-  background-color: #2e3a59;
-}
-
-.logout {
-  margin-top: auto;
-  background-color: #c0392b;
-  text-align: center;
-}
-
-.dashboard-content {
-  flex: 1;
-  padding: 25px;
-  background: #f8f9fa;
-}
-</style>
-{% endblock %}
-{% endblock %}
+  <script>
+    // Ocultar opciones según rol (seguridad visual en frontend)
+    const rol = {{ session['rol'] }};
+    if (rol === 1) {
+      document.querySelectorAll('.recep-only').forEach(e => e.style.display = 'none');
+    } else if (rol === 2) {
+      document.querySelectorAll('.admin-only').forEach(e => e.style.display = 'none');
+    }
+  </script>
+</body>
+</html>

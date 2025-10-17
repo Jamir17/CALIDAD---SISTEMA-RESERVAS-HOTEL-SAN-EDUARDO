@@ -1,0 +1,42 @@
+{% extends "dashboard.html" %}
+{% block content %}
+<h2 class="titulo">Gestión de Reservas</h2>
+
+<table class="tabla">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Cliente</th>
+      <th>Habitación</th>
+      <th>Entrada</th>
+      <th>Salida</th>
+      <th>Estado</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in reservas %}
+    <tr>
+      <td>{{ r.id_reserva }}</td>
+      <td>{{ r.cliente }}</td>
+      <td>{{ r.habitacion }}</td>
+      <td>{{ r.fecha_entrada }}</td>
+      <td>{{ r.fecha_salida }}</td>
+      <td>
+        {% if r.estado == "Activa" %}
+          <span class="badge activa">Activa</span>
+        {% elif r.estado == "Cancelada" %}
+          <span class="badge cancelada">Cancelada</span>
+        {% else %}
+          <span class="badge pendiente">Pendiente</span>
+        {% endif %}
+      </td>
+      <td>
+        <button class="btn btn-editar">Editar</button>
+        <button class="btn btn-eliminar">Cancelar</button>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

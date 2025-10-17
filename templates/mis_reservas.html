@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Mis Reservas - Hotel San Eduardo{% endblock %}
+
+{% block content %}
+<section class="contenedor-principal">
+  <div class="encabezado">
+    <h1>Mis Reservas</h1>
+    <p>Administre y modifique sus reservas de hotel</p>
+  </div>
+
+  {% if reservas %}
+  <div class="reservas-grid">
+    {% for r in reservas %}
+    <div class="reserva-card">
+      <div class="card-header">
+        <h3>{{ r.tipo }} Nº {{ r.habitacion }}</h3>
+      </div>
+
+      <div class="card-body">
+        <p><strong>Fechas:</strong> {{ r.fecha_entrada }} → {{ r.fecha_salida }}</p>
+        <p><strong>Huéspedes:</strong> {{ r.num_huespedes }}</p>
+
+        <span class="estado {{ r.estado|lower }}">
+          {{ r.estado }}
+        </span>
+      </div>
+
+      <div class="card-footer">
+        <a href="{{ url_for('reservas.detalle_reserva', id_reserva=r.id_reserva) }}" class="btn-primario">Ver Detalles</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="sin-reservas">No tienes reservas registradas.</p>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.contenedor-principal {
+  max-width: 1100px;
+  margin: 80px auto;
+  padding: 0 20px 100px;
+}
+.encabezado {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.encabezado h1 {
+  font-size: 32px;
+  color: #0f2a63;
+  font-weight: 800;
+}
+.encabezado p {
+  color: #6b6b6b;
+  font-size: 15px;
+}
+
+.reservas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+}
+
+.reserva-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.08);
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.reserva-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.12);
+}
+
+.card-header {
+  background: #f4f7ff;
+  padding: 14px 18px;
+}
+.card-header h3 {
+  color: #0f2a63;
+  font-weight: 700;
+  margin: 0;
+}
+
+.card-body {
+  padding: 16px 18px;
+}
+.card-body p {
+  color: #333;
+  margin: 6px 0;
+  font-size: 14.5px;
+}
+
+.estado {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.estado.activa { background: #dcf9de; color: #198754; }
+.estado.cancelada { background: #ffe4e4; color: #c82333; }
+.estado.pendiente { background: #fff4d2; color: #b88a00; }
+
+.card-footer {
+  text-align: center;
+  padding: 12px 18px 20px;
+}
+.btn-primario {
+  background: #0d6efd;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background .2s ease;
+}
+.btn-primario:hover { background: #0b5ed7; }
+
+.sin-reservas {
+  text-align: center;
+  color: #555;
+  margin-top: 60px;
+  font-style: italic;
+}
+</style>
+{% endblock %}

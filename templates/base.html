@@ -69,7 +69,7 @@
                   👋 {{ session.get('nombre', 'Usuario') }}
                 </button>
                 <div class="dropdown-content" id="userDropdown">
-                  <a href="#">Mis Reservas</a>
+                  <a href="{{ url_for('reservas.mis_reservas') }}">Mis Reservas</a>
                   <a href="{{ url_for('perfil.ver_perfil') }}">Perfil</a>
                   <a href="{{ url_for('usuarios.logout') }}">Cerrar Sesión</a>
                 </div>

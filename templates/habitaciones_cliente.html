@@ -378,9 +378,28 @@ if(btnAplicar){
 }
 
 // avanzar a pago (ruta de ejemplo)
-function continuarPago(){
-  // Puedes guardar en sesión/POST… aquí solo redirijo:
-  window.location.href = "{{ url_for('index') if false else '/pago_reserva' }}";
+function continuarPago() {
+  if (!reserva.id_habitacion) {
+    alert('Selecciona una habitación primero.');
+    return;
+  }
+
+  fetch('/reservas/cliente/pago_reserva', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(reserva)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      window.location.href = '/reservas/cliente/pago_reserva';
+
+    } else {
+      alert('Error al preparar la reserva.');
+    }
+  })
+  .catch(err => alert('Error de conexión.'));
 }
+
 </script>
 {% endblock %}

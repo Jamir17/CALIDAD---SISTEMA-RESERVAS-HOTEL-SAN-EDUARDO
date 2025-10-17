@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Pago de Reserva - Hotel San Eduardo{% endblock %}
+
+{% block content %}
+<div class="pago-layout">
+  <h2>Confirmar Reserva</h2>
+
+  <!-- RESUMEN DE RESERVA -->
+  <section class="card-resumen">
+    <h3>Resumen</h3>
+    <p><strong>Habitación:</strong> {{ reserva.tipo }} Nº {{ reserva.numero }}</p>
+    <p><strong>Fechas:</strong> {{ reserva.entrada }} → {{ reserva.salida }}</p>
+    <p><strong>Noches:</strong> {{ reserva.noches }}</p>
+
+    {% if reserva.servicios %}
+    <p><strong>Servicios:</strong></p>
+    <ul>
+      {% for s in reserva.servicios %}
+        <li>{{ s.nombre }} x{{ s.qty }} → S/. {{ (s.precio * s.qty) | round(2) }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <p><strong>Total:</strong> <span class="total">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span></p>
+  </section>
+
+  <!-- FORMULARIO DE DATOS Y PAGO -->
+  <form id="formPago" method="POST" enctype="multipart/form-data" action="{{ url_for('reservas.confirmar_reserva') }}">
+    <div class="form-seccion">
+      <h3>Datos del huésped</h3>
+      <div class="form-grid">
+        <div>
+          <label>Nombre completo</label>
+          <input type="text" name="nombre_huesped" required>
+        </div>
+        <div>
+          <label>Documento</label>
+          <input type="text" name="documento_huesped" required>
+        </div>
+        <div>
+          <label>Teléfono</label>
+          <input type="text" name="telefono_huesped">
+        </div>
+        <div>
+          <label>Correo</label>
+          <input type="email" name="correo_huesped">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-seccion">
+      <h3>Pago</h3>
+      <label>Método de pago:</label>
+      <select name="tipo_pago" id="tipo_pago" required>
+        <option value="">Seleccione</option>
+        {% for p in tipos_pago %}
+          <option value="{{ p.id_tipo_pago }}">{{ p.descripcion }}</option>
+        {% endfor %}
+      </select>
+
+      <div id="qrPago" class="oculto">
+        <h4>Escanee el código QR</h4>
+        <img id="imgQR" src="" alt="QR de pago">
+        <p>Adjunte el comprobante (jpg, png, jpeg)</p>
+        <input type="file" name="comprobante" id="comprobante" accept=".jpg,.jpeg,.png">
+      </div>
+    </div>
+
+    <button type="submit" class="btn-confirmar">Confirmar Reserva</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.pago-layout {
+  max-width: 800px;
+  margin: 100px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.1);
+}
+.pago-layout h2 {
+  color: #0f2a63;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.card-resumen {
+  background: #f8faff;
+  border: 1px solid #d6e0ff;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+}
+.card-resumen h3 {
+  margin-bottom: 10px;
+  color: #0f2a63;
+}
+.total {
+  color: #1e8449;
+  font-weight: bold;
+}
+.form-seccion {
+  margin-bottom: 25px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+label {
+  font-weight: 600;
+  color: #0f2a63;
+}
+input, select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d6e0ff;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+#qrPago {
+  text-align: center;
+  margin-top: 15px;
+}
+#qrPago img {
+  max-width: 200px;
+  margin: 10px auto;
+  display: block;
+  border-radius: 8px;
+}
+.oculto { display: none; }
+.btn-confirmar {
+  width: 100%;
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.btn-confirmar:hover {
+  background: #218838;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const tipoPago = document.getElementById('tipo_pago');
+const qrPago = document.getElementById('qrPago');
+const imgQR = document.getElementById('imgQR');
+const comprobante = document.getElementById('comprobante');
+const formPago = document.getElementById('formPago');
+
+tipoPago.addEventListener('change', () => {
+  const valor = tipoPago.options[tipoPago.selectedIndex].text;
+  if (valor === 'Yape' || valor === 'Plin') {
+    qrPago.classList.remove('oculto');
+    imgQR.src = valor === 'Yape'
+      ? "{{ url_for('static', filename='img/pagos/qr_yape.jpg') }}"
+      : "{{ url_for('static', filename='img/pagos/qr_plin.jpg') }}";
+  } else {
+    qrPago.classList.add('oculto');
+    comprobante.value = '';
+  }
+});
+
+formPago.addEventListener('submit', (e) => {
+  const metodo = tipoPago.options[tipoPago.selectedIndex].text;
+  if ((metodo === 'Yape' || metodo === 'Plin') && !comprobante.files.length) {
+    e.preventDefault();
+    alert('Debes adjuntar el comprobante de pago.');
+    return false;
+  }
+});
+</script>
+{% endblock %}

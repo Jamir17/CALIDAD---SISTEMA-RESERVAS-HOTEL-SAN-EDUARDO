@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Detalle de Reserva - Hotel San Eduardo{% endblock %}
+
+{% block content %}
+<section class="contenedor-principal">
+  <a href="{{ url_for('reservas.mis_reservas') }}" class="volver">← Volver a Mis Reservas</a>
+
+  <div class="detalle-card">
+    <h2>{{ reserva.tipo }} Nº {{ reserva.numero }}</h2>
+    <div class="datos">
+      <p><strong>Fechas:</strong> {{ reserva.fecha_entrada }} → {{ reserva.fecha_salida }}</p>
+      <p><strong>Huéspedes:</strong> {{ reserva.num_huespedes }}</p>
+      <p><strong>Estado:</strong> {{ reserva.estado }}</p>
+    </div>
+
+    {% if reserva.estado == 'Activa' %}
+    <div class="acciones">
+      <button class="btn-amarillo" onclick="abrirModal('modalModificar')">Modificar</button>
+      <button class="btn-rojo" onclick="abrirModal('modalCancelar')">Cancelar</button>
+    </div>
+    {% else %}
+    <div class="info">
+      <p>Esta reserva se encuentra <strong>{{ reserva.estado|lower }}</strong>.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Modal Modificar -->
+  <div id="modalModificar" class="modal-overlay">
+    <div class="modal-contenido">
+      <span class="cerrar" onclick="cerrarModal('modalModificar')">&times;</span>
+      <h3>Modificar Reserva</h3>
+      <form method="POST" action="{{ url_for('reservas.modificar_reserva', id_reserva=reserva.id_reserva) }}">
+        <label>Fecha de entrada</label>
+        <input type="date" name="fecha_entrada" value="{{ reserva.fecha_entrada }}" required>
+
+        <label>Fecha de salida</label>
+        <input type="date" name="fecha_salida" value="{{ reserva.fecha_salida }}" required>
+
+        <label>Número de huéspedes</label>
+        <input type="number" name="num_huespedes" min="1" value="{{ reserva.num_huespedes }}" required>
+
+        <p class="politica">
+          <strong>Políticas de modificación:</strong><br>
+          - Sin cargo hasta 48h antes del check-in.<br>
+          - Sujeto a disponibilidad del hotel.<br>
+          - Posibles diferencias de tarifa.
+        </p>
+
+        <div class="acciones-modal">
+          <button type="button" class="btn-gris" onclick="cerrarModal('modalModificar')">Cancelar</button>
+          <button type="submit" class="btn-azul">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Cancelar -->
+  <div id="modalCancelar" class="modal-overlay">
+    <div class="modal-contenido">
+      <span class="cerrar" onclick="cerrarModal('modalCancelar')">&times;</span>
+      <h3>¿Cancelar esta reserva?</h3>
+      <p>Esta acción no se puede deshacer. Se aplicarán las políticas del hotel.</p>
+
+      <div class="politica-cancelacion">
+        <strong>Política de cancelación:</strong><br>
+        - Cancelación gratuita hasta 48h antes del check-in.<br>
+        - Cargo del 50% entre 24–48h antes del check-in.<br>
+        - Cargo del 100% con menos de 24h.
+      </div>
+
+      <form method="POST" action="{{ url_for('reservas.cancelar_reserva', id_reserva=reserva.id_reserva) }}">
+        <label>Motivo (opcional):</label>
+        <input type="text" name="motivo" placeholder="Motivo de cancelación">
+        <div class="acciones-modal">
+          <button type="button" class="btn-gris" onclick="cerrarModal('modalCancelar')">Mantener</button>
+          <button type="submit" class="btn-rojo">Cancelar Reserva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.contenedor-principal {
+  max-width: 800px;
+  margin: 100px auto;
+  padding: 0 20px 120px;
+}
+.volver {
+  text-decoration: none;
+  color: #0d6efd;
+  font-weight: 600;
+}
+.detalle-card {
+  background: #fff;
+  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.1);
+  padding: 30px;
+}
+.detalle-card h2 {
+  color: #0f2a63;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.datos p { margin: 6px 0; color: #333; }
+.acciones {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+.btn-azul, .btn-amarillo, .btn-rojo, .btn-gris {
+  border: none;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn-azul { background: #0d6efd; color: #fff; }
+.btn-azul:hover { background: #0b5ed7; }
+.btn-amarillo { background: #ffc107; color: #000; }
+.btn-amarillo:hover { background: #e0a800; }
+.btn-rojo { background: #dc3545; color: #fff; }
+.btn-rojo:hover { background: #bb2d3b; }
+.btn-gris { background: #e0e0e0; color: #333; }
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  place-items: center;
+  z-index: 999;
+}
+.modal-overlay.show { display: grid; }
+
+.modal-contenido {
+  background: #fff;
+  border-radius: 12px;
+  width: min(450px, 95%);
+  padding: 24px;
+  box-shadow: 0 5px 20px rgba(0,0,0,.2);
+  position: relative;
+  animation: aparecer .2s ease;
+}
+@keyframes aparecer { from {opacity:0; transform:translateY(-10px);} to {opacity:1; transform:translateY(0);} }
+
+.cerrar {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 24px;
+  cursor: pointer;
+}
+.modal-contenido h3 {
+  color: #0f2a63;
+  margin-bottom: 12px;
+}
+.modal-contenido label {
+  font-weight: 600;
+  display: block;
+  margin-top: 10px;
+}
+.modal-contenido input {
+  width: 100%;
+  border: 1px solid #cfd7ff;
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+.acciones-modal {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.politica, .politica-cancelacion {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  color: #444;
+  margin-top: 10px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function abrirModal(id){ document.getElementById(id).classList.add('show'); }
+function cerrarModal(id){ document.getElementById(id).classList.remove('show'); }
+</script>
+{% endblock %}
