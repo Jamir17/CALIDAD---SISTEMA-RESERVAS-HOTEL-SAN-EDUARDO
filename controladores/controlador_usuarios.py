@@ -109,14 +109,11 @@ def registro():
 # =========================================================
 # INICIO DE SESIÓN
 # =========================================================
-
-# ...existing code...
 @usuarios_bp.route("/iniciar-sesion", methods=["GET", "POST"])
 def iniciosesion():
     if request.method == "POST":
         correo = (request.form.get("email") or "").strip().lower()
         password = (request.form.get("password") or "").strip()
-        # <-- obtener el checkbox "recordarme"
         recordarme = request.form.get("recordarme") == "on"
 
         con = obtener_conexion()
@@ -136,31 +133,41 @@ def iniciosesion():
 
         try:
             ph.verify(usuario["password_hash"].strip(), password)
-        except Exception:
+        except (VerifyMismatchError, InvalidHashError):
             flash("Contraseña incorrecta o hash inválido.", "error")
             return render_template("iniciosesion.html", correo=correo)
 
-        # Guardar datos de sesión (no guardar contraseña)
+        # Guardar datos en sesión
         session["usuario_id"] = usuario["id_usuario"]
         session["nombre"] = usuario["nombres"]
+        session["rol"] = usuario["id_rol"]   # ✅ Aquí guardamos el rol del usuario
 
-        # Si marcó "Recordarme", hacemos la sesión permanente para que
-        # la cookie no se borre al cerrar el navegador.
+        # Si marcó "Recordarme"
         session.permanent = bool(recordarme)
-
-        # Opcional: guardar el correo en sesión para rellenar el campo en el login
         if recordarme:
             session["correo_recordado"] = correo
         else:
             session.pop("correo_recordado", None)
 
-        # ✅ Redirigir a la página de habitaciones para clientes logueados
-        return redirect(url_for("habitaciones.habitaciones_cliente"))
+        # ✅ Redirección según el rol
+        rol = usuario["id_rol"]
 
+        if rol == 1:  # Administrador
+            flash("Bienvenido al panel administrativo.", "success")
+            return redirect(url_for("admin.dashboard"))
+        elif rol == 2:  # Recepcionista
+            flash("Bienvenido al panel de recepción.", "success")
+            return redirect(url_for("admin.dashboard"))
+        elif rol == 3:  # Cliente
+            flash("Inicio de sesión correcto.", "success")
+            return redirect(url_for("reservas.habitaciones_cliente"))
+        else:
+            flash("Rol no reconocido. Contacte al administrador.", "error")
+            return redirect(url_for("usuarios.iniciosesion"))
 
-    # GET: pasar correo almacenado (si existe) para rellenar el formulario
+    # GET
     return render_template("iniciosesion.html", correo=session.get("correo_recordado", ""))
-# ...existing code...
+
 
 # =========================================================
 # CERRAR SESIÓN
