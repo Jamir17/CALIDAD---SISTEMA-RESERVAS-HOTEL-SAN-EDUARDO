@@ -1,4 +1,5 @@
-from flask import Flask, render_template, session
+from flask import Flask, render_template, session, request, redirect, url_for
+from datetime import timedelta
 from controladores.controlador_usuarios import usuarios_bp
 from controladores.controlador_reservas import reservas_bp
 from controladores.controlador_administrador import admin_bp
@@ -9,6 +10,11 @@ app = Flask(__name__)
 app.secret_key = "clave-super-segura"
 
 # ====== REGISTRO DE BLUEPRINTS ======
+app.permanent_session_lifetime = timedelta(days=30)
+
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+
+# Registrar los Blueprints
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(perfil_bp)
 app.register_blueprint(reservas_bp, url_prefix="/reservas")
