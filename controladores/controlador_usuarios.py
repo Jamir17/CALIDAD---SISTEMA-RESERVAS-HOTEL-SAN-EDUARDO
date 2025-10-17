@@ -4,7 +4,7 @@ from argon2 import PasswordHasher
 import re
 from argon2.exceptions import VerifyMismatchError, InvalidHashError
 
-usuarios_bp = Blueprint("usuarios", __name__)
+usuarios_bp = Blueprint("usuarios", __name__, template_folder="../templates")
 ph = PasswordHasher()
 
 # =========================================================
@@ -109,35 +109,57 @@ def registro():
 # =========================================================
 # INICIO DE SESIÓN
 # =========================================================
+
+# ...existing code...
 @usuarios_bp.route("/iniciar-sesion", methods=["GET", "POST"])
 def iniciosesion():
     if request.method == "POST":
         correo = (request.form.get("email") or "").strip().lower()
         password = (request.form.get("password") or "").strip()
+        # <-- obtener el checkbox "recordarme"
+        recordarme = request.form.get("recordarme") == "on"
 
         con = obtener_conexion()
-        with con.cursor() as cur:
-            cur.execute("SELECT * FROM usuarios WHERE correo = %s", (correo,))
-            usuario = cur.fetchone()
+        try:
+            with con.cursor() as cur:
+                cur.execute("SELECT * FROM usuarios WHERE correo = %s", (correo,))
+                usuario = cur.fetchone()
+        finally:
+            try:
+                con.close()
+            except Exception:
+                pass
 
         if not usuario:
             flash("Correo no encontrado.", "error")
-            return render_template("iniciosesion.html")
+            return render_template("iniciosesion.html", correo=correo)
 
         try:
             ph.verify(usuario["password_hash"].strip(), password)
         except Exception:
             flash("Contraseña incorrecta o hash inválido.", "error")
-            return render_template("iniciosesion.html")
+            return render_template("iniciosesion.html", correo=correo)
 
-        # Guardar datos de sesión
+        # Guardar datos de sesión (no guardar contraseña)
         session["usuario_id"] = usuario["id_usuario"]
         session["nombre"] = usuario["nombres"]
+
+        # Si marcó "Recordarme", hacemos la sesión permanente para que
+        # la cookie no se borre al cerrar el navegador.
+        session.permanent = bool(recordarme)
+
+        # Opcional: guardar el correo en sesión para rellenar el campo en el login
+        if recordarme:
+            session["correo_recordado"] = correo
+        else:
+            session.pop("correo_recordado", None)
 
         # ✅ Redirigir a la página de habitaciones para clientes logueados
         return redirect(url_for("reservas.habitaciones_cliente"))
 
-    return render_template("iniciosesion.html")
+    # GET: pasar correo almacenado (si existe) para rellenar el formulario
+    return render_template("iniciosesion.html", correo=session.get("correo_recordado", ""))
+# ...existing code...
 
 # =========================================================
 # CERRAR SESIÓN

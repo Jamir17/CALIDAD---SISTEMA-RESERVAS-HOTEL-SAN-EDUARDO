@@ -4,61 +4,75 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/iniciosesion.css') }}">
 <style>
-/* ===============================
+  /* ===============================
    🌿 Modal de confirmación éxito
    =============================== */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
-.modal-overlay.open {
-  display: flex;
-}
-.modal-success {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 30px 36px;
-  text-align: center;
-  max-width: 420px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
-  animation: fadeIn 0.3s ease-out;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.modal-success h2 {
-  color: #047857;
-  margin-top: 12px;
-  font-weight: 700;
-}
-.modal-success p {
-  color: #374151;
-  margin: 8px 0 16px;
-  font-size: 15px;
-}
-.modal-success .checkmark {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: #10b981;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto;
-}
-.modal-success .checkmark svg {
-  width: 36px;
-  height: 36px;
-  stroke: #fff;
-  stroke-width: 3;
-  fill: none;
-}
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal-success {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px 36px;
+    text-align: center;
+    max-width: 420px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .modal-success h2 {
+    color: #047857;
+    margin-top: 12px;
+    font-weight: 700;
+  }
+
+  .modal-success p {
+    color: #374151;
+    margin: 8px 0 16px;
+    font-size: 15px;
+  }
+
+  .modal-success .checkmark {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #10b981;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+  }
+
+  .modal-success .checkmark svg {
+    width: 36px;
+    height: 36px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+  }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 {% endblock %}
@@ -67,15 +81,15 @@
 <div class="auth-page">
   <div class="auth-container">
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          {% if category == 'success' %}
-            <div id="successMessage" data-message="{{ message }}"></div>
-          {% else %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    {% if category == 'success' %}
+    <div id="successMessage" data-message="{{ message }}"></div>
+    {% else %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
     <div class="auth-header">
@@ -90,15 +104,14 @@
     <form method="POST" action="{{ url_for('usuarios.iniciosesion') }}">
       <div class="form-group">
         <label class="form-label" for="email">Correo electrónico</label>
-        <input type="email" id="email" name="email" class="form-input"
-               placeholder="tu@email.com" required>
+        <input type="email" id="email" name="email" class="form-input" placeholder="tu@email.com" required
+          value="{{ correo }}">
       </div>
 
       <div class="form-group">
         <label class="form-label" for="password">Contraseña</label>
         <div class="password-wrapper">
-          <input type="password" id="password" name="password" class="form-input"
-                 placeholder="••••••••" required>
+          <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
           <span class="toggle-password" onclick="togglePasswordVisibility('password', this)">
             <i class="fas fa-eye"></i>
           </span>
@@ -106,7 +119,7 @@
       </div>
 
       <div class="checkbox-group">
-        <input type="checkbox" id="remember" name="remember">
+        <input type="checkbox" id="remember" name="recordarme" {% if session.get('correo_recordado') %}checked{% endif %}>
         <label for="remember">Recordarme</label>
       </div>
 
@@ -137,41 +150,41 @@
 </div>
 
 <script>
-// ===============================
-// 🎉 Modal éxito (auto 5 segundos)
-// ===============================
-function togglePasswordVisibility(idDelCampo, elementoToggle) {
-  const passwordInput = document.getElementById(idDelCampo);
-  const icon = elementoToggle.querySelector('i');
+  // ===============================
+  // 🎉 Modal éxito (auto 5 segundos)
+  // ===============================
+  function togglePasswordVisibility(idDelCampo, elementoToggle) {
+    const passwordInput = document.getElementById(idDelCampo);
+    const icon = elementoToggle.querySelector('i');
 
-  if (!passwordInput || !icon) return;
+    if (!passwordInput || !icon) return;
 
-  const isPassword = passwordInput.type === 'password';
-  passwordInput.type = isPassword ? 'text' : 'password';
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
 
-  if (isPassword) {
-    icon.classList.remove('fa-eye');
-    icon.classList.add('fa-eye-slash');
-  } else {
-    icon.classList.remove('fa-eye-slash');
-    icon.classList.add('fa-eye');
+    if (isPassword) {
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
   }
-}
 
 
-document.addEventListener("DOMContentLoaded", () => {
-  const successDiv = document.getElementById("successMessage");
-  if (successDiv) {
-    const modal = document.getElementById("modalSuccess");
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden", "false");
+  document.addEventListener("DOMContentLoaded", () => {
+    const successDiv = document.getElementById("successMessage");
+    if (successDiv) {
+      const modal = document.getElementById("modalSuccess");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
 
-    // Se cierra automáticamente después de 5 segundos
-    setTimeout(() => {
-      modal.classList.remove("open");
-      modal.setAttribute("aria-hidden", "true");
-    }, 3000);
-  }
-});
+      // Se cierra automáticamente después de 5 segundos
+      setTimeout(() => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+      }, 3000);
+    }
+  });
 </script>
 {% endblock %}
