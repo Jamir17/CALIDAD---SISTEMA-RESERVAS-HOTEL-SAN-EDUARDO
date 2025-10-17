@@ -168,6 +168,10 @@ def confirmar_reserva():
     return redirect(url_for("habitaciones.habitaciones_cliente"))
 
 
+
+
+
+
 # ================================================
 # Mis reservas de cliente
 @reservas_bp.route("/cliente/mis_reservas")
