@@ -3,38 +3,157 @@
 
 <h2 class="mb-4 fw-bold text-primary">📊 Panel Principal</h2>
 
-<div class="row g-4">
-
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 p-3">
-      <h6 class="text-muted">Reservas activas</h6>
-      <h3 class="fw-bold text-primary">{{ reservas_activas }}</h3>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 p-3">
-      <h6 class="text-muted">Habitaciones disponibles</h6>
-      <h3 class="fw-bold text-success">{{ habitaciones_disponibles }}</h3>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 p-3">
-      <h6 class="text-muted">Clientes registrados</h6>
-      <h3 class="fw-bold text-info">{{ clientes_registrados }}</h3>
-    </div>
-  </div>
-
-  {% if session['rol'] == 1 %}
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 p-3">
-      <h6 class="text-muted">Ingresos totales (S/)</h6>
-      <h3 class="fw-bold text-dark">{{ ingresos_totales }}</h3>
-    </div>
-  </div>
-  {% endif %}
-
+<div class="row g-4 mb-4">
+  <div class="col-md-3"><div class="card shadow-sm p-3"><h6>Reservas activas</h6><h3>{{ reservas_activas }}</h3></div></div>
+  <div class="col-md-3"><div class="card shadow-sm p-3"><h6>Habitaciones disponibles</h6><h3>{{ habitaciones_disponibles }}</h3></div></div>
+  <div class="col-md-3"><div class="card shadow-sm p-3"><h6>Clientes registrados</h6><h3>{{ clientes_registrados }}</h3></div></div>
+  <div class="col-md-3"><div class="card shadow-sm p-3"><h6>Ingresos totales (S/)</h6><h3>{{ ingresos_totales }}</h3></div></div>
 </div>
 
+{% if session['rol'] == 1 %}
+<div class="card border-0 shadow-sm p-4 mt-3">
+  <h4 class="fw-bold mb-3">📧 Envío de Notificaciones</h4>
+
+  <form id="formCorreo" class="row g-3 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label">DNI del usuario</label>
+      <input type="text" class="form-control" id="dni" name="dni" maxlength="8" inputmode="numeric" required>
+      <div class="form-text">Se busca automáticamente al escribir 8 dígitos.</div>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Correo destino</label>
+      <input type="email" class="form-control" id="correo" name="correo" readonly required>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Tipo</label>
+      <select class="form-select" id="tipo" name="tipo" required>
+        <option value="confirmacion">Confirmación</option>
+        <option value="recordatorio">Recordatorio</option>
+        <option value="cancelacion">Cancelación</option>
+      </select>
+    </div>
+
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn btn-primary">📤 Enviar</button>
+    </div>
+  </form>
+
+  <hr class="my-4">
+  <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalHistorial">
+    📜 Ver historial de notificaciones
+  </button>
+</div>
+
+<!-- Modal historial -->
+<div class="modal fade" id="modalHistorial" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="fw-bold">Historial de Notificaciones</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-5">
+            <label class="form-label">Desde</label>
+            <input type="date" id="fdesde" class="form-control">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Hasta</label>
+            <input type="date" id="fhasta" class="form-control">
+          </div>
+          <div class="col-md-2 d-grid">
+            <button class="btn btn-dark" id="btnFiltrar">🔎 Filtrar</button>
+          </div>
+        </div>
+
+        <table class="table table-striped">
+          <thead class="table-light">
+            <tr>
+              <th>Usuario</th><th>Tipo</th><th>Correo</th><th>Asunto</th><th>Estado</th><th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyHistorial"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const URL_BUSCAR = "{{ url_for('notificaciones.buscar_usuario') }}";
+const URL_ENVIAR = "{{ url_for('notificaciones.enviar_correo_real') }}";
+const URL_HIST   = "{{ url_for('notificaciones.historial') }}";
+
+// 1) Buscar correo por DNI (auto al completar 8 dígitos)
+const dniInput = document.getElementById('dni');
+dniInput.addEventListener('input', async (e)=>{
+  const dni = e.target.value.replace(/\D/g, '');
+  e.target.value = dni.substr(0, 8);
+  if (dni.length === 8){
+    try{
+      const res = await fetch(URL_BUSCAR + '?' + new URLSearchParams({dni}));
+      const data = await res.json();
+      document.getElementById('correo').value = data.ok ? (data.correo || '') : '';
+    }catch(err){
+      console.error(err);
+      document.getElementById('correo').value = '';
+    }
+  } else {
+    document.getElementById('correo').value = '';
+  }
+});
+
+// 2) Enviar correo
+document.getElementById('formCorreo').addEventListener('submit', async (ev)=>{
+  ev.preventDefault();
+  const form = ev.target;
+  const fd = new FormData(form);
+  try{
+    const res = await fetch(URL_ENVIAR, {method:'POST', body: fd});
+    const data = await res.json();
+    alert(data.msg);
+  }catch(err){
+    console.error(err);
+    alert('Error de red enviando el correo');
+  }
+});
+
+// 3) Historial con rango de fechas
+async function cargarHistorial(){
+  const desde = document.getElementById('fdesde').value;
+  const hasta = document.getElementById('fhasta').value;
+  const params = new URLSearchParams();
+  if (desde) params.append('desde', desde);
+  if (hasta) params.append('hasta', hasta);
+
+  try{
+    const res = await fetch(URL_HIST + '?' + params.toString());
+    const data = await res.json();
+    const tb = document.getElementById('tbodyHistorial');
+    if (!data.ok){ tb.innerHTML = '<tr><td colspan="6">Error cargando historial</td></tr>'; return; }
+    tb.innerHTML = data.items.map(n => `
+      <tr>
+        <td>${n.nombres}</td>
+        <td>${n.tipo}</td>
+        <td>${n.correo_destino}</td>
+        <td>${n.asunto}</td>
+        <td><span class="badge ${n.estado === 'Enviado' ? 'bg-success' : 'bg-danger'}">${n.estado}</span></td>
+        <td>${n.fecha_envio}</td>
+      </tr>
+    `).join('');
+  }catch(err){
+    console.error(err);
+    document.getElementById('tbodyHistorial').innerHTML = '<tr><td colspan="6">Error de red</td></tr>';
+  }
+}
+
+document.getElementById('btnFiltrar').addEventListener('click', cargarHistorial);
+
+// Cargar historial cuando se abre el modal
+document.getElementById('modalHistorial').addEventListener('shown.bs.modal', cargarHistorial);
+</script>
+{% endif %}
 {% endblock %}

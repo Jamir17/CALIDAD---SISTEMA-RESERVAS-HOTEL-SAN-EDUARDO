@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Notificación - Hotel San Eduardo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #f2f6fa;
+      margin: 0; padding: 30px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      max-width: 620px;
+      margin: auto;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #0062ff;
+      color: white;
+      padding: 18px 25px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .body {
+      padding: 25px;
+      color: #333;
+      line-height: 1.6;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    .table th {
+      text-align: left;
+      background: #f4f6f8;
+      padding: 8px;
+      border-bottom: 2px solid #ddd;
+    }
+    .table td {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .footer {
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+      padding: 15px;
+      border-top: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">{{ reserva.tipo }} • Hotel San Eduardo</div>
+    <div class="body">
+      <p>Estimado/a <strong>{{ reserva.nombres }}</strong>,</p>
+
+      {% if reserva.id_reserva and reserva.id_reserva != 0 %}
+        <p>Nos complace informarte que tu reserva fue <strong>confirmada con éxito</strong>. A continuación, los detalles:</p>
+
+        <table class="table">
+          <tr><th>Código de reserva</th><td>#{{ reserva.id_reserva }}</td></tr>
+          <tr><th>Habitación</th><td>{{ reserva.numero }}</td></tr>
+          <tr><th>Tipo</th><td>{{ reserva.tipo }}</td></tr>
+          <tr><th>Fecha de entrada</th><td>{{ reserva.fecha_entrada }}</td></tr>
+          <tr><th>Fecha de salida</th><td>{{ reserva.fecha_salida }}</td></tr>
+          <tr><th>Total</th><td>S/ {{ "%.2f"|format(reserva.total) }}</td></tr>
+        </table>
+
+        <p>Te esperamos en el Hotel San Eduardo. Si deseas modificar o cancelar tu reserva, comunícate con nuestro equipo de recepción.</p>
+      {% else %}
+        <p>Este es un mensaje automático del sistema del hotel. No tienes reservas registradas actualmente, pero puedes realizar una desde tu cuenta.</p>
+      {% endif %}
+    </div>
+    <div class="footer">
+      © 2025 Hotel San Eduardo — No responder a este correo.
+    </div>
+  </div>
+</body>
+</html>

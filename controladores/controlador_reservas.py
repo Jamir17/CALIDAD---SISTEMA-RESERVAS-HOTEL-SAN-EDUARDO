@@ -164,6 +164,10 @@ def confirmar_reserva():
     # Eliminar la reserva temporal
     session.pop("reserva_temp", None)
 
+    # ✅ Importa y envía el correo de confirmación
+    from controladores.controlador_notificaciones import enviar_confirmacion_reserva
+    enviar_confirmacion_reserva(id_reserva, correo_override=correo_huesped)
+    
     flash("¡Reserva confirmada con éxito! Se registró correctamente.", "success")
     return redirect(url_for("habitaciones.habitaciones_cliente"))
 

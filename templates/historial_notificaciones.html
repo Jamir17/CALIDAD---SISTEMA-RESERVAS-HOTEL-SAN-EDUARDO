@@ -1,0 +1,89 @@
+{% extends "principal.html" %}
+{% block content %}
+
+<h3 class="fw-bold mb-3">📋 Historial de Notificaciones</h3>
+
+<!-- 🔍 Filtros -->
+<form id="formFiltro" class="row g-3 mb-4">
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Desde</label>
+    <input type="date" name="fecha_inicio" class="form-control">
+  </div>
+
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Hasta</label>
+    <input type="date" name="fecha_fin" class="form-control">
+  </div>
+
+  <div class="col-md-3">
+    <label class="form-label fw-semibold">Tipo</label>
+    <select name="tipo" class="form-select">
+      <option value="">Todos</option>
+      <option value="confirmacion">Confirmación</option>
+      <option value="recordatorio">Recordatorio</option>
+      <option value="cancelacion">Cancelación</option>
+    </select>
+  </div>
+
+  <div class="col-md-3 d-flex align-items-end">
+    <button type="submit" class="btn btn-primary w-100">🔎 Filtrar</button>
+  </div>
+</form>
+
+<!-- 📄 Tabla -->
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Tipo</th>
+        <th>Correo destino</th>
+        <th>Estado</th>
+        <th>Fecha envío</th>
+      </tr>
+    </thead>
+    <tbody id="tablaHistorial">
+      {% for n in historial %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ n.tipo }}</td>
+        <td>{{ n.correo_destino }}</td>
+        <td>
+          <span class="badge {% if n.estado == 'Enviado' %}bg-success{% else %}bg-danger{% endif %}">
+            {{ n.estado }}
+          </span>
+        </td>
+        <td>{{ n.fecha_envio.strftime('%d/%m/%Y %H:%M') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.getElementById("formFiltro").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const resp = await fetch("/notificaciones/filtrar", { method: "POST", body: formData });
+  const data = await resp.json();
+  const tbody = document.getElementById("tablaHistorial");
+  tbody.innerHTML = "";
+
+  if (data.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Sin resultados</td></tr>`;
+  } else {
+    data.forEach((n, i)=>{
+      tbody.innerHTML += `
+        <tr>
+          <td>${i+1}</td>
+          <td>${n.tipo}</td>
+          <td>${n.correo_destino}</td>
+          <td><span class="badge ${n.estado === "Enviado" ? "bg-success" : "bg-danger"}">${n.estado}</span></td>
+          <td>${n.fecha_envio}</td>
+        </tr>`;
+    });
+  }
+});
+</script>
+
+{% endblock %}
