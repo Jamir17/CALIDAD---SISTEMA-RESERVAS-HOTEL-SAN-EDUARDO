@@ -27,6 +27,8 @@ app.register_blueprint(admin_bp, url_prefix="/admin")
 app.register_blueprint(habitaciones_bp, url_prefix="/habitaciones")
 app.register_blueprint(reservas_admin_bp) 
 app.register_blueprint(notificaciones_bp, url_prefix="/notificaciones")
+app.register_blueprint(checkinout_bp)
+app.register_blueprint(respaldo_bp, url_prefix="/")
 # ====== RUTA PRINCIPAL ======
 @app.route("/")
 def index():
