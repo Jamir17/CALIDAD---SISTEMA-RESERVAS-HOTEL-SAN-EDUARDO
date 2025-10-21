@@ -1,0 +1,130 @@
+{% extends "principal.html" %}
+{% block content %}
+<div class="container-checkinout">
+    <!-- SIDEBAR IZQUIERDO -->
+    <aside class="sidebar-checkinout">
+        <h2>Seleccionar reserva</h2>
+        <p class="sidebar-subtitle">Elige una reserva activa para gestionar su check-in / check-out</p>
+
+        <div class="section-title">Reserva</div>
+        <select class="select-box" id="selectReserva">
+            <option value="">-- Elige una reserva --</option>
+            {% for r in reservas_activas %}
+            <option value="{{ r.id_reserva }}">R-{{ r.id_reserva }} — {{ r.nombres }} {{ r.apellidos }} (Hab. {{ r.numero }})</option>
+            {% endfor %}
+        </select>
+
+        <div id="reservaDetalles" class="hidden">
+            <div class="section-title">Datos</div>
+            <p class="info-text"><strong id="infoCliente"></strong></p>
+
+            <div class="section-title">Habitación</div>
+            <p class="info-text" id="infoHabitacion"></p>
+
+            <div class="section-title">Estadía</div>
+            <p class="info-text" id="infoEstadia"></p>
+
+            <div class="section-title">Estado de la reserva</div>
+            <span id="infoEstadoReserva" class="status-badge"></span>
+
+            <div class="section-title">Acciones</div>
+            <div id="acciones-container">
+                <button id="btnCheckin" class="btn-primary btn-checkin" disabled>Hacer check-in</button>
+                <button id="btnCheckout" class="btn-primary btn-checkout" disabled>Hacer check-out</button>
+                <button id="btnLimpieza" class="btn-secondary">Marcar limpieza hecha</button>
+                <button id="btnCancelar" class="btn-secondary">Cancelar reserva</button>
+            </div>
+
+            <div class="section-title">Confirmación rápida</div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="confirm" checked>
+                <label for="confirm">Acepto términos de hospedaje (simulado)</label>
+            </div>
+        </div>
+
+        <div class="section-title">KPI</div>
+        <div class="kpi-container">
+            <div class="kpi-item">
+                <div class="kpi-label">Disponibles</div>
+                <div class="kpi-value" id="kpiDisponibles">{{ kpis.Disponibles }}</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">Ocupadas</div>
+                <div class="kpi-value" id="kpiOcupadas">{{ kpis.Ocupadas }}</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">En limpieza</div>
+                <div class="kpi-value" id="kpiLimpieza">{{ kpis['En limpieza'] }}</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content-checkinout">
+        <!-- ESTADO DE HABITACIONES -->
+        <section class="section">
+            <h2>Estado de habitaciones</h2>
+            <div class="rooms-grid" id="roomsGrid">
+                {% for hab in habitaciones %}
+                <div class="room-card" id="hab-{{ hab.id_habitacion }}" data-id-habitacion="{{ hab.id_habitacion }}">
+                    <div class="room-header">
+                        <span class="room-number">Hab. {{ hab.numero }}</span>
+                        {% if hab.estado == 'Disponible' %}
+                        <span class="badge badge-available">Disponible</span>
+                        {% elif hab.estado == 'Ocupada' %}
+                        <span class="badge badge-occupied">Ocupada</span>
+                        {% else %}
+                        <span class="badge badge-cleaning">En Limpieza</span>
+                        {% endif %}
+                    </div>
+                    <div class="room-buttons">
+                        <button class="btn-small btn-small-checkin" {% if hab.estado != 'Disponible' %}disabled{% endif %}>Check-in</button>
+                        <button class="btn-small btn-small-checkout" {% if hab.estado != 'Ocupada' %}disabled{% endif %}>Check-out</button>
+                    </div>
+                    <div class="room-status">
+                        <button class="btn-small-limpieza" {% if hab.estado != 'En Limpieza' %}disabled{% endif %}>Marcar limpieza</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- TABLA DE ACTIVIDAD -->
+        <section class="section">
+            <h2>Actividad</h2>
+            <table class="activity-table">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Acción</th>
+                        <th>Reserva</th>
+                        <th>Cliente</th>
+                        <th>Habitación</th>
+                        <th>Nuevo estado</th>
+                    </tr>
+                </thead>
+                <tbody id="activityLog">
+                    {% for act in actividades %}
+                    <tr>
+                        <td class="date-cell">{{ act.fecha_hora.strftime('%d/%m/%Y, %H:%M:%S') }}</td>
+                        <td class="action-cell">{{ act.accion }}</td>
+                        <td>{{ 'R-' ~ act.id_reserva if act.id_reserva else '-' }}</td>
+                        <td class="client-cell">{{ (act.nombres + ' ' + act.apellidos) if act.nombres else '-' }}</td>
+                        <td>{{ act.numero if act.numero else '-' }}</td>
+                        <td class="status-cell">
+                            {% if act.nuevo_estado_hab == 'Disponible' %}
+                            <span class="badge badge-available">Disponible</span>
+                            {% elif act.nuevo_estado_hab == 'Ocupada' %}
+                            <span class="badge badge-occupied">Ocupada</span>
+                            {% else %}
+                            <span class="badge badge-cleaning">En Limpieza</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</div>
+{% endblock %}
