@@ -91,6 +91,8 @@
             <a href="#">👥 Clientes</a>
             <a href="#">📊 Reportes</a>
             <a href="#">⚙️ Seguridad</a>
+            <a href="{{ url_for('respaldo.panel_respaldo') }}">💾 Respaldos BD</a>
+
         {% elif session['rol'] == 2 %}
             <a href="{{ url_for('reservas_admin.panel_reservas') }}">📅 Reservas</a>
             <a href="#">🏨 Habitaciones</a>

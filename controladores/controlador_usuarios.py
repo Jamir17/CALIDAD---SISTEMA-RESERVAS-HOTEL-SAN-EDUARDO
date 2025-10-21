@@ -160,7 +160,7 @@ def iniciosesion():
             return redirect(url_for("admin.dashboard"))
         elif rol == 3:  # Cliente
             flash("Inicio de sesión correcto.", "success")
-            return redirect(url_for("reservas.habitaciones_cliente"))
+            return redirect(url_for("habitaciones.habitaciones_cliente"))
         else:
             flash("Rol no reconocido. Contacte al administrador.", "error")
             return redirect(url_for("usuarios.iniciosesion"))

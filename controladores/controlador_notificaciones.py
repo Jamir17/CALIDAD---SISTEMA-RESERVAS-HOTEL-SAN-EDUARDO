@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -7,13 +7,15 @@ from datetime import datetime
 
 notificaciones_bp = Blueprint("notificaciones", __name__)
 
-# ============ CONFIG SMTP (Brevo) ============
-# Configura tus credenciales de Brevo
+# =========================
+# 📧 CONFIGURACIÓN SMTP BREVO
+# =========================
 SMTP_SERVER = "smtp-relay.brevo.com"
 SMTP_PORT = 587
-SMTP_USER = "8ea603001@smtp-brevo.com"  # login brevo
-SMTP_PASSWORD = "6x2k9byOXhwPJW0d"          # clave SMTP generada
-REMITENTE = "jamir_merino@hotmail.com"  # tu correo visible al usuario                    # <-- usa el mismo remitente verificado
+SMTP_USER = "8ea603002@smtp-brevo.com"   # Tu usuario SMTP Brevo
+SMTP_PASSWORD = "7KA1hPWvaVyqYTLr"       # Tu clave SMTP generada
+REMITENTE = "jamir_merino@hotmail.com"   # Dirección visible
+
 
 def enviar_correo(destinatario: str, asunto: str, html_contenido: str) -> bool:
     """Envia correo real por Brevo. Devuelve True/False."""
@@ -89,7 +91,6 @@ def enviar_correo_real():
         "correo": usuario["correo"]
     })
 
-
     enviado = enviar_correo(usuario["correo"], asunto, html)
     estado = "Enviado" if enviado else "Fallido"
 
@@ -145,59 +146,76 @@ def historial():
     return jsonify({"ok": True, "items": data})
 
 
-def enviar_confirmacion_reserva(id_reserva: int, correo_override: str | None = None) -> bool:
+
+
+
+def _enviar_correo(destinatario: str, asunto: str, html: str) -> bool:
+    """Envía 1 correo HTML. Devuelve True/False."""
+    try:
+        msg = MIMEMultipart()
+        msg["From"] = REMITENTE
+        msg["To"] = destinatario
+        msg["Subject"] = asunto
+        msg.attach(MIMEText(html, "html"))
+
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print("SMTP error ->", e)
+        return False
+    
+def enviar_confirmacion_reserva_multi(id_reserva: int, correos: list[str]) -> None:
     """
-    Envía correo de confirmación usando los datos reales de la reserva.
-    Si 'correo_override' viene (p.ej. correo del huésped), se usa ese destino.
-    Si no, se usa el correo del cliente dueño de la cuenta (tabla clientes).
-    También registra el envío en 'historial_notificaciones'.
+    Envía la confirmación de la reserva a N correos y registra cada envío
+    en historial_notificaciones.
     """
+    if not correos:
+        return
+
     con = obtener_conexion()
     with con.cursor() as cur:
+        # Trae TODOS los datos que queremos en el correo
         cur.execute("""
-            SELECT r.id_reserva, r.id_usuario,
-                   c.nombres, c.correo,
-                   h.numero,
-                   t.nombre AS tipo,
-                   DATE_FORMAT(r.fecha_entrada, '%%Y-%%m-%%d') AS fecha_entrada,
-                   DATE_FORMAT(r.fecha_salida, '%%Y-%%m-%%d') AS fecha_salida,
-                   IFNULL(f.total, 0) AS total
+            SELECT r.id_reserva, r.fecha_entrada, r.fecha_salida, r.num_huespedes,
+                   DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                   u.id_usuario, u.nombres AS usuario_nombres, u.correo AS correo_usuario,
+                   c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos, c.correo AS correo_cliente,
+                   h.numero AS hab_numero, t.nombre AS hab_tipo, t.precio_base,
+                   COALESCE(f.total,0) AS total
             FROM reservas r
-            JOIN clientes c        ON r.id_cliente     = c.id_cliente
-            JOIN habitaciones h     ON r.id_habitacion  = h.id_habitacion
-            JOIN tipo_habitacion t  ON h.id_tipo        = t.id_tipo
-            LEFT JOIN facturacion f ON f.id_reserva     = r.id_reserva
+            JOIN usuarios u   ON u.id_usuario  = r.id_usuario
+            JOIN clientes c   ON c.id_cliente  = r.id_cliente
+            JOIN habitaciones h ON h.id_habitacion = r.id_habitacion
+            JOIN tipo_habitacion t ON t.id_tipo = h.id_tipo
+            LEFT JOIN facturacion f ON f.id_reserva = r.id_reserva
             WHERE r.id_reserva = %s
         """, (id_reserva,))
         datos = cur.fetchone()
 
-    if not datos:
-        return False
+        # Servicios seleccionados
+        cur.execute("""
+            SELECT s.nombre, rs.cantidad AS qty, rs.subtotal
+            FROM reserva_servicio rs
+            JOIN servicios s ON s.id_servicio = rs.id_servicio
+            WHERE rs.id_reserva = %s
+        """, (id_reserva,))
+        servicios = cur.fetchall()
 
-    # destinatario: huésped si lo ingresaste; si no, el correo del cliente
-    destinatario = (correo_override or "").strip() or datos["correo"]
+    # Render del correo
+    html = render_template("email_confirmacion.html", r=datos, servicios=servicios)
+    asunto = f"Confirmación de Reserva #{datos['id_reserva']} • Hotel San Eduardo"
 
-    asunto = f"Confirmación de reserva #{datos['id_reserva']} – Hotel San Eduardo"
-    html = render_template("email_confirmacion.html", reserva=datos)
-
-    ok = enviar_correo(destinatario, asunto, html)
-
-    # Registrar en historial_notificaciones
-    try:
-        with con.cursor() as cur:
+    # Enviar a cada destinatario y registrar
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        for correo in {c.strip().lower() for c in correos if c}:
+            exito = _enviar_correo(correo, asunto, html)
             cur.execute("""
-                INSERT INTO historial_notificaciones
-                    (id_usuario, tipo, correo_destino, asunto, estado, fecha_envio)
+                INSERT INTO historial_notificaciones (id_usuario, tipo, correo_destino, asunto, estado, fecha_envio)
                 VALUES (%s, %s, %s, %s, %s, NOW())
-            """, (
-                datos["id_usuario"],
-                "confirmacion",
-                destinatario,
-                asunto,
-                "Enviado" if ok else "Error"
-            ))
+            """, (datos["id_usuario"], "confirmacion", correo, asunto, "Enviado" if exito else "Error"))
         con.commit()
-    except Exception as e:
-        print("LOG NOTI ERROR:", e)
-
-    return ok

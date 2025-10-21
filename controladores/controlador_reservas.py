@@ -161,15 +161,35 @@ def confirmar_reserva():
 
         con.commit()
 
-    # Eliminar la reserva temporal
+        # Eliminar la reserva temporal
     session.pop("reserva_temp", None)
 
-    # ✅ Importa y envía el correo de confirmación
-    from controladores.controlador_notificaciones import enviar_confirmacion_reserva
-    enviar_confirmacion_reserva(id_reserva, correo_override=correo_huesped)
-    
-    flash("¡Reserva confirmada con éxito! Se registró correctamente.", "success")
+    # ===== Enviar confirmación a 3 posibles correos =====
+    # 1) correo del dueño de la cuenta (usuarios)
+    # 2) correo del cliente (clientes)
+    # 3) correo del huésped adicional (formulario), si lo ingresaron
+    with obtener_conexion().cursor() as cur:
+        cur.execute("""
+            SELECT u.correo AS correo_usuario, c.correo AS correo_cliente
+            FROM reservas r
+            JOIN usuarios u ON u.id_usuario = r.id_usuario
+            JOIN clientes c ON c.id_cliente = r.id_cliente
+            WHERE r.id_reserva = %s
+        """, (id_reserva,))
+        row = cur.fetchone()
+
+    destinatarios = []
+    if row and row.get("correo_usuario"): destinatarios.append(row["correo_usuario"])
+    if row and row.get("correo_cliente"): destinatarios.append(row["correo_cliente"])
+    if correo_huesped: destinatarios.append(correo_huesped)
+
+    # Enviar (y registrar en historial_notificaciones)
+    from controladores.controlador_notificaciones import enviar_confirmacion_reserva_multi
+    enviar_confirmacion_reserva_multi(id_reserva, destinatarios)
+
+    flash("¡Reserva confirmada con éxito! Se envió la confirmación por correo.", "success")
     return redirect(url_for("habitaciones.habitaciones_cliente"))
+
 
 
 

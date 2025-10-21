@@ -1,83 +1,84 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>Notificación - Hotel San Eduardo</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background-color: #f2f6fa;
-      margin: 0; padding: 30px;
-    }
-    .card {
-      background: white;
-      border-radius: 10px;
-      max-width: 620px;
-      margin: auto;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    .header {
-      background-color: #0062ff;
-      color: white;
-      padding: 18px 25px;
-      font-size: 20px;
-      font-weight: bold;
-    }
-    .body {
-      padding: 25px;
-      color: #333;
-      line-height: 1.6;
-    }
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    .table th {
-      text-align: left;
-      background: #f4f6f8;
-      padding: 8px;
-      border-bottom: 2px solid #ddd;
-    }
-    .table td {
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-    }
-    .footer {
-      font-size: 13px;
-      color: #666;
-      text-align: center;
-      padding: 15px;
-      border-top: 1px solid #eee;
-    }
-  </style>
+  <meta charset="utf-8"/>
+  <title>Confirmación de reserva</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
 </head>
-<body>
-  <div class="card">
-    <div class="header">{{ reserva.tipo }} • Hotel San Eduardo</div>
-    <div class="body">
-      <p>Estimado/a <strong>{{ reserva.nombres }}</strong>,</p>
-
-      {% if reserva.id_reserva and reserva.id_reserva != 0 %}
-        <p>Nos complace informarte que tu reserva fue <strong>confirmada con éxito</strong>. A continuación, los detalles:</p>
-
-        <table class="table">
-          <tr><th>Código de reserva</th><td>#{{ reserva.id_reserva }}</td></tr>
-          <tr><th>Habitación</th><td>{{ reserva.numero }}</td></tr>
-          <tr><th>Tipo</th><td>{{ reserva.tipo }}</td></tr>
-          <tr><th>Fecha de entrada</th><td>{{ reserva.fecha_entrada }}</td></tr>
-          <tr><th>Fecha de salida</th><td>{{ reserva.fecha_salida }}</td></tr>
-          <tr><th>Total</th><td>S/ {{ "%.2f"|format(reserva.total) }}</td></tr>
-        </table>
-
-        <p>Te esperamos en el Hotel San Eduardo. Si deseas modificar o cancelar tu reserva, comunícate con nuestro equipo de recepción.</p>
-      {% else %}
-        <p>Este es un mensaje automático del sistema del hotel. No tienes reservas registradas actualmente, pero puedes realizar una desde tu cuenta.</p>
-      {% endif %}
+<body style="margin:0;padding:24px;background:#f5f7fb;font-family:Inter,Arial,Helvetica,sans-serif">
+  <div style="max-width:680px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(16,24,40,.08)">
+    <div style="background:#1666ff;color:#fff;padding:18px 22px">
+      <h2 style="margin:0;font-size:20px">Confirmación de reserva • Hotel San Eduardo</h2>
+      <div style="font-size:13px;opacity:.9">Código: #{{ r.id_reserva }}</div>
     </div>
-    <div class="footer">
-      © 2025 Hotel San Eduardo — No responder a este correo.
+
+    <div style="padding:22px">
+      <p style="margin:0 0 8px">Hola <strong>{{ r.cliente_nombres }}</strong>,</p>
+      <p style="margin:0 0 16px">Tu reserva fue confirmada correctamente. Aquí tienes los detalles:</p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr>
+          <td style="padding:12px;border:1px solid #e5e7eb;border-right:none;border-radius:10px 0 0 0;background:#f8fafc">
+            <small style="display:block;color:#64748b">Check-in</small>
+            <strong style="font-size:15px;color:#0f172a">{{ r.fecha_entrada }}</strong>
+          </td>
+          <td style="padding:12px;border:1px solid #e5e7eb;border-left:none;border-radius:0 10px 0 0;background:#f8fafc">
+            <small style="display:block;color:#64748b">Check-out</small>
+            <strong style="font-size:15px;color:#0f172a">{{ r.fecha_salida }}</strong>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:12px;border:1px solid #e5e7eb;border-right:none;border-top:none;background:#ffffff">
+            <small style="display:block;color:#64748b">Noches</small>
+            <strong style="font-size:15px;color:#0f172a">{{ r.noches }}</strong>
+          </td>
+          <td style="padding:12px;border:1px solid #e5e7eb;border-left:none;border-top:none;background:#ffffff">
+            <small style="display:block;color:#64748b">Huéspedes</small>
+            <strong style="font-size:15px;color:#0f172a">{{ r.num_huespedes }}</strong>
+          </td>
+        </tr>
+      </table>
+
+      <div style="margin:18px 0 6px;font-weight:700;color:#0f172a">Habitación</div>
+      <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fafbff">
+        {{ r.hab_tipo }} N.º {{ r.hab_numero }} — <strong>S/ {{ '%.2f'|format(r.precio_base) }}</strong> por noche
+      </div>
+
+      {% if servicios and servicios|length %}
+      <div style="margin:18px 0 6px;font-weight:700;color:#0f172a">Servicios adicionales</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <thead>
+          <tr>
+            <th align="left" style="padding:8px 6px;color:#64748b;border-bottom:1px solid #e5e7eb">Descripción</th>
+            <th align="center" style="padding:8px 6px;color:#64748b;border-bottom:1px solid #e5e7eb">Cant.</th>
+            <th align="right" style="padding:8px 6px;color:#64748b;border-bottom:1px solid #e5e7eb">Subtotal (S/)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in servicios %}
+          <tr>
+            <td style="padding:8px 6px;border-bottom:1px solid #f1f5f9">{{ s.nombre }}</td>
+            <td align="center" style="padding:8px 6px;border-bottom:1px solid #f1f5f9">{{ s.qty }}</td>
+            <td align="right" style="padding:8px 6px;border-bottom:1px solid #f1f5f9">{{ '%.2f'|format(s.subtotal) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      <div style="margin:18px 0 6px;font-weight:700;color:#0f172a">Total a pagar</div>
+      <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fefefe">
+        <strong style="font-size:18px;color:#0f9d58">S/ {{ '%.2f'|format(r.total) }}</strong>
+      </div>
+
+      <p style="margin:18px 0 0;color:#64748b;font-size:13px">
+        Si tienes consultas o deseas modificar tu reserva, responde a este correo o contáctanos por nuestros canales oficiales.
+      </p>
+      <p style="margin:8px 0 0;color:#94a3b8;font-size:12px">No respondas a esta dirección: es un buzón automático.</p>
+    </div>
+
+    <div style="padding:12px 22px;background:#0b2c6c;color:#cbd5e1;font-size:12px">
+      © {{ (now() if now else '') }} Hotel San Eduardo — Chiclayo. Todos los derechos reservados.
     </div>
   </div>
 </body>

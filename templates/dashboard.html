@@ -1,7 +1,7 @@
 {% extends "principal.html" %}
 {% block content %}
 
-<h2 class="mb-4 fw-bold text-primary">📊 Panel Principal</h2>
+<h2 class="mb-4 fw-bold text-primary">Panel Principal</h2>
 
 <div class="row g-4 mb-4">
   <div class="col-md-3"><div class="card shadow-sm p-3"><h6>Reservas activas</h6><h3>{{ reservas_activas }}</h3></div></div>
@@ -12,7 +12,7 @@
 
 {% if session['rol'] == 1 %}
 <div class="card border-0 shadow-sm p-4 mt-3">
-  <h4 class="fw-bold mb-3">📧 Envío de Notificaciones</h4>
+  <h4 class="fw-bold mb-3">Envío de Notificaciones</h4>
 
   <form id="formCorreo" class="row g-3 align-items-end">
     <div class="col-md-3">
@@ -36,13 +36,12 @@
     </div>
 
     <div class="col-md-2 d-grid">
-      <button type="submit" class="btn btn-primary">📤 Enviar</button>
+      <button type="submit" class="btn btn-primary">Enviar</button>
     </div>
   </form>
 
   <hr class="my-4">
-  <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalHistorial">
-    📜 Ver historial de notificaciones
+  <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalHistorial">Ver historial de notificaciones
   </button>
 </div>
 
@@ -155,5 +154,7 @@ document.getElementById('btnFiltrar').addEventListener('click', cargarHistorial)
 // Cargar historial cuando se abre el modal
 document.getElementById('modalHistorial').addEventListener('shown.bs.modal', cargarHistorial);
 </script>
+
 {% endif %}
+
 {% endblock %}
