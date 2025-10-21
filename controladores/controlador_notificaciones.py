@@ -67,33 +67,50 @@ def enviar_correo_real():
         return jsonify({"ok": False, "msg": "No se encontró un usuario con ese DNI"})
 
     asunto = f"{tipo.capitalize()} - Hotel San Eduardo"
+
     with con.cursor() as cur:
         cur.execute("""
-            SELECT r.id_reserva, h.numero, t.nombre AS tipo,
-                r.fecha_entrada, r.fecha_salida,
-                IFNULL(f.total,0) AS total
+            SELECT 
+                r.id_reserva,
+                h.numero AS hab_numero,
+                t.nombre AS hab_tipo,
+                t.precio_base,
+                r.fecha_entrada,
+                r.fecha_salida,
+                DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                IFNULL(f.total,0) AS total,
+                r.num_huespedes
             FROM reservas r
-            JOIN habitaciones h ON r.id_habitacion=h.id_habitacion
-            JOIN tipo_habitacion t ON h.id_tipo=t.id_tipo
-            LEFT JOIN facturacion f ON r.id_reserva=f.id_reserva
+            JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            LEFT JOIN facturacion f ON r.id_reserva = f.id_reserva
             WHERE r.id_usuario=%s
-            ORDER BY r.fecha_entrada DESC LIMIT 1
+            ORDER BY r.fecha_entrada DESC
+            LIMIT 1
         """, (usuario["id_usuario"],))
         reserva = cur.fetchone()
 
     if not reserva:
-        reserva = {"id_reserva": 0, "numero": "-", "tipo": "Sin reservas",
-                "fecha_entrada": "-", "fecha_salida": "-", "total": 0}
+        reserva = {
+            "id_reserva": 0,
+            "hab_numero": "-",
+            "hab_tipo": "Sin reservas",
+            "precio_base": 0,
+            "fecha_entrada": "-",
+            "fecha_salida": "-",
+            "noches": 0,
+            "num_huespedes": 0,
+            "total": 0
+        }
 
-    html = render_template("email_confirmacion.html", reserva={
-        **reserva,
-        "nombres": usuario["nombres"],
-        "correo": usuario["correo"]
-    })
+    # Renderizar el correo con los datos esperados por la plantilla
+    html = render_template("email_confirmacion.html", r=reserva, servicios=[])
 
+    # Enviar correo real
     enviado = enviar_correo(usuario["correo"], asunto, html)
     estado = "Enviado" if enviado else "Fallido"
 
+    # Registrar en historial
     with con.cursor() as cur:
         cur.execute("""
             INSERT INTO historial_notificaciones
@@ -103,7 +120,6 @@ def enviar_correo_real():
         con.commit()
 
     return jsonify({"ok": enviado, "msg": ("Correo enviado correctamente" if enviado else "Error al enviar correo")})
-
 
 # ============ Historial (con rango de fechas) ============
 @notificaciones_bp.route("/historial", methods=["GET"])

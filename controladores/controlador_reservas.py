@@ -124,76 +124,96 @@ def confirmar_reserva():
         archivo.save(ruta_guardar)
 
     con = obtener_conexion()
-    with con.cursor() as cur:
-        # Obtener el id_cliente asociado al usuario logueado
-        cur.execute("SELECT id_cliente FROM clientes WHERE id_usuario = %s", (id_usuario,))
-        cliente = cur.fetchone()
-        if not cliente:
-            flash("No se encontró cliente asociado.", "error")
-            return redirect(url_for("reservas.habitaciones_cliente"))
+    try:
+        with con.cursor() as cur:
+            # Obtener el id_cliente asociado al usuario logueado
+            cur.execute("SELECT id_cliente FROM clientes WHERE id_usuario = %s", (id_usuario,))
+            cliente = cur.fetchone()
+            if not cliente:
+                flash("No se encontró cliente asociado.", "error")
+                return redirect(url_for("reservas.habitaciones_cliente"))
 
-        # Insertar en reservas
-        cur.execute("""
-            INSERT INTO reservas (id_cliente, id_habitacion, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
-            VALUES (%s, %s, %s, %s, %s, %s, 'Activa')
-        """, (cliente["id_cliente"], reserva_temp["id_habitacion"], id_usuario,
-              reserva_temp["entrada"], reserva_temp["salida"], 1))
-        id_reserva = cur.lastrowid
-
-        # Insertar servicios adicionales (si los hay)
-        for s in reserva_temp.get("servicios", []):
-            subtotal = float(s["precio"]) * int(s["qty"])
+            # Insertar en reservas
             cur.execute("""
-                INSERT INTO reserva_servicio (id_reserva, id_servicio, cantidad, subtotal)
-                VALUES (%s, %s, %s, %s)
-            """, (id_reserva, s["id"], s["qty"], subtotal))
+                INSERT INTO reservas (id_cliente, id_habitacion, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
+                VALUES (%s, %s, %s, %s, %s, %s, 'Activa')
+            """, (cliente["id_cliente"], reserva_temp["id_habitacion"], id_usuario,
+                  reserva_temp["entrada"], reserva_temp["salida"], 1))
+            id_reserva = cur.lastrowid
 
-        # Calcular total final
-        total = reserva_temp["precio"] * reserva_temp["noches"]
-        total_serv = sum(s["precio"] * s["qty"] for s in reserva_temp.get("servicios", []))
-        total_final = total + total_serv
+            # Insertar servicios adicionales (si los hay)
+            for s in reserva_temp.get("servicios", []):
+                subtotal = float(s["precio"]) * int(s["qty"])
+                cur.execute("""
+                    INSERT INTO reserva_servicio (id_reserva, id_servicio, cantidad, subtotal)
+                    VALUES (%s, %s, %s, %s)
+                """, (id_reserva, s["id"], s["qty"], subtotal))
 
-        # Insertar en facturación
-        cur.execute("""
-            INSERT INTO facturacion (id_reserva, id_tipo_pago, id_usuario, fecha_emision, total, estado, comprobante_pago)
-            VALUES (%s, %s, %s, CURDATE(), %s, 'Pagado', %s)
-        """, (id_reserva, tipo_pago, id_usuario, total_final, nombre_archivo))
+            # Calcular total final
+            total = float(reserva_temp["precio"]) * int(reserva_temp["noches"])
+            total_serv = sum(float(s["precio"]) * int(s["qty"]) for s in reserva_temp.get("servicios", []))
+            total_final = total + total_serv
 
-        con.commit()
+            # Insertar en facturación
+            cur.execute("""
+                INSERT INTO facturacion (id_reserva, id_tipo_pago, id_usuario, fecha_emision, total, estado, comprobante_pago)
+                VALUES (%s, %s, %s, CURDATE(), %s, 'Pagado', %s)
+            """, (id_reserva, tipo_pago, id_usuario, total_final, nombre_archivo))
 
-        # Eliminar la reserva temporal
+            con.commit()
+    finally:
+        try:
+            con.close()
+        except Exception:
+            pass
+
+    # Eliminar la reserva temporal
     session.pop("reserva_temp", None)
 
     # ===== Enviar confirmación a 3 posibles correos =====
     # 1) correo del dueño de la cuenta (usuarios)
     # 2) correo del cliente (clientes)
     # 3) correo del huésped adicional (formulario), si lo ingresaron
-    with obtener_conexion().cursor() as cur:
-        cur.execute("""
-            SELECT u.correo AS correo_usuario, c.correo AS correo_cliente
-            FROM reservas r
-            JOIN usuarios u ON u.id_usuario = r.id_usuario
-            JOIN clientes c ON c.id_cliente = r.id_cliente
-            WHERE r.id_reserva = %s
-        """, (id_reserva,))
-        row = cur.fetchone()
+    con2 = obtener_conexion()
+    try:
+        with con2.cursor() as cur:
+            cur.execute("""
+                SELECT u.correo AS correo_usuario, c.correo AS correo_cliente
+                FROM reservas r
+                JOIN usuarios u ON u.id_usuario = r.id_usuario
+                JOIN clientes c ON c.id_cliente = r.id_cliente
+                WHERE r.id_reserva = %s
+            """, (id_reserva,))
+            row = cur.fetchone()
+    finally:
+        try:
+            con2.close()
+        except Exception:
+            pass
 
     destinatarios = []
-    if row and row.get("correo_usuario"): destinatarios.append(row["correo_usuario"])
-    if row and row.get("correo_cliente"): destinatarios.append(row["correo_cliente"])
-    if correo_huesped: destinatarios.append(correo_huesped)
+    if row and row.get("correo_usuario"):
+        destinatarios.append(row["correo_usuario"])
+    if row and row.get("correo_cliente"):
+        destinatarios.append(row["correo_cliente"])
+    if correo_huesped:
+        destinatarios.append(correo_huesped)
+
+    # Quitar duplicados y vacíos
+    destinatarios = [c.strip() for c in destinatarios if c and c.strip()]
+    destinatarios = list(dict.fromkeys(destinatarios))
 
     # Enviar (y registrar en historial_notificaciones)
-    from controladores.controlador_notificaciones import enviar_confirmacion_reserva_multi
-    enviar_confirmacion_reserva_multi(id_reserva, destinatarios)
+    try:
+        from controladores.controlador_notificaciones import enviar_confirmacion_reserva_multi
+        if destinatarios:
+            enviar_confirmacion_reserva_multi(id_reserva, destinatarios)
+    except Exception as _e:
+        # No rompemos el flujo por el correo, solo informativo
+        print("Aviso: no se pudo enviar confirmación por correo ->", _e)
 
     flash("¡Reserva confirmada con éxito! Se envió la confirmación por correo.", "success")
     return redirect(url_for("habitaciones.habitaciones_cliente"))
-
-
-
-
-
 
 
 # ================================================

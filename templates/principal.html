@@ -85,22 +85,22 @@
     <div class="sidebar">
         <h2>Hotel San Eduardo</h2>
 
-        <a href="{{ url_for('admin.dashboard') }}" class="active">🏠 Dashboard</a>
+        <a href="{{ url_for('admin.dashboard') }}" class="active">Menu principal</a>
 
         {% if session['rol'] == 1 %}
-            <a href="{{ url_for('reservas_admin.panel_reservas') }}">📅 Reservas</a>
-           <a href="{{ url_for('checkinout.panel_checkinout') }}">🔑 Check-in/out</a>
-            <a href="#">🏨 Habitaciones</a>
-            <a href="#">👥 Clientes</a>
-            <a href="#">📊 Reportes</a>
-            <a href="#">⚙️ Seguridad</a>
-            <a href="{{ url_for('respaldo.panel_respaldo') }}">💾 Respaldos BD</a>
+            <a href="{{ url_for('reservas_admin.panel_reservas') }}">Reservas</a>
+           <a href="{{ url_for('checkinout.panel_checkinout') }}">Check-in/out</a>
+            <a href="#">Habitaciones</a>
+            <a href="#">Clientes</a>
+            <a href="#">Reportes</a>
+            <a href="#">Seguridad</a>
+            <a href="{{ url_for('respaldo.panel_respaldo') }}">Respaldos</a>
 
         {% elif session['rol'] == 2 %}
-            <a href="{{ url_for('reservas_admin.panel_reservas') }}">📅 Reservas</a>
-           <a href="{{ url_for('checkinout.panel_checkinout') }}">🔑 Check-in/out</a>
-            <a href="#">🏨 Habitaciones</a>
-            <a href="#">👥 Clientes</a>
+            <a href="{{ url_for('reservas_admin.panel_reservas') }}">Reservas</a>
+           <a href="{{ url_for('checkinout.panel_checkinout') }}">Check-in/out</a>
+            <a href="#">Habitaciones</a>
+            <a href="#">Clientes</a>
         {% endif %}
     </div>
 
@@ -108,7 +108,7 @@
     <div class="content">
         <div class="topbar">
             <div class="user-info">
-                👋 Bienvenido, {{ session.get('nombre', 'Usuario') }}
+                Bienvenido, {{ session.get('nombre', 'Usuario') }}
             </div>
             <a href="{{ url_for('usuarios.logout') }}" class="logout-btn">Cerrar sesión</a>
         </div>
