@@ -14,6 +14,21 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+-- Volcando estructura para tabla bd_hotel_san_eduardo.actividad
+CREATE TABLE IF NOT EXISTS `actividad` (
+  `id_actividad` int NOT NULL AUTO_INCREMENT,
+  `accion` varchar(50) NOT NULL,
+  `id_reserva` int DEFAULT NULL,
+  `id_habitacion` int DEFAULT NULL,
+  `nuevo_estado_hab` varchar(50) DEFAULT NULL,
+  `fecha_hora` datetime NOT NULL,
+  PRIMARY KEY (`id_actividad`),
+  KEY `fk_actividad_reserva` (`id_reserva`),
+  KEY `fk_actividad_habitacion` (`id_habitacion`),
+  CONSTRAINT `fk_actividad_habitacion` FOREIGN KEY (`id_habitacion`) REFERENCES `habitaciones` (`id_habitacion`) ON DELETE SET NULL,
+  CONSTRAINT `fk_actividad_reserva` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 -- Volcando estructura de base de datos para bd_hotel_san_eduardo
 CREATE DATABASE IF NOT EXISTS `bd_hotel_san_eduardo` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;

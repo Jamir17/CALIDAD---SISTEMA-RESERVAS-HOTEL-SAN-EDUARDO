@@ -7,6 +7,7 @@ from controladores.controlador_perfil import perfil_bp
 from controladores.controlador_habitaciones import habitaciones_bp
 from controladores.controlador_reservas_admin import reservas_admin_bp
 from controladores.controlador_notificaciones import notificaciones_bp
+from controladores.controlador_checkinout import checkinout_bp
 from controladores.controlador_respaldo import respaldo_bp
 
 
@@ -26,7 +27,6 @@ app.register_blueprint(admin_bp, url_prefix="/admin")
 app.register_blueprint(habitaciones_bp, url_prefix="/habitaciones")
 app.register_blueprint(reservas_admin_bp) 
 app.register_blueprint(notificaciones_bp, url_prefix="/notificaciones")
-app.register_blueprint(respaldo_bp, url_prefix="/")
 # ====== RUTA PRINCIPAL ======
 @app.route("/")
 def index():
