@@ -67,7 +67,7 @@
           <div class="actions">
             <button class="btn-outline" data-open="modal-{{ h.id_habitacion }}">Ver Detalles</button>
             <button class="btn-primary"
-                    onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }})">
+                    onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }}, false)">
               Seleccionar
             </button>
           </div>
@@ -82,11 +82,20 @@
           <p class="modal-sub">{{ h.descripcion }}</p>
 
           <div class="carousel">
-            {% for img in h.galeria %}
-              <img src="{{ url_for('static', filename=img) }}"
-                   alt="Foto {{ loop.index }}"
-                   onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
-            {% endfor %}
+            <div class="carousel-inner">
+              {% for img in h.galeria %}
+                <img src="{{ url_for('static', filename=img) }}"
+                     alt="Foto {{ loop.index }}"
+                     class="carousel-item"
+                     onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
+              {% endfor %}
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-primary"
+                    onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }}, true)">
+              Seleccionar esta habitación
+            </button>
           </div>
         </div>
       </div>
@@ -246,7 +255,13 @@
 .close { position:absolute; right:14px; top:8px; font-size:26px; cursor:pointer; }
 .modal-sub { color:#4b5563; margin:4px 0 10px; }
 .carousel { display:flex; gap:10px; overflow-x:auto; }
-.carousel img { width:260px; height:180px; object-fit:cover; border-radius:10px; }
+.carousel-inner { display: flex; gap: 10px; padding-bottom: 10px; }
+.carousel-item {
+  width:260px; height:180px; object-fit:cover; border-radius:10px;
+  cursor: pointer; border: 3px solid transparent; transition: border-color .2s;
+}
+.carousel-item:hover { border-color: #a7caff; }
+.carousel-item.selected { border-color: #0d6efd; }
 
 /* Modal servicios */
 .servicios-list { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
@@ -257,6 +272,7 @@
 .serv-item label { display:flex; gap:10px; align-items:center; }
 .serv-item .qty { width:70px; padding:6px; border:1px solid #d1d5db; border-radius:8px; }
 .modal-actions { display:flex; justify-content:flex-end; margin-top:10px; }
+.modal-actions { margin-top: 16px; }
 .empty { color:#6b7280; }
 
 /* Animación */
@@ -296,20 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// ===== Modales (detalles y servicios) =====
-document.addEventListener('click', (e)=>{
-  const openBtn = e.target.closest('[data-open]');
-  if(openBtn){
-    const id = openBtn.getAttribute('data-open');
-    const m = document.getElementById(id);
-    if(m) m.classList.add('show');
-  }
-  if (e.target.matches('[data-close]') || e.target.classList.contains('modal')) {
-    const m = e.target.closest('.modal') || document.querySelector('.modal.show');
-    if(m) m.classList.remove('show');
-  }
-});
-
 // ===== Estado temporal de la reserva seleccionada (solo front) =====
 let reserva = {
   tipo: null,
@@ -319,10 +321,11 @@ let reserva = {
   entrada: null,
   salida: null,
   id_habitacion: null,
+  imagen_seleccionada: null,
   servicios: []  // {id, nombre, precio, qty}
 };
 
-function seleccionarHabitacion(tipo, numero, precio, idHabitacion){
+function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = false){
   const entrada = document.querySelector('[name="fecha_entrada"]').value;
   const salida  = document.querySelector('[name="fecha_salida"]').value;
 
@@ -336,7 +339,25 @@ function seleccionarHabitacion(tipo, numero, precio, idHabitacion){
 
   const noches = (d2 - d1) / (1000*60*60*24);
 
-  reserva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, servicios: [] };
+  let imagenSeleccionada = null;
+  const modal = document.getElementById(`modal-${idHabitacion}`);
+
+  if (desdeModal && modal) {
+    const imgSelected = modal.querySelector('.carousel-item.selected');
+    if (imgSelected) {
+      imagenSeleccionada = imgSelected.src;
+    }
+    // Cerrar modal después de seleccionar
+    modal.classList.remove('show');
+  }
+
+  // Si no se seleccionó una, usar la de la tarjeta
+  if (!imagenSeleccionada) {
+    const cardImg = document.querySelector(`.card button[data-open="modal-${idHabitacion}"]`).closest('.card').querySelector('.card-media img');
+    imagenSeleccionada = cardImg.src;
+  }
+
+  reserva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: imagenSeleccionada, servicios: [] };
   renderResumen();
 }
 
@@ -355,6 +376,9 @@ function renderResumen(){
   reserva.servicios.forEach(s => totalServ += (s.precio * s.qty));
 
   cont.innerHTML = `
+    ${reserva.imagen_seleccionada ?
+      `<img src="${reserva.imagen_seleccionada}" alt="Habitación seleccionada" style="width:100%; border-radius:8px; margin-bottom:10px;">` : ''
+    }
     <p><strong>${reserva.tipo} Nº ${reserva.numero}</strong></p>
     <p><strong>Fechas:</strong> ${reserva.entrada} → ${reserva.salida}</p>
     <p><strong>Noches:</strong> ${reserva.noches}</p>
@@ -430,5 +454,38 @@ function continuarPago() {
   .catch(err => alert('Error de conexión.'));
 }
 
+// ===== Selección de imagen en Modal =====
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('carousel-item')) {
+    const modal = e.target.closest('.modal');
+    if (!modal) return;
+
+    // Quitar 'selected' de otras imágenes en el mismo carrusel
+    modal.querySelectorAll('.carousel-item').forEach(img => img.classList.remove('selected'));
+    // Añadir 'selected' a la imagen clickeada
+    e.target.classList.add('selected');
+  }
+});
+
+// ===== Modales (detalles y servicios) =====
+document.addEventListener('click', (e)=>{
+  const openBtn = e.target.closest('[data-open]');
+  if(openBtn){
+    const id = openBtn.getAttribute('data-open');
+    const m = document.getElementById(id);
+    if(m) {
+      m.classList.add('show');
+      // Pre-seleccionar la primera imagen del carrusel si no hay ninguna seleccionada
+      const firstImg = m.querySelector('.carousel-item');
+      if (firstImg && !m.querySelector('.carousel-item.selected')) {
+        firstImg.classList.add('selected');
+      }
+    }
+  }
+  if (e.target.matches('[data-close]') || e.target.classList.contains('modal')) {
+    const m = e.target.closest('.modal') || document.querySelector('.modal.show');
+    if(m) m.classList.remove('show');
+  }
+});
 </script>
 {% endblock %}

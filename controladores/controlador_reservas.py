@@ -135,10 +135,11 @@ def confirmar_reserva():
 
             # Insertar en reservas
             cur.execute("""
-                INSERT INTO reservas (id_cliente, id_habitacion, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
-                VALUES (%s, %s, %s, %s, %s, %s, 'Activa')
+                INSERT INTO reservas (id_cliente, id_habitacion, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado, imagen_seleccionada)
+                VALUES (%s, %s, %s, %s, %s, %s, 'Activa', %s)
             """, (cliente["id_cliente"], reserva_temp["id_habitacion"], id_usuario,
-                  reserva_temp["entrada"], reserva_temp["salida"], 1))
+                  reserva_temp["entrada"], reserva_temp["salida"], 1,
+                  reserva_temp.get("imagen_seleccionada")))
             id_reserva = cur.lastrowid
 
             # Insertar servicios adicionales (si los hay)
@@ -301,4 +302,3 @@ def cancelar_reserva(id_reserva):
 
     flash("Reserva cancelada con éxito.", "success")
     return redirect(url_for("reservas.mis_reservas"))
-
