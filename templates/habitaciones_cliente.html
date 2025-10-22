@@ -267,6 +267,35 @@
 
 {% block extra_js %}
 <script>
+// ===== Validación de Fechas en Filtros =====
+document.addEventListener('DOMContentLoaded', () => {
+  const fechaEntradaInput = document.querySelector('[name="fecha_entrada"]');
+  const fechaSalidaInput = document.querySelector('[name="fecha_salida"]');
+
+  // 1. Establecer la fecha mínima para la entrada como hoy
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalizar a medianoche
+  const todayString = today.toISOString().split('T')[0];
+  fechaEntradaInput.min = todayString;
+
+  // 2. Validar que la fecha de entrada no sea pasada
+  fechaEntradaInput.addEventListener('change', () => {
+    const selectedDate = new Date(fechaEntradaInput.value);
+    if (selectedDate < today) {
+      alert('La fecha de entrada no puede ser una fecha pasada.');
+      fechaEntradaInput.value = fechaEntradaInput.min;
+    }
+
+    // 3. Actualizar la fecha mínima de salida
+    if (fechaEntradaInput.value) {
+      const nextDay = new Date(fechaEntradaInput.value);
+      nextDay.setDate(nextDay.getDate() + 2); // +1 para el día siguiente, +1 para que sea seleccionable
+      fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
+    }
+  });
+});
+
+
 // ===== Modales (detalles y servicios) =====
 document.addEventListener('click', (e)=>{
   const openBtn = e.target.closest('[data-open]');
