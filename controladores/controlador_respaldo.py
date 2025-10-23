@@ -299,6 +299,9 @@ def eliminar_respaldo(nombre):
         flash("Archivo no encontrado.", "danger")
     return redirect(url_for("respaldo.panel_respaldo"))
 
+def _get_mysql_client():
+    mysql_path, _ = _find_mysql_binaries()
+    return mysql_path
 
 @respaldo_bp.route("/admin/respaldo/restaurar/<nombre>", methods=["POST"])
 def restaurar_respaldo(nombre):
