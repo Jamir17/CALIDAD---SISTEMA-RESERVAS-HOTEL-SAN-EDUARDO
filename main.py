@@ -11,6 +11,7 @@ from controladores.controlador_checkinout import checkinout_bp
 from controladores.controlador_respaldo import respaldo_bp
 from controladores.controlador_gestion_roles import gestion_roles_bp
 from controladores.controlador_gestion_usuarios_roles import gestion_usuarios_roles_bp
+from controladores.controlador_reservas_cliente import reservas_cliente_bp
 
 app = Flask(__name__)
 app.secret_key = "clave-super-segura"
@@ -32,6 +33,7 @@ app.register_blueprint(checkinout_bp)
 app.register_blueprint(respaldo_bp, url_prefix="/")
 app.register_blueprint(gestion_roles_bp)
 app.register_blueprint(gestion_usuarios_roles_bp)
+app.register_blueprint(reservas_cliente_bp)
 
 # ====== RUTA PRINCIPAL ======
 @app.route("/")
