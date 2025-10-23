@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Actualizar la fecha mínima de salida
     if (fechaEntradaInput.value) {
       const nextDay = new Date(fechaEntradaInput.value);
-      nextDay.setDate(nextDay.getDate() + 2); // +1 para el día siguiente, +1 para que sea seleccionable
+      nextDay.setDate(nextDay.getDate() + 1); // +1 para el día siguiente, +1 para que sea seleccionable
       fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
     }
   });
@@ -397,7 +397,7 @@ function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = 
   reserva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: imagenSeleccionada, servicios: [] };
 
   // Condición: si la reserva es > 10 noches, añadir servicios gratis
-  if (noches > 10) {
+  if (noches > 3) {
     const desayuno = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'desayuno buffet');
     const lavanderia = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'lavandería');
 
