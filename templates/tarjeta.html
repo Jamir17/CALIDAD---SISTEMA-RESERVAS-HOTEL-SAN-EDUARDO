@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Pago con Tarjeta - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container-pago {
+        max-width: 500px;
+        margin: 120px auto 40px;
+        padding: 20px;
+    }
+    .payment-form {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        padding: 25px;
+    }
+    .header h1 {
+        font-size: 22px;
+        color: #0f2a63;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .card-resumen {
+        background: #f8faff;
+        border: 1px solid #d6e0ff;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        font-size: 14px;
+    }
+    .card-resumen p { margin: 4px 0; }
+    .total { color: #1e8449; font-weight: bold; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+    .form-row {
+        display: flex;
+        gap: 15px;
+    }
+    .form-row .form-group { flex: 1; }
+    .date-inputs { display: flex; align-items: center; }
+    .date-inputs .separator { margin: 0 5px; }
+    .cvv-input-group { position: relative; }
+    .cvv-input-group input { padding-right: 40px; }
+    .card-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 20px;
+        object-fit: contain;
+    }
+    .security-info {
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+        margin-top: 20px;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+    }
+    .btn-pay {
+        width: 100%;
+        padding: 12px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .btn-pay:hover { background-color: #218838; }
+    .error-message {
+        color: #dc3545;
+        font-size: 12px;
+        display: none;
+        margin-top: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-pago">
+    <div class="payment-form">
+        <!-- Header -->
+        <div class="header">
+            <h1>Tarjeta de crédito o débito</h1>
+        </div>
+
+        <!-- Resumen -->
+        <section class="card-resumen">
+            <p><strong>Habitación:</strong> {{ reserva.tipo }} Nº {{ reserva.numero }}</p>
+            <p><strong>Huésped:</strong> {{ reserva.huesped.nombre }}</p>
+            <p><strong>Total a Pagar:</strong> <span class="total">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span></p>
+        </section>
+
+        <!-- Form -->
+        <form id="paymentForm" class="form" method="POST" action="{{ url_for('reservas.confirmar_reserva') }}">
+            <!-- Nombre del titular -->
+            <div class="form-group">
+                <label for="cardholderName">Nombre del titular</label>
+                <input type="text" id="cardholderName" name="cardholderName" placeholder="Como aparece en la tarjeta" required>
+                <span class="error-message" id="nameError"></span>
+            </div>
+
+            <!-- Número de tarjeta -->
+            <div class="form-group">
+                <label for="cardNumber">Número de tarjeta</label>
+                <input type="text" id="cardNumber" name="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                <span class="error-message" id="cardError"></span>
+            </div>
+
+            <!-- Fecha de expiración y Código de seguridad -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fecha de expiración</label>
+                    <div class="date-inputs">
+                        <input type="number" id="expiryMonth" name="expiryMonth" placeholder="Mes" min="1" max="12" required>
+                        <span class="separator">/</span>
+                        <input type="number" id="expiryYear" name="expiryYear" placeholder="Año" min="2024" max="2099" required>
+                    </div>
+                    <span class="error-message" id="dateError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="cvv">Código de seguridad</label>
+                    <div class="cvv-input-group">
+                        <input type="text" id="cvv" name="cvv" placeholder="3-4 dígitos" maxlength="4" required>
+                        <img src="{{ url_for('static', filename='img/pagos/cvv.png') }}" alt="CVV" class="card-icon">
+                    </div>
+                    <span class="error-message" id="cvvError"></span>
+                </div>
+            </div>
+
+            <!-- Security Info -->
+            <div class="security-info">
+                <span>Tus pagos se realizan de forma segura con encriptación de 256 bits.</span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-pay">Pagar y Confirmar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('paymentForm');
+    const cardNumberInput = document.getElementById('cardNumber');
+
+    // Formatear número de tarjeta con espacios
+    cardNumberInput.addEventListener('input', (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+        e.target.value = value;
+    });
+
+    form.addEventListener('submit', (e) => {
+        // Aquí iría la validación de la tarjeta antes de enviar
+        // Por simplicidad, solo se envía el formulario.
+        // En un caso real, se usaría una pasarela de pago como Stripe.js o Culqi.
+        console.log('Enviando formulario de pago...');
+    });
+});
+</script>
+{% endblock %}

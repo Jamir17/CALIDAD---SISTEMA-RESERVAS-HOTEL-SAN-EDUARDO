@@ -112,6 +112,9 @@
       <p>No has seleccionado ninguna habitación.</p>
     </div>
   </aside>
+
+  <!-- Contenedor para notificaciones dinámicas -->
+  <div id="notificacion-container"></div>
 </div>
 
 <!-- Modal Servicios Adicionales -->
@@ -278,11 +281,45 @@
 /* Animación */
 .fade-in { animation:fade .25s ease; }
 @keyframes fade { from { opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+/* Notificación dinámica (Toast) */
+#notificacion-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notificacion-toast {
+  background-color: #28a745; /* Éxito */
+  color: white;
+  padding: 16px 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  transform: translateX(100%);
+  animation: toast-in 0.5s forwards;
+}
+.notificacion-toast.out {
+  animation: toast-out 0.5s forwards;
+}
+@keyframes toast-in { to { opacity: 1; transform: translateX(0); } }
+@keyframes toast-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// ===== Datos globales desde Flask =====
+const TODOS_LOS_SERVICIOS = JSON.parse('{{ servicios_json|default('[]')|safe }}');
+
+
 // ===== Validación de Fechas en Filtros =====
 document.addEventListener('DOMContentLoaded', () => {
   const fechaEntradaInput = document.querySelector('[name="fecha_entrada"]');
@@ -358,7 +395,38 @@ function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = 
   }
 
   reserva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: imagenSeleccionada, servicios: [] };
+
+  // Condición: si la reserva es > 10 noches, añadir servicios gratis
+  if (noches > 10) {
+    const desayuno = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'desayuno buffet');
+    const lavanderia = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'lavandería');
+
+    if (desayuno) {
+      reserva.servicios.push({ id: desayuno.id_servicio, nombre: desayuno.nombre, precio: 0.00, qty: 1 });
+    }
+    if (lavanderia) {
+      reserva.servicios.push({ id: lavanderia.id_servicio, nombre: lavanderia.nombre, precio: 0.00, qty: 1 });
+    }
+    mostrarNotificacion('¡Felicidades! Por tu estancia larga, hemos incluido Desayuno y Lavandería sin costo.');
+  }
+
   renderResumen();
+}
+
+function mostrarNotificacion(mensaje) {
+  const container = document.getElementById('notificacion-container');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'notificacion-toast';
+  toast.innerHTML = `<span>🎉</span> ${mensaje}`;
+  container.appendChild(toast);
+
+  // Auto-eliminar después de 5 segundos
+  setTimeout(() => {
+    toast.classList.add('out');
+    toast.addEventListener('animationend', () => toast.remove());
+  }, 5000);
 }
 
 function renderResumen(){
@@ -375,6 +443,20 @@ function renderResumen(){
   let totalServ = 0;
   reserva.servicios.forEach(s => totalServ += (s.precio * s.qty));
 
+  // --- Lógica de Descuento por Larga Estancia ---
+  let descuentoPorcentaje = 0;
+  if (reserva.noches >= 30) {
+    descuentoPorcentaje = 0.25; // 25%
+  } else if (reserva.noches >= 15) {
+    descuentoPorcentaje = 0.20; // 20%
+  } else if (reserva.noches >= 8) {
+    descuentoPorcentaje = 0.10; // 10%
+  }
+
+  const montoDescuento = total * descuentoPorcentaje;
+  const subtotalHabitacion = total - montoDescuento;
+  const totalFinal = subtotalHabitacion + totalServ;
+
   cont.innerHTML = `
     ${reserva.imagen_seleccionada ?
       `<img src="${reserva.imagen_seleccionada}" alt="Habitación seleccionada" style="width:100%; border-radius:8px; margin-bottom:10px;">` : ''
@@ -383,8 +465,13 @@ function renderResumen(){
     <p><strong>Fechas:</strong> ${reserva.entrada} → ${reserva.salida}</p>
     <p><strong>Noches:</strong> ${reserva.noches}</p>
     <p><strong>Precio por noche:</strong> S/. ${reserva.precio.toFixed(2)}</p>
+    ${montoDescuento > 0 ? `
+      <p><strong>Subtotal Habitación:</strong> S/. ${total.toFixed(2)}</p>
+      <p style="color: #28a745;"><strong>Descuento Larga Estancia (${(descuentoPorcentaje * 100).toFixed(0)}%):</strong> - S/. ${montoDescuento.toFixed(2)}</p>
+    ` : ''}
     <p><strong>Servicios:</strong> S/. ${totalServ.toFixed(2)}</p>
-    <p><strong>Total:</strong> <span style="color:#0f9d58; font-weight:800">S/. ${(total+totalServ).toFixed(2)}</span></p>
+    <hr style="border-top: 1px dashed #ccc; margin: 8px 0;">
+    <p><strong>Total a Pagar:</strong> <span style="color:#0f9d58; font-weight:800; font-size: 1.2em;">S/. ${totalFinal.toFixed(2)}</span></p>
     <button class="btn-accion serv" onclick="abrirServicios()">🧾 Agregar Servicios Adicionales</button>
     <button class="btn-accion pago" onclick="continuarPago()">💳 Continuar Reserva</button>
   `;

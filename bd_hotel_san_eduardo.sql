@@ -233,6 +233,7 @@ CREATE TABLE IF NOT EXISTS `reservas` (
   `estado` varchar(30) DEFAULT 'Activa',
   `motivo_cancelacion` varchar(255) DEFAULT NULL,
   `fecha_cancelacion` datetime DEFAULT NULL,
+  `imagen_seleccionada` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_reserva`),
   UNIQUE KEY `codigo_confirmacion` (`codigo_confirmacion`),
   KEY `id_cliente` (`id_cliente`),

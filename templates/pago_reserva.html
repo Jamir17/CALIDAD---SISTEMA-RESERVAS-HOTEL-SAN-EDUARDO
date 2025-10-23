@@ -25,7 +25,7 @@
   </section>
 
   <!-- FORMULARIO DE DATOS Y PAGO -->
-  <form id="formPago" method="POST" enctype="multipart/form-data" action="{{ url_for('reservas.confirmar_reserva') }}">
+  <form id="formPago" method="POST" action="{{ url_for('reservas.pago_reserva') }}">
     <div class="form-seccion">
       <h3>Datos del huésped</h3>
       <div class="form-grid">
@@ -48,25 +48,7 @@
       </div>
     </div>
 
-    <div class="form-seccion">
-      <h3>Pago</h3>
-      <label>Método de pago:</label>
-      <select name="tipo_pago" id="tipo_pago" required>
-        <option value="">Seleccione</option>
-        {% for p in tipos_pago %}
-          <option value="{{ p.id_tipo_pago }}">{{ p.descripcion }}</option>
-        {% endfor %}
-      </select>
-
-      <div id="qrPago" class="oculto">
-        <h4>Escanee el código QR</h4>
-        <img id="imgQR" src="" alt="QR de pago">
-        <p>Adjunte el comprobante (jpg, png, jpeg)</p>
-        <input type="file" name="comprobante" id="comprobante" accept=".jpg,.jpeg,.png">
-      </div>
-    </div>
-
-    <button type="submit" class="btn-confirmar">Confirmar Reserva</button>
+    <button type="submit" class="btn-confirmar">Continuar a Pago</button>
   </form>
 </div>
 {% endblock %}
@@ -148,33 +130,5 @@ input, select {
 {% endblock %}
 
 {% block extra_js %}
-<script>
-const tipoPago = document.getElementById('tipo_pago');
-const qrPago = document.getElementById('qrPago');
-const imgQR = document.getElementById('imgQR');
-const comprobante = document.getElementById('comprobante');
-const formPago = document.getElementById('formPago');
-
-tipoPago.addEventListener('change', () => {
-  const valor = tipoPago.options[tipoPago.selectedIndex].text;
-  if (valor === 'Yape' || valor === 'Plin') {
-    qrPago.classList.remove('oculto');
-    imgQR.src = valor === 'Yape'
-      ? "{{ url_for('static', filename='img/pagos/qr_yape.jpg') }}"
-      : "{{ url_for('static', filename='img/pagos/qr_plin.jpg') }}";
-  } else {
-    qrPago.classList.add('oculto');
-    comprobante.value = '';
-  }
-});
-
-formPago.addEventListener('submit', (e) => {
-  const metodo = tipoPago.options[tipoPago.selectedIndex].text;
-  if ((metodo === 'Yape' || metodo === 'Plin') && !comprobante.files.length) {
-    e.preventDefault();
-    alert('Debes adjuntar el comprobante de pago.');
-    return false;
-  }
-});
-</script>
+<script></script>
 {% endblock %}
