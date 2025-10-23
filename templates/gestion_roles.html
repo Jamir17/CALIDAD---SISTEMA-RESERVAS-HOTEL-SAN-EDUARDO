@@ -1,0 +1,154 @@
+{% extends "principal.html" %}
+{% block title %}Gestión de Roles{% endblock %}
+
+{% block content %}
+<style>
+/* ===== CONTENEDOR PRINCIPAL ===== */
+.roles-wrap {
+  max-width: 900px;
+  margin: 24px auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 30px;
+  box-shadow: 0 8px 24px rgba(16,24,40,0.08);
+}
+
+.roles-wrap h3 {
+  font-weight: 700;
+  color: #0a2342;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.roles-wrap h3 i {
+  color: #1666ff;
+}
+
+/* ===== FORMULARIO NUEVO ROL ===== */
+.add-role-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.add-role-form input {
+  flex: 1;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 15px;
+}
+.add-role-form button {
+  background: #1666ff;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  transition: .2s;
+}
+.add-role-form button:hover {
+  filter: brightness(.95);
+}
+
+/* ===== TABLA ===== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table th {
+  background: #0a2342;
+  color: #fff;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+.table td {
+  padding: 12px;
+  text-align: center;
+  vertical-align: middle;
+  border-top: 1px solid #e5e7eb;
+}
+.table tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ===== BOTONES ===== */
+.btn-save, .btn-delete {
+  width: 100px;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 0;
+  font-weight: 600;
+  transition: .2s;
+}
+
+.btn-save {
+  background: #1666ff;
+  color: #fff;
+}
+.btn-save:hover {
+  filter: brightness(.93);
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-delete:hover {
+  filter: brightness(.9);
+}
+
+.input-edit {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  padding: 8px 10px;
+  text-align: center;
+}
+</style>
+
+<div class="roles-wrap">
+  <h3>Gestión de roles</h3>
+
+  <!-- 🔹 Formulario para agregar nuevo rol -->
+  <form method="POST" action="{{ url_for('gestion_roles.crear_rol') }}" class="add-role-form">
+    <input type="text" name="nombre_rol" placeholder="Ingrese un nuevo rol" required>
+    <button type="submit">Guardar</button>
+  </form>
+
+  <!-- 🔹 Tabla de roles -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre del Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for rol in roles %}
+      <tr>
+        <td>{{ rol.id_rol }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('gestion_roles.editar_rol') }}">
+            <input type="hidden" name="id_rol" value="{{ rol.id_rol }}">
+            <input type="text" name="nombre_rol" value="{{ rol.nombre_rol }}" class="input-edit">
+        </td>
+        <td style="display:flex; gap:8px; justify-content:center;">
+            <button type="submit" class="btn-save">Guardar</button>
+          </form>
+          <form method="POST" action="{{ url_for('gestion_roles.eliminar_rol') }}">
+            <input type="hidden" name="id_rol" value="{{ rol.id_rol }}">
+            <button type="submit" class="btn-delete">Eliminar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "principal.html" %}
+{% block title %}Asignar roles a usuarios{% endblock %}
+
+{% block content %}
+<style>
+/* ===== Estilo general ===== */
+.usr-wrap {
+  max-width: 1200px;
+  margin: 24px auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px 26px;
+  box-shadow: 0 8px 24px rgba(16,24,40,.08);
+}
+.usr-wrap h3 {
+  font-weight: 700;
+  color: #0a2342;
+  margin-bottom: 18px;
+}
+.table th {
+  background: #0a2342;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
+}
+.table td {
+  text-align: center;
+  vertical-align: middle;
+}
+.btn-primary {
+  background: #1666ff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-weight: 500;
+}
+.btn-primary:hover {
+  filter: brightness(.93);
+}
+.dataTables_wrapper .dataTables_filter input {
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.dataTables_length select {
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+</style>
+
+<!-- 📋 Contenedor -->
+<div class="usr-wrap">
+  <h3>Asignación de roles a usuarios</h3>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- 🧩 Tabla -->
+  <table id="tablaUsuarios" class="table table-bordered table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Rol actual</th>
+        <th>Nuevo rol</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr>
+        <td>{{ u.nombres }} {{ u.apellidos }}</td>
+        <td>{{ u.correo }}</td>
+        <td>{{ u.nombre_rol }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('gestion_usuarios_roles.actualizar_rol_usuario') }}" class="d-flex gap-2 justify-content-center">
+            <input type="hidden" name="id_usuario" value="{{ u.id_usuario }}">
+            <select name="id_rol" class="form-select" style="max-width:200px;">
+              {% for r in roles %}
+              <option value="{{ r.id_rol }}" {% if u.id_rol == r.id_rol %}selected{% endif %}>{{ r.nombre_rol }}</option>
+              {% endfor %}
+            </select>
+        </td>
+        <td>
+            <button type="submit" class="btn btn-primary btn-sm">Actualizar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 🔹 Scripts para DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+
+<script>
+$(document).ready(function () {
+  $('#tablaUsuarios').DataTable({
+    language: {
+      search: "Buscar:",
+      lengthMenu: "Mostrar _MENU_ registros",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
+      paginate: {
+        previous: "Anterior",
+        next: "Siguiente"
+      },
+      zeroRecords: "No se encontraron coincidencias"
+    },
+    pageLength: 5,
+    lengthMenu: [5, 10, 25, 50, 100],
+    columnDefs: [
+      { orderable: false, targets: [3, 4] } // No ordenar por las columnas de rol y acción
+    ]
+  });
+});
+</script>
+{% endblock %}
