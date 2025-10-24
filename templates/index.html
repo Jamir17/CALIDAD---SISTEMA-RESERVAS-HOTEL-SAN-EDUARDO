@@ -320,4 +320,188 @@
         </div>
       </div>
     </section>
+
+    <!-- Botón Flotante de WhatsApp -->
+    <div class="whatsapp-fab-container">
+      <div class="whatsapp-fab-options">
+        <a href="https://wa.me/51948436969?text=Hola,%20necesito%20ayuda%20con%20una%20reserva." target="_blank" class="whatsapp-option">
+          <div class="whatsapp-option-text">
+            <strong>Reservas</strong>
+            <span>+51 948 436 969</span>
+          </div>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="whatsapp-icon-small">
+        </a>
+        <a href="https://wa.me/51966555444?text=Hola,%20necesito%20soporte%20técnico." target="_blank" class="whatsapp-option">
+          <div class="whatsapp-option-text">
+            <strong>Soporte Técnico</strong>
+            <span>+51 966 555 444</span>
+          </div>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="whatsapp-icon-small">
+        </a>
+      </div>
+      <button class="whatsapp-fab" id="whatsappFabBtn" aria-label="Abrir opciones de WhatsApp">
+        <svg class="whatsapp-icon-main" viewBox="0 0 32 32"><path d=" M19.11 17.205c-.372 0-1.088 1.39-1.518 1.39a.63.63 0 0 1-.315-.1c-.802-.402-1.504-.817-2.163-1.447-.545-.516-1.146-1.29-1.46-1.963a.426.426 0 0 1-.073-.215c0-.33.99-.945.99-1.49 0-.143-.73-2.09-.832-2.335-.143-.372-.214-.487-.6-.487-.187 0-.36-.044-.53-.044-.302 0-.53.115-.746.315-.688.645-1.032 1.318-1.06 2.264v.114c-.015.99.472 1.977 1.017 2.78 1.23 1.82 2.506 3.41 4.554 4.34.616.287 2.035.888 2.722.888.817 0 2.15-.515 2.478-1.38.288-.73.288-1.45.214-1.59-.072-.142-.24-.214-.51-.355z" fill-rule="evenodd"></path></svg>
+        <svg class="close-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+      </button>
+    </div>
+{% endblock %}
+
+{% block extra_css %}
+  {{ super() }}
+  <style>
+    /* Estilos para el botón flotante de WhatsApp */
+    .whatsapp-fab-container {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .whatsapp-fab {
+      width: 60px;
+      height: 60px;
+      background-color: #25D366;
+      border-radius: 50%;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    .whatsapp-fab:hover {
+      transform: scale(1.1);
+    }
+    .whatsapp-fab.open {
+      background-color: #e74c3c;
+    }
+    .whatsapp-fab svg {
+      width: 32px;
+      height: 32px;
+      fill: white;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .whatsapp-fab .close-icon {
+      opacity: 0;
+      transform: scale(0);
+      position: absolute;
+    }
+    .whatsapp-fab.open .whatsapp-icon-main {
+      opacity: 0;
+      transform: scale(0);
+    }
+    .whatsapp-fab.open .close-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .whatsapp-fab-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 15px;
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.3s ease;
+    }
+    .whatsapp-fab-container.open .whatsapp-fab-options {
+      transform: scaleY(1);
+    }
+    .whatsapp-option {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      padding: 10px 15px;
+      border-radius: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      text-decoration: none;
+      color: #333;
+      gap: 10px;
+      transition: transform 0.2s ease;
+    }
+    .whatsapp-option:hover {
+      transform: translateX(-5px);
+    }
+    .whatsapp-option-text {
+      display: flex;
+      flex-direction: column;
+      text-align: right;
+    }
+    .whatsapp-option-text strong { font-size: 14px; }
+    .whatsapp-option-text span { font-size: 12px; color: #555; }
+    .whatsapp-icon-small {
+      width: 28px;
+      height: 28px;
+    }
+
+    /* =========================================
+       RESPONSIVE DESIGN PARA index.html
+       ========================================= */
+
+    /* Ajustes para pantallas medianas (tablets, ~768px a 1024px) */
+    @media (max-width: 1024px) {
+      .container { padding: 0 20px; }
+      .hero-content h1 { font-size: 3.5rem; }
+      .hero-content p { font-size: 1.1rem; }
+      .services-grid, .rooms-grid, .gallery-grid, .testimonials-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+      .room-card .room-image { height: 220px; }
+    }
+
+    /* Ajustes para pantallas pequeñas (móviles, ~480px a 767px) */
+    @media (max-width: 767px) {
+      .hero-content h1 { font-size: 2.5rem; }
+      .hero-content p { font-size: 1rem; }
+      .hero-actions { flex-direction: column; gap: 15px; }
+      .hero-actions .btn { width: 100%; }
+      .tabs-header { flex-direction: column; gap: 10px; }
+      .tabs-header .tab-button { width: 100%; }
+      .services-grid, .rooms-grid, .gallery-grid, .testimonials-grid {
+        grid-template-columns: 1fr; /* Una columna para móviles */
+      }
+      .room-card { flex-direction: column; }
+      .room-card .room-image { width: 100%; height: 250px; }
+      .cta-actions { flex-direction: column; gap: 15px; }
+      .cta-actions .btn { width: 100%; }
+      .section-header h2 { font-size: 2rem; }
+      .section-header p { font-size: 0.9rem; }
+    }
+
+    /* Ajustes para pantallas muy pequeñas (menos de 480px) */
+    @media (max-width: 480px) {
+      .container { padding: 0 15px; }
+      .hero-content h1 { font-size: 2rem; }
+      .hero-content p { font-size: 0.9rem; }
+      .section-header h2 { font-size: 1.8rem; }
+      .section-header p { font-size: 0.85rem; }
+      .whatsapp-fab-container { bottom: 15px; right: 15px; }
+      .whatsapp-fab { width: 50px; height: 50px; }
+      .whatsapp-fab svg { width: 28px; height: 28px; }
+      .whatsapp-fab-options { margin-bottom: 10px; }
+      .whatsapp-option { padding: 8px 12px; }
+      .whatsapp-option-text strong { font-size: 13px; }
+      .whatsapp-option-text span { font-size: 11px; }
+      .whatsapp-icon-small { width: 24px; height: 24px; }
+    }
+  </style>
+{% endblock %}
+
+{% block extra_js %}
+  {{ super() }}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const fabContainer = document.querySelector('.whatsapp-fab-container');
+      const fabButton = document.getElementById('whatsappFabBtn');
+
+      if (fabButton) {
+        fabButton.addEventListener('click', () => {
+          fabContainer.classList.toggle('open');
+          fabButton.classList.toggle('open');
+        });
+      }
+    });
+  </script>
 {% endblock %}
