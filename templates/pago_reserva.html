@@ -1,134 +1,444 @@
 {% extends "base.html" %}
-{% block title %}Pago de Reserva - Hotel San Eduardo{% endblock %}
-
-{% block content %}
-<div class="pago-layout">
-  <h2>Confirmar Reserva</h2>
-
-  <!-- RESUMEN DE RESERVA -->
-  <section class="card-resumen">
-    <h3>Resumen</h3>
-    <p><strong>Habitación:</strong> {{ reserva.tipo }} Nº {{ reserva.numero }}</p>
-    <p><strong>Fechas:</strong> {{ reserva.entrada }} → {{ reserva.salida }}</p>
-    <p><strong>Noches:</strong> {{ reserva.noches }}</p>
-
-    {% if reserva.servicios %}
-    <p><strong>Servicios:</strong></p>
-    <ul>
-      {% for s in reserva.servicios %}
-        <li>{{ s.nombre }} x{{ s.qty }} → S/. {{ (s.precio * s.qty) | round(2) }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-
-    <p><strong>Total:</strong> <span class="total">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span></p>
-  </section>
-
-  <!-- FORMULARIO DE DATOS Y PAGO -->
-  <form id="formPago" method="POST" action="{{ url_for('reservas.pago_reserva') }}">
-    <div class="form-seccion">
-      <h3>Datos del huésped</h3>
-      <div class="form-grid">
-        <div>
-          <label>Nombre completo</label>
-          <input type="text" name="nombre_huesped" required>
-        </div>
-        <div>
-          <label>Documento</label>
-          <input type="text" name="documento_huesped" required>
-        </div>
-        <div>
-          <label>Teléfono</label>
-          <input type="text" name="telefono_huesped">
-        </div>
-        <div>
-          <label>Correo</label>
-          <input type="email" name="correo_huesped">
-        </div>
-      </div>
-    </div>
-
-    <button type="submit" class="btn-confirmar">Continuar a Pago</button>
-  </form>
-</div>
-{% endblock %}
+{% block title %}Hotel San Eduardo - Confirmación de Pago{% endblock %}
 
 {% block extra_css %}
 <style>
-.pago-layout {
-  max-width: 800px;
-  margin: 100px auto;
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 3px 15px rgba(0,0,0,.1);
-}
-.pago-layout h2 {
-  color: #0f2a63;
-  margin-bottom: 20px;
-  text-align: center;
-}
-.card-resumen {
-  background: #f8faff;
-  border: 1px solid #d6e0ff;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 25px;
-}
-.card-resumen h3 {
-  margin-bottom: 10px;
-  color: #0f2a63;
-}
-.total {
-  color: #1e8449;
-  font-weight: bold;
-}
-.form-seccion {
-  margin-bottom: 25px;
-}
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-label {
-  font-weight: 600;
-  color: #0f2a63;
-}
-input, select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #d6e0ff;
-  border-radius: 8px;
-  margin-top: 4px;
-}
-#qrPago {
-  text-align: center;
-  margin-top: 15px;
-}
-#qrPago img {
-  max-width: 200px;
-  margin: 10px auto;
-  display: block;
-  border-radius: 8px;
-}
-.oculto { display: none; }
-.btn-confirmar {
-  width: 100%;
-  background: #28a745;
-  color: #fff;
-  border: none;
-  padding: 12px;
-  font-weight: bold;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.btn-confirmar:hover {
-  background: #218838;
-}
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+    }
+
+    /* BREADCRUMB */
+    .breadcrumb {
+        max-width: 1400px;
+        margin: 100px auto 0;
+        padding: 1rem 2rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .breadcrumb a {
+        color: #666;
+        text-decoration: none;
+    }
+
+    /* MAIN CONTAINER */
+    .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem 2rem 2rem;
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+    }
+
+    /* FORM SECTION */
+    .form-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+    }
+
+    .form-block {
+        margin-bottom: 2rem;
+    }
+
+    .form-block:last-child {
+        margin-bottom: 0;
+    }
+
+    .block-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .block-number {
+        width: 32px;
+        height: 32px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    .block-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    /* FORM FIELDS */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row.full {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* RADIO OPTIONS */
+    .radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .radio-option {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .radio-option:hover {
+        border-color: #3b82f6;
+        background-color: #f0f9ff;
+    }
+
+    .radio-option input[type="radio"] {
+        margin-right: 0.75rem;
+        cursor: pointer;
+        accent-color: #3b82f6;
+    }
+
+    .radio-option input[type="radio"]:checked + label {
+        color: #1f2937;
+    }
+
+    .radio-option label {
+        cursor: pointer;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* SUMMARY SIDEBAR */
+    .summary-card {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+
+    .summary-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+    }
+
+    .summary-label {
+        opacity: 0.9;
+    }
+
+    .summary-value {
+        font-weight: 600;
+    }
+
+    .summary-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 1rem 0;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-total-label {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .summary-total-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* BENEFITS */
+    .benefits-section {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .benefit-item {
+        display: flex;
+        gap: 0.75rem;
+        font-size: 0.85rem;
+        align-items: flex-start;
+    }
+
+    .benefit-icon {
+        width: 18px;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    /* SECURITY ALERT */
+    .security-alert {
+        background: #ecfdf5;
+        border-left: 4px solid #10b981;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .security-alert-title {
+        color: #047857;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .security-alert-text {
+        color: #065f46;
+    }
+
+    .check-icon {
+        width: 18px;
+        height: 18px;
+        background: #10b981;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+
+    /* BUTTON */
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 2rem;
+        transition: background-color 0.3s;
+    }
+
+    .submit-btn:hover {
+        background-color: #2563eb;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+        .main-container {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-card {
+            position: static;
+            order: -1; /* Mover resumen arriba en móviles */
+        }
+    }
 </style>
 {% endblock %}
 
-{% block extra_js %}
-<script></script>
+{% block content %}
+<!-- BREADCRUMB -->
+<nav class="breadcrumb">
+    <a href="{{ url_for('reservas.habitaciones_cliente') }}">Reserva</a> / Confirmación de pago
+</nav>
+
+<!-- MAIN -->
+<div class="main-container">
+    <!-- FORM -->
+    <div class="form-section">
+        <form method="POST" action="{{ url_for('reservas.pago_reserva') }}">
+            <!-- BLOCK 1 -->
+            <div class="form-block">
+                <div class="block-header">
+                    <div class="block-number">1</div>
+                    <div class="block-title">Datos del Huésped Principal</div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label for="nombre_huesped">Nombres y Apellidos</label>
+                        <input type="text" id="nombre_huesped" name="nombre_huesped" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="documento_huesped">Nº de Documento (DNI/Pasaporte)</label>
+                        <input type="text" id="documento_huesped" name="documento_huesped" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono_huesped">Teléfono</label>
+                        <input type="tel" id="telefono_huesped" name="telefono_huesped" required>
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label for="correo_huesped">Correo Electrónico (opcional)</label>
+                        <input type="email" id="correo_huesped" name="correo_huesped" placeholder="Para enviar confirmación adicional">
+                    </div>
+                </div>
+            </div>
+
+            <!-- BLOCK 2 -->
+            <div class="form-block">
+                <div class="block-header">
+                    <div class="block-number">2</div>
+                    <div class="block-title">Método de Pago</div>
+                </div>
+
+                <div class="radio-group">
+                    {% for tipo in tipos_pago %}
+                    <label class="radio-option">
+                        <input type="radio" name="tipo_pago" value="{{ tipo.id_tipo_pago }}" {% if loop.first %}checked{% endif %} required>
+                        <label style="cursor: pointer;">{{ tipo.descripcion }}</label>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Continuar al Pago</button>
+        </form>
+    </div>
+
+    <!-- SIDEBAR SUMMARY -->
+    <div class="summary-card">
+        <div class="summary-title">Resumen de tu Estancia</div>
+
+        <div class="summary-info">
+            <div class="summary-row">
+                <span class="summary-label">Habitación:</span>
+                <span class="summary-value">{{ reserva.tipo }} Nº {{ reserva.numero }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Fechas:</span>
+                <span class="summary-value">{{ reserva.entrada }} al {{ reserva.salida }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Noches:</span>
+                <span class="summary-value">{{ reserva.noches }} Noche{% if reserva.noches > 1 %}s{% endif %}</span>
+            </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-info">
+            <div class="summary-row">
+                <span class="summary-label">Subtotal</span>
+                <span class="summary-value">S/. {{ (reserva.precio * reserva.noches) | round(2) }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Servicios</span>
+                <span class="summary-value">S/. {{ (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0) | round(2) }}</span>
+            </div>
+        </div>
+
+        <div class="summary-total">
+            <span class="summary-total-label">Total a Pagar</span>
+            <span class="summary-total-amount">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span>
+        </div>
+
+        <div class="benefits-section">
+            <div class="benefit-item">
+                <div class="benefit-icon">●</div>
+                <div><strong>Check-in después de las 3 PM</strong><br>Check-out antes de las 11 AM</div>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">●</div>
+                <div><strong>Cancelación gratuita</strong><br>Hasta 48 horas antes</div>
+            </div>
+        </div>
+
+        <div class="security-alert">
+            <div class="security-alert-title">
+                <div class="check-icon">✓</div>
+                Tu pago está protegido
+            </div>
+            <div class="security-alert-text">Garantía de seguridad en todas las transacciones</div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,181 +1,844 @@
 {% extends "base.html" %}
-{% block title %}Pago con Tarjeta - Hotel San Eduardo{% endblock %}
+:root {
+  /* Color palette from Hotel San Eduardo */
+  --primary: #5b3fd8;
+  --secondary: #1ab394;
+  --dark: #1c2536;
+  --light: #f8fafb;
+  --border: #e8eef5;
+  --text-dark: #1c2536;
+  --text-light: #6b7280;
+  --error: #ef4444;
+  --success: #10b981;
+}
+
+{% block title %}Formulario de Pago - Hotel San Eduardo{% endblock %}
 
 {% block extra_css %}
 <style>
-    .container-pago {
-        max-width: 500px;
-        margin: 120px auto 40px;
-        padding: 20px;
-    }
-    .payment-form {
-        background-color: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        padding: 25px;
-    }
-    .header h1 {
-        font-size: 22px;
-        color: #0f2a63;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-    .card-resumen {
-        background: #f8faff;
-        border: 1px solid #d6e0ff;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 25px;
-        font-size: 14px;
-    }
-    .card-resumen p { margin: 4px 0; }
-    .total { color: #1e8449; font-weight: bold; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 600;
-        color: #333;
-        font-size: 14px;
-    }
-    .form-group input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-    }
-    .form-row {
-        display: flex;
-        gap: 15px;
-    }
-    .form-row .form-group { flex: 1; }
-    .date-inputs { display: flex; align-items: center; }
-    .date-inputs .separator { margin: 0 5px; }
-    .cvv-input-group { position: relative; }
-    .cvv-input-group input { padding-right: 40px; }
-    .card-icon {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 30px;
-        height: 20px;
-        object-fit: contain;
-    }
-    .security-info {
-        font-size: 12px;
-        color: #666;
-        text-align: center;
-        margin-top: 20px;
-        border-top: 1px solid #eee;
-        padding-top: 15px;
-    }
-    .btn-pay {
-        width: 100%;
-        padding: 12px;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-    .btn-pay:hover { background-color: #218838; }
-    .error-message {
-        color: #dc3545;
-        font-size: 12px;
-        display: none;
-        margin-top: 4px;
-    }
+   * {
+  box-sizing: border-box;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+    "Droid Sans", "Helvetica Neue", sans-serif;
+  background: linear-gradient(135deg, var(--light) 0%, #f3f0ff 100%);
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.container-pago {
+  max-width: 500px;
+  margin: 120px auto 40px; /* Ajustado para dar espacio al header principal */
+}
+
+/* Header */
+.payment-header {
+  background: linear-gradient(135deg, var(--dark) 0%, #2d3a4e 100%);
+  color: white;
+  padding: 30px 24px;
+  margin-bottom: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(28, 37, 54, 0.15);
+}
+
+.payment-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-circle {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--primary) 0%, #7c5ce6 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(91, 63, 216, 0.3);
+}
+
+.payment-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.payment-header p {
+  font-size: 12px;
+  opacity: 0.85;
+  margin: 4px 0 0 0;
+}
+
+/* Payment Form */
+.payment-form {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* Card Selection */
+.card-selection {
+  padding: 28px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(to bottom, #fafbfc, white);
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
+}
+
+.card-types-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.card-type-group {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.card-type-group:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(91, 63, 216, 0.1);
+}
+
+.card-type-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-logos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-icon-svg {
+  width: 40px;
+  height: 25px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+  transition: transform 0.2s ease;
+}
+
+.card-icon-svg:hover {
+  transform: translateY(-2px);
+}
+
+/* Form */
+.form {
+  padding: 28px 24px;
+}
+
+.form-section {
+  margin-bottom: 28px;
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91, 63, 216, 0.1);
+  background: white;
+}
+
+.form-group input::placeholder {
+  color: #b0bac9;
+}
+
+.card-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.card-input-wrapper input {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.card-input-icon {
+  position: absolute;
+  right: 14px;
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Form Row */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Date Inputs */
+.date-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.date-inputs input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.date-inputs input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91, 63, 216, 0.1);
+}
+
+.separator {
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* CVV Input Group */
+.cvv-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cvv-input-group input {
+  flex: 1;
+  padding-right: 40px;
+  font-size: 20px;
+  letter-spacing: 4px;
+  font-family: "Courier New", monospace;
+}
+
+.cvv-icon {
+  position: absolute;
+  right: 14px;
+  width: 20px;
+  height: 20px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Error Messages */
+.error-message {
+  display: block;
+  color: var(--error);
+  font-size: 12px;
+  margin-top: 6px;
+  min-height: 16px;
+  font-weight: 500;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Security Section */
+.security-section {
+  background: linear-gradient(135deg, rgba(26, 179, 148, 0.05) 0%, rgba(91, 63, 216, 0.05) 100%);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.security-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.security-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.security-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.security-text {
+  font-size: 12px;
+  color: var(--text-light);
+  margin: 4px 0 0 0;
+}
+
+.payment-provider {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.provider-badge {
+  background: var(--secondary);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+
+/* Submit Button */
+.btn-pay {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, #7c5ce6 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: -0.3px;
+  box-shadow: 0 4px 15px rgba(91, 63, 216, 0.3);
+  margin-bottom: 16px;
+}
+
+.btn-pay:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(91, 63, 216, 0.4);
+}
+
+.btn-pay:active {
+  transform: translateY(0);
+}
+
+.btn-pay:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-text {
+  flex: 1;
+  text-align: center;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Trust Indicators */
+.trust-indicators {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 0 24px 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+}
+
+.indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--light);
+  transition: all 0.3s ease;
+}
+
+.indicator:hover {
+  background: linear-gradient(135deg, rgba(91, 63, 216, 0.05), rgba(26, 179, 148, 0.05));
+}
+
+.indicator svg {
+  width: 24px;
+  height: 24px;
+  color: var(--primary);
+}
+
+.indicator span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dark);
+  letter-spacing: -0.2px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .container-pago {
+    max-width: 100%;
+  }
+
+  .payment-header {
+    padding: 20px 16px;
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-size: 18px;
+  }
+
+  .payment-form {
+    border-radius: 8px;
+  }
+
+  .card-types-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .trust-indicators {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 0 16px 16px;
+  }
+
+  .btn-pay {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .date-inputs {
+    gap: 6px;
+  }
+}
+
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-pago">
+    <!-- Enhanced header with refined branding -->
+    <div class="payment-header">
+        <div class="payment-header-content">
+            <div class="logo-circle">H</div>
+            <div>
+                <h1>Hotel San Eduardo</h1>
+                <p>Procesamiento de Pago Seguro</p>
+            </div>
+        </div>
+    </div>
+
     <div class="payment-form">
-        <!-- Header -->
-        <div class="header">
-            <h1>Tarjeta de crédito o débito</h1>
+        <!-- Resumen de la reserva -->
+        <style>
+            .card-resumen { background: #f8faff; border: 1px solid #d6e0ff; padding: 15px; border-radius: 10px; margin: 20px; font-size: 14px; }
+            .card-resumen p { margin: 4px 0; }
+            .total { color: #1e8449; font-weight: bold; }
+        </style>
+        <div class="card-resumen">
+             <p><strong>Habitación:</strong> {{ reserva.tipo }} Nº {{ reserva.numero }}</p>
+             <p><strong>Huésped:</strong> {{ reserva.huesped.nombre }}</p>
+             <p><strong>Total a Pagar:</strong> <span class="total">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span></p>
         </div>
 
-        <!-- Resumen -->
-        <section class="card-resumen">
-            <p><strong>Habitación:</strong> {{ reserva.tipo }} Nº {{ reserva.numero }}</p>
-            <p><strong>Huésped:</strong> {{ reserva.huesped.nombre }}</p>
-            <p><strong>Total a Pagar:</strong> <span class="total">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span></p>
-        </section>
-
-        <!-- Form -->
-        <form id="paymentForm" class="form" method="POST" action="{{ url_for('reservas.confirmar_reserva') }}">
-            <!-- Nombre del titular -->
-            <div class="form-group">
-                <label for="cardholderName">Nombre del titular</label>
-                <input type="text" id="cardholderName" name="cardholderName" placeholder="Como aparece en la tarjeta" required>
-                <span class="error-message" id="nameError"></span>
-            </div>
-
-            <!-- Número de tarjeta -->
-            <div class="form-group">
-                <label for="cardNumber">Número de tarjeta</label>
-                <input type="text" id="cardNumber" name="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required>
-                <span class="error-message" id="cardError"></span>
-            </div>
-
-            <!-- Fecha de expiración y Código de seguridad -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Fecha de expiración</label>
-                    <div class="date-inputs">
-                        <input type="number" id="expiryMonth" name="expiryMonth" placeholder="Mes" min="1" max="12" required>
-                        <span class="separator">/</span>
-                        <input type="number" id="expiryYear" name="expiryYear" placeholder="Año" min="2024" max="2099" required>
+        <!-- Improved card selection with better visual hierarchy -->
+        <div class="card-selection">
+            <h2 class="section-title">Selecciona tu método de pago</h2>
+            <div class="card-types-container">
+                <div class="card-type-group">
+                    <div class="card-type-label">Tarjetas de Crédito</div>
+                    <div class="card-logos">
+                        <svg class="card-icon-svg" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg"><rect fill="#1434CB" width="40" height="25" rx="2"/><text x="50%" y="50%" text-anchor="middle" dy="0.3em" fill="white" font-size="8" font-weight="bold">VISA</text></svg>
+                        <svg class="card-icon-svg" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg"><rect fill="#FF5F00" width="40" height="25" rx="2"/><circle cx="14" cy="12.5" r="6" fill="#EB001B"/><circle cx="26" cy="12.5" r="6" fill="#FF5F00"/><circle cx="20" cy="12.5" r="6" fill="#FFAB00"/></svg>
+                        <svg class="card-icon-svg" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg"><rect fill="#006FCF" width="40" height="25" rx="2"/><text x="50%" y="50%" text-anchor="middle" dy="0.3em" fill="white" font-size="6" font-weight="bold">AMEX</text></svg>
                     </div>
-                    <span class="error-message" id="dateError"></span>
                 </div>
-
-                <div class="form-group">
-                    <label for="cvv">Código de seguridad</label>
-                    <div class="cvv-input-group">
-                        <input type="text" id="cvv" name="cvv" placeholder="3-4 dígitos" maxlength="4" required>
-                        <img src="{{ url_for('static', filename='img/pagos/cvv.png') }}" alt="CVV" class="card-icon">
+                <div class="card-type-group">
+                    <div class="card-type-label">Tarjetas de Débito</div>
+                    <div class="card-logos">
+                        <svg class="card-icon-svg" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg"><rect fill="#003DA5" width="40" height="25" rx="2"/><text x="50%" y="50%" text-anchor="middle" dy="0.3em" fill="white" font-size="7" font-weight="bold">BBVA</text></svg>
+                        <svg class="card-icon-svg" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg"><rect fill="#1C2536" width="40" height="25" rx="2"/><text x="50%" y="50%" text-anchor="middle" dy="0.3em" fill="white" font-size="6" font-weight="bold">BCP</text></svg>
+                        <svg class="card-icon-svg" viewBox="0 0 40 25" xmlns="http://www.w3.org/2000/svg"><rect fill="#DC291E" width="40" height="25" rx="2"/><text x="50%" y="50%" text-anchor="middle" dy="0.3em" fill="white" font-size="5" font-weight="bold">SCOTIA</text></svg>
                     </div>
-                    <span class="error-message" id="cvvError"></span>
                 </div>
             </div>
+        </div>
 
-            <!-- Security Info -->
-            <div class="security-info">
-                <span>Tus pagos se realizan de forma segura con encriptación de 256 bits.</span>
+        <!-- Improved form layout with better spacing and organization -->
+        <form id="paymentForm" method="POST" action="{{ url_for('reservas.confirmar_reserva') }}">
+            <div class="form">
+                <h3 class="section-label">Información de la Tarjeta</h3>
+                
+                <!-- Cardholder Name -->
+                <div class="form-group">
+                    <label for="cardholderName">Nombre del Titular</label>
+                    <input 
+                        type="text" 
+                        id="cardholderName" 
+                        name="cardholderName" 
+                        placeholder="Exactamente como aparece en la tarjeta"
+                        required
+                    >
+                    <span class="error-message" id="nameError"></span>
+                </div>
+
+                <!-- Card Number -->
+                <div class="form-group">
+                    <label for="cardNumber">Número de Tarjeta</label>
+                    <div class="card-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="cardNumber" 
+                            name="cardNumber" 
+                            placeholder="0000 0000 0000 0000"
+                            maxlength="19"
+                            required
+                        >
+                        <svg class="card-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    </div>
+                    <span class="error-message" id="cardError"></span>
+                </div>
+
+                <!-- Expiry and CVV -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha de Expiración</label>
+                        <div class="date-inputs">
+                            <input 
+                                type="number" 
+                                id="expiryMonth" 
+                                name="expiryMonth" 
+                                placeholder="MM"
+                                min="1"
+                                max="12"
+                                required
+                            >
+                            <span class="separator">/</span>
+                            <input 
+                                type="number" 
+                                id="expiryYear" 
+                                name="expiryYear" 
+                                placeholder="AA"
+                                min="24"
+                                max="99"
+                                required
+                            >
+                        </div>
+                        <span class="error-message" id="dateError"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cvv">CVV</label>
+                        <div class="cvv-input-group">
+                            <input 
+                                type="text" 
+                                id="cvv" 
+                                name="cvv" 
+                                placeholder="•••"
+                                maxlength="4"
+                                required
+                            >
+                            <svg class="cvv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line><rect x="16" y="12" width="6" height="4" rx="1"></rect></svg>
+                        </div>
+                        <span class="error-message" id="cvvError"></span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Submit Button -->
-            <button type="submit" class="btn-pay">Pagar y Confirmar</button>
+            <!-- Enhanced security information section -->
+            <div class="security-section">
+                <div class="security-badge">
+                    <svg class="security-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 12 15 15 9"></polyline></svg>
+                    <div>
+                        <p class="security-title">Pago 100% Seguro</p>
+                        <p class="security-text">Encriptación SSL de 256 bits</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced submit button with better styling -->
+            <div class="form-actions">
+                <button type="submit" class="btn-pay">
+                    <span class="btn-text">Procesar Pago</span>
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="5 12 19 12"></polyline><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </button>
+            </div>
         </form>
+
+        <!-- Added trust indicators -->
+        <div class="trust-indicators">
+            <div class="indicator">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1C6.48 1 2 5.48 2 11s4.48 10 10 10 10-4.48 10-10S17.52 1 12 1m-2 15l-5-5 1.41-1.41L10 12.17l7.59-7.59L19 6l-9 9z"/></svg>
+                <span>Certificado</span>
+            </div>
+            <div class="indicator">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                <span>Confiable</span>
+            </div>
+            <div class="indicator">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4m0 18.91c-4.46-1.15-7.51-5.27-7.51-10.91V6.03L12 3.09l7.51 2.94v2.97c0 5.64-3.05 9.76-7.51 10.91z"/></svg>
+                <span>Protegido</span>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('paymentForm');
-    const cardNumberInput = document.getElementById('cardNumber');
+// Form elements
+const form = document.getElementById("paymentForm")
+const cardholderNameInput = document.getElementById("cardholderName")
+const cardNumberInput = document.getElementById("cardNumber")
+const expiryMonthInput = document.getElementById("expiryMonth")
+const expiryYearInput = document.getElementById("expiryYear")
+const cvvInput = document.getElementById("cvv")
 
-    // Formatear número de tarjeta con espacios
-    cardNumberInput.addEventListener('input', (e) => {
-        let value = e.target.value.replace(/\D/g, '');
-        value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
-        e.target.value = value;
-    });
+// Error message elements
+const nameError = document.getElementById("nameError")
+const cardError = document.getElementById("cardError")
+const dateError = document.getElementById("dateError")
+const cvvError = document.getElementById("cvvError")
 
-    form.addEventListener('submit', (e) => {
-        // Aquí iría la validación de la tarjeta antes de enviar
-        // Por simplicidad, solo se envía el formulario.
-        // En un caso real, se usaría una pasarela de pago como Stripe.js o Culqi.
-        console.log('Enviando formulario de pago...');
-    });
-});
+cardNumberInput.addEventListener("input", (e) => {
+  const value = e.target.value.replace(/\s/g, "").slice(0, 16)
+  const formattedValue = value.replace(/(\d{4})/g, "$1 ").trim()
+  e.target.value = formattedValue
+  validateCardNumber()
+})
+
+cvvInput.addEventListener("input", (e) => {
+  e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4)
+  validateCVV()
+})
+
+// Validate cardholder name
+cardholderNameInput.addEventListener("blur", validateCardholderName)
+cardholderNameInput.addEventListener("input", () => {
+  if (nameError.textContent) validateCardholderName()
+})
+
+// Validate expiry date
+expiryMonthInput.addEventListener("blur", validateExpiryDate)
+expiryYearInput.addEventListener("blur", validateExpiryDate)
+expiryMonthInput.addEventListener("input", () => {
+  if (dateError.textContent) validateExpiryDate()
+})
+expiryYearInput.addEventListener("input", () => {
+  if (dateError.textContent) validateExpiryDate()
+})
+
+// Validation functions
+function validateCardholderName() {
+  const value = cardholderNameInput.value.trim()
+  if (!value) {
+    nameError.textContent = "El nombre del titular es requerido"
+    return false
+  }
+  if (value.length < 3) {
+    nameError.textContent = "El nombre debe tener al menos 3 caracteres"
+    return false
+  }
+  if (!/^[a-zA-Z\s]+$/.test(value)) {
+    nameError.textContent = "El nombre solo puede contener letras"
+    return false
+  }
+  nameError.textContent = ""
+  return true
+}
+
+function validateCardNumber() {
+  const value = cardNumberInput.value.replace(/\s/g, "")
+  if (!value) {
+    cardError.textContent = "El número de tarjeta es requerido"
+    return false
+  }
+  if (value.length !== 16) {
+    cardError.textContent = "El número de tarjeta debe tener 16 dígitos"
+    return false
+  }
+  if (!/^\d+$/.test(value)) {
+    cardError.textContent = "El número de tarjeta solo puede contener dígitos"
+    return false
+  }
+  if (!luhnCheck(value)) {
+    cardError.textContent = "El número de tarjeta no es válido"
+    return false
+  }
+  cardError.textContent = ""
+  return true
+}
+
+function validateExpiryDate() {
+  const month = Number.parseInt(expiryMonthInput.value)
+  // Convierte el año de 2 dígitos (ej: 26) a 4 dígitos (ej: 2026)
+  const year = 2000 + Number.parseInt(expiryYearInput.value)
+
+  if (!month || !year) {
+    dateError.textContent = "La fecha de expiración es requerida"
+    return false
+  }
+
+  if (month < 1 || month > 12) {
+    dateError.textContent = "El mes debe estar entre 01 y 12"
+    return false
+  }
+
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1
+
+  if (year < currentYear || (year === currentYear && month < currentMonth)) {
+    dateError.textContent = "La tarjeta ha expirado"
+    return false
+  }
+
+  dateError.textContent = ""
+  return true
+}
+
+function validateCVV() {
+  const value = cvvInput.value
+  if (!value) {
+    cvvError.textContent = "El código de seguridad es requerido"
+    return false
+  }
+  if (value.length < 3 || value.length > 4) {
+    cvvError.textContent = "El código debe tener 3 o 4 dígitos"
+    return false
+  }
+  if (!/^\d+$/.test(value)) {
+    cvvError.textContent = "El código solo puede contener dígitos"
+    return false
+  }
+  cvvError.textContent = ""
+  return true
+}
+
+// Luhn algorithm for card validation
+function luhnCheck(cardNumber) {
+  let sum = 0
+  let isEven = false
+
+  for (let i = cardNumber.length - 1; i >= 0; i--) {
+    let digit = Number.parseInt(cardNumber[i])
+
+    if (isEven) {
+      digit *= 2
+      if (digit > 9) {
+        digit -= 9
+      }
+    }
+
+    sum += digit
+    isEven = !isEven
+  }
+
+  return sum % 10 === 0
+}
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault()
+
+  // Validate all fields
+  const isNameValid = validateCardholderName()
+  const isCardValid = validateCardNumber()
+  const isDateValid = validateExpiryDate()
+  const isCVVValid = validateCVV()
+
+  // Si todos los campos son válidos, deshabilita el botón y envía el formulario.
+  if (isNameValid && isCardValid && isDateValid && isCVVValid) {
+    const button = form.querySelector(".btn-pay")
+    button.disabled = true
+    button.innerHTML = '<span class="btn-text">Procesando...</span>'
+    form.submit(); // Envía el formulario al servidor
+  }
+})
+
 </script>
 {% endblock %}

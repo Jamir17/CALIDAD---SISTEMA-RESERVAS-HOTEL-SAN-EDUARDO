@@ -74,7 +74,7 @@ def pago_reserva():
             session["reserva_temp"] = datos
             return jsonify({"ok": True})
 
-        # Si es POST desde el form de datos de huésped, los guarda y redirige a tarjeta
+        # Si es POST desde el form de datos de huésped, los guarda y redirige
         reserva_temp = session.get("reserva_temp", {})
         reserva_temp['huesped'] = {
             "nombre": request.form.get("nombre_huesped"),
@@ -82,8 +82,16 @@ def pago_reserva():
             "telefono": request.form.get("telefono_huesped"),
             "correo": request.form.get("correo_huesped"),
         }
+        # Guardar el método de pago seleccionado
+        reserva_temp['id_tipo_pago'] = request.form.get("tipo_pago")
         session["reserva_temp"] = reserva_temp
-        return redirect(url_for('reservas.tarjeta'))
+
+        # Si el pago es con tarjeta (ID 2), ir al form de tarjeta.
+        # Si no, confirmar directamente.
+        if reserva_temp['id_tipo_pago'] == '2':
+            return redirect(url_for('reservas.tarjeta'))
+        else:
+            return redirect(url_for('reservas.confirmar_reserva'))
 
     # Si es GET → muestra el HTML de pago
     reserva_temp = session.get("reserva_temp")
@@ -91,7 +99,13 @@ def pago_reserva():
         flash("No hay datos de reserva seleccionados.", "error")
         return redirect(url_for("reservas.habitaciones_cliente"))
     
-    return render_template("pago_reserva.html", reserva=reserva_temp)
+    # Obtener tipos de pago para el formulario
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        cur.execute("SELECT id_tipo_pago, descripcion FROM tipo_pago")
+        tipos_pago = cur.fetchall()
+    
+    return render_template("pago_reserva.html", reserva=reserva_temp, tipos_pago=tipos_pago)
 
 
 @reservas_bp.route("/cliente/tarjeta", methods=["GET"])
@@ -193,7 +207,7 @@ def confirmar_reserva():
             cur.execute("""
                 INSERT INTO facturacion (id_reserva, id_tipo_pago, id_usuario, fecha_emision, total, estado, comprobante_pago)
                 VALUES (%s, %s, %s, CURDATE(), %s, 'Pagado', NULL)
-            """, (id_reserva, 2, id_usuario, total_final)) # 2 = Tarjeta
+            """, (id_reserva, reserva_temp.get('id_tipo_pago', 2), id_usuario, total_final))
 
             con.commit()
     finally:
