@@ -1,42 +1,377 @@
-{% extends "dashboard.html" %}
+{% extends "principal.html" %}
 {% block content %}
-<h2 class="titulo">Gestión de Reservas</h2>
+<div class="reservas-container">
+    <div class="reservas-header">
+        <h1>Gestión de Reservas</h1>
+        <p>Administra, visualiza y edita todas las reservas del hotel.</p>
+    </div>
 
-<table class="tabla">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Cliente</th>
-      <th>Habitación</th>
-      <th>Entrada</th>
-      <th>Salida</th>
-      <th>Estado</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in reservas %}
-    <tr>
-      <td>{{ r.id_reserva }}</td>
-      <td>{{ r.cliente }}</td>
-      <td>{{ r.habitacion }}</td>
-      <td>{{ r.fecha_entrada }}</td>
-      <td>{{ r.fecha_salida }}</td>
-      <td>
-        {% if r.estado == "Activa" %}
-          <span class="badge activa">Activa</span>
-        {% elif r.estado == "Cancelada" %}
-          <span class="badge cancelada">Cancelada</span>
-        {% else %}
-          <span class="badge pendiente">Pendiente</span>
-        {% endif %}
-      </td>
-      <td>
-        <button class="btn btn-editar">Editar</button>
-        <button class="btn btn-eliminar">Cancelar</button>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <!-- Statistics Section -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="stat-label">Total Reservas</div>
+            <div class="stat-value text-default">{{ kpis.total }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="stat-label">Activas</div>
+            <div class="stat-value text-success">{{ kpis.activas }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="stat-label">Próximas</div>
+            <div class="stat-value text-warning">{{ kpis.proximas }}</div>
+        </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+        <a href="#" class="btn-primary-pill" onclick="openNewReservationModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+            Nueva Reserva
+        </a>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Buscar por ID o cliente..." onkeyup="filterTable()">
+        </div>
+    </div>
+
+    <!-- Reservations Table -->
+    <div class="table-wrap">
+        <table class="table-reservas">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAll"></th>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Habitación</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Noches</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for r in reservas %}
+                <tr class="row-clickable">
+                    <td><input type="checkbox" class="row-checkbox"></td>
+                    <td>{{ r.id_reserva }}</td>
+                    <td>{{ r.cliente }}</td>
+                    <td><a href="#">{{ r.habitacion }}</a></td>
+                    <td>{{ r.fecha_entrada.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ r.fecha_salida.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ r.noches }}</td>
+                    <td>S/. {{ "%.2f"|format(r.total) if r.total else 'N/A' }}</td>
+                    <td>
+                        <span class="badge badge--{{ r.estado|lower }}">{{ r.estado }}</span>
+                    </td>
+                    <td>
+                        <div class="acciones">
+                            <button class="icon-btn view" onclick="viewReservation({{ r.id_reserva }})" title="Ver Detalles">👁️</button>
+                            <button class="icon-btn edit" onclick="editReservation({{ r.id_reserva }})" title="Editar Reserva">✏️</button>
+                            <button class="icon-btn delete" onclick="deleteReservation({{ r.id_reserva }})" title="Cancelar Reserva">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 2rem;">No hay reservas para mostrar.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modals -->
+<div id="viewModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeViewModal()">×</button>
+        <h2>Detalles de la Reserva</h2>
+        <div id="viewModalContent" class="modal-body"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="closeViewModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeEditModal()">×</button>
+        <h2>Editar Reserva</h2>
+        <form id="editForm" class="form">
+            <input type="hidden" id="editId">
+            <div class="form-group">
+                <label for="editClient">Cliente</label>
+                <input type="text" id="editClient" name="client" required>
+            </div>
+            <div class="form-group">
+                <label for="editRoom">Habitación</label>
+                <input type="text" id="editRoom" name="room" required>
+            </div>
+            <div class="form-group">
+                <label for="editCheckIn">Check-in</label>
+                <input type="date" id="editCheckIn" name="checkIn" required>
+            </div>
+            <div class="form-group">
+                <label for="editCheckOut">Check-out</label>
+                <input type="date" id="editCheckOut" name="checkOut" required>
+            </div>
+             <div class="form-group">
+                <label for="editTotal">Total</label>
+                <input type="number" id="editTotal" name="total" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="editStatus">Estado</label>
+                <select id="editStatus" name="status" required>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Confirmada">Confirmada</option>
+                    <option value="Completada">Completada</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                <button type="submit" class="btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="newReservationModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeNewReservationModal()">×</button>
+        <h2>Crear Nueva Reserva</h2>
+        <form id="newReservationForm" class="form">
+            <div class="form-group">
+                <label for="newClient">Cliente</label>
+                <input type="text" id="newClient" name="id_cliente" placeholder="ID del Cliente" required>
+            </div>
+            <div class="form-group">
+                <label for="newRoom">Habitación</label>
+                <input type="text" id="newRoom" name="id_habitacion" placeholder="ID de la Habitación" required>
+            </div>
+            <div class="form-group">
+                <label for="newCheckIn">Check-in</label>
+                <input type="date" id="newCheckIn" required>
+            </div>
+            <div class="form-group">
+                <label for="newCheckOut">Check-out</label>
+                <input type="date" id="newCheckOut" required>
+            </div>
+            <div class="form-group">
+                <label for="newTotal">Total</label>
+                <input type="number" id="newTotal" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="newStatus">Estado</label>
+                <select id="newStatus" name="estado" required>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Confirmada">Confirmada</option>
+                    <option value="Completada">Completada</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeNewReservationModal()">Cancelar</button>
+                <button type="submit" class="btn-primary">Crear Reserva</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="deleteModal" class="modal" style="display:none;">
+    <div class="modal-content modal-small">
+        <button class="btn-close" onclick="closeDeleteModal()">×</button>
+        <h2>Eliminar Reserva</h2>
+        <p>¿Estás seguro de que deseas eliminar esta reserva? Esta acción no se puede deshacer.</p>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+            <button class="btn-danger" onclick="confirmDelete()">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data management
+let reservations = {{ reservas|tojson }};
+
+let deleteTargetId = null
+
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+  // La tabla ya se renderiza con Jinja2, solo necesitamos los listeners
+  setupFormListeners()
+});
+
+// Format date
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString("es-ES", { year: "numeric", month: "2-digit", day: "2-digit" })
+}
+
+// Update statistics
+// Los KPIs ahora se calculan en el backend
+
+// View reservation
+function viewReservation(id) {
+  const res = reservations.find((r) => r.id_reserva === id)
+  if (!res) return
+
+  const content = `
+        <div class="view-field">
+            <span class="view-field-label">ID Reserva:</span>
+            <span class="view-field-value">#${res.id_reserva}</span>
+        </div>
+        <div class="view-field">
+            <span class="view-field-label">Cliente:</span>
+            <span class="view-field-value">${res.cliente}</span>
+        </div>
+        <div class="view-field">
+            <span class="view-field-label">Habitación:</span>
+            <span class="view-field-value">${res.habitacion}</span>
+        </div>
+        <div class="view-field">
+            <span class="view-field-label">Check-in:</span>
+            <span class="view-field-value">${formatDate(res.fecha_entrada)}</span>
+        </div>
+        <div class="view-field">
+            <span class="view-field-label">Check-out:</span>
+            <span class="view-field-value">${formatDate(res.fecha_salida)}</span>
+        </div>
+        <div class="view-field">
+            <span class="view-field-label">Noches:</span>
+            <span class="view-field-value">${res.nights}</span>
+        </div>
+        <div class="view-field">
+            <span class="view-field-label">Total:</span>
+            <span class="view-field-value">S/. ${res.total ? res.total.toFixed(2) : 'N/A'}</span>
+        </div>
+        <div class="view-field">
+            <span class="view-field-label">Estado:</span>
+            <span class="view-field-value">${res.estado}</span>
+        </div>
+    `
+
+  document.getElementById("viewModalContent").innerHTML = content
+  openModal("viewModal")
+}
+
+// Edit reservation
+function editReservation(id) {
+  const res = reservations.find((r) => r.id_reserva === id)
+  if (!res) return
+
+  document.getElementById("editId").value = res.id_reserva
+  document.getElementById("editClient").value = res.cliente
+  document.getElementById("editRoom").value = res.id_habitacion
+  document.getElementById("editCheckIn").value = res.fecha_entrada.split(' ')[0]
+  document.getElementById("editCheckOut").value = res.fecha_salida.split(' ')[0]
+  document.getElementById("editTotal").value = res.total
+  document.getElementById("editStatus").value = res.estado
+
+  openModal("editModal")
+}
+
+// Delete reservation
+function deleteReservation(id) {
+  deleteTargetId = id
+  openModal("deleteModal")
+}
+
+function confirmDelete() {
+  if (deleteTargetId !== null) {
+    // Crear un formulario dinámico para enviar la petición POST al backend
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/panel/reservas/eliminar/${deleteTargetId}`;
+    document.body.appendChild(form);
+    form.submit();
+
+    deleteTargetId = null
+  }
+}
+
+// Modal functions
+function openModal(modalId) {
+  document.getElementById(modalId).classList.add("active")
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove("active")
+}
+
+function openNewReservationModal() {
+  document.getElementById("newReservationForm").reset()
+  openModal("newReservationModal")
+}
+
+function closeNewReservationModal() {
+  closeModal("newReservationModal")
+}
+
+function closeViewModal() {
+  closeModal("viewModal")
+}
+
+function closeEditModal() {
+  closeModal("editModal")
+}
+
+function closeDeleteModal() {
+  closeModal("deleteModal")
+}
+
+// Form listeners
+function setupFormListeners() {
+  document.getElementById("editForm").addEventListener("submit", (e) => {
+    e.preventDefault()
+    const id = document.getElementById("editId").value;
+    const form = e.target;
+    form.action = `/panel/reservas/editar/${id}`;
+    form.method = 'POST';
+    form.submit();
+  })
+
+  const newReservationForm = document.getElementById("newReservationForm");
+  if (newReservationForm) {
+      newReservationForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.target;
+        form.action = "{{ url_for('reservas_admin.nueva_reserva') }}";
+        form.method = 'POST';
+        form.submit();
+      });
+  }
+}
+
+// Filter table
+function filterTable() {
+  const searchTerm = document.getElementById("searchInput").value.toLowerCase()
+  const tableBody = document.getElementById("tableBody");
+  const rows = tableBody.getElementsByTagName("tr");
+
+  for (const row of rows) {
+    const idCell = row.cells[1];
+    const clientCell = row.cells[2];
+    if (idCell && clientCell) {
+        const idText = (idCell.textContent || idCell.innerText).toLowerCase();
+        const clientText = (clientCell.textContent || clientCell.innerText).toLowerCase();
+        row.style.display = (idText.includes(searchTerm) || clientText.includes(searchTerm)) ? "" : "none";
+    }
+  }
+}
+
+// Select all checkboxes
+function toggleSelectAll() {
+  const selectAll = document.getElementById("selectAll")
+  const checkboxes = document.querySelectorAll(".row-checkbox")
+  checkboxes.forEach((cb) => (cb.checked = selectAll.checked))
+}
+
+// Logout
+function logout() {
+  alert("Sesión cerrada")
+  window.location.href = "{{ url_for('usuarios.logout') }}";
+}
+</script>
 {% endblock %}

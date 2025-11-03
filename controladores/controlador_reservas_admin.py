@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request, jsonify
 from bd import obtener_conexion
+from datetime import datetime, timedelta
 
 # Blueprint del panel administrativo
 reservas_admin_bp = Blueprint("reservas_admin", __name__)
@@ -32,16 +33,32 @@ def panel_reservas():
     con = obtener_conexion()
     with con.cursor() as cur:
         cur.execute("""
-            SELECT r.id_reserva, c.nombres AS cliente, h.numero AS habitacion,
-                   r.fecha_entrada, r.fecha_salida, r.estado, r.num_huespedes
+            SELECT 
+                r.id_reserva, c.nombres AS cliente, h.numero AS habitacion,
+                r.fecha_entrada, r.fecha_salida, r.estado, r.num_huespedes,
+                DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                f.total
             FROM reservas r
             JOIN clientes c ON r.id_cliente = c.id_cliente
             JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            LEFT JOIN facturacion f ON r.id_reserva = f.id_reserva
             ORDER BY r.fecha_entrada DESC
         """)
         reservas = cur.fetchall()
 
-    return render_template("panel_reservas.html", reservas=reservas, nombre=session.get("nombre"))
+    # Calcular KPIs en el backend
+    total_reservas = len(reservas)
+    activas = len([r for r in reservas if r['estado'] in ['Activa', 'Confirmada']])
+    
+    hoy = datetime.now().date()
+    proximos_7_dias = hoy + timedelta(days=7)
+    proximas = len([
+        r for r in reservas 
+        if r['estado'] in ['Activa', 'Confirmada', 'Pendiente'] and r['fecha_entrada'] and hoy <= r['fecha_entrada'] <= proximos_7_dias
+    ])
+
+    kpis = {'total': total_reservas, 'activas': activas, 'proximas': proximas}
+    return render_template("panel_reservas.html", reservas=reservas, nombre=session.get("nombre"), kpis=kpis)
 
 
 # ======================================
@@ -53,11 +70,10 @@ def nueva_reserva():
     """Registra una nueva reserva desde el panel."""
     id_cliente = request.form.get("id_cliente")
     id_habitacion = request.form.get("id_habitacion")
-    fecha_entrada = request.form.get("fecha_entrada")
-    fecha_salida = request.form.get("fecha_salida")
-    tipo_pago = request.form.get("tipo_pago")
+    fecha_entrada = request.form.get("newCheckIn")
+    fecha_salida = request.form.get("newCheckOut")
     num_huespedes = request.form.get("num_huespedes", 1)
-    estado = request.form.get("estado", "Pendiente")
+    estado = request.form.get("newStatus", "Pendiente")
 
     con = obtener_conexion()
     with con.cursor() as cur:
@@ -67,8 +83,10 @@ def nueva_reserva():
         """, (id_cliente, id_habitacion, session["usuario_id"], fecha_entrada, fecha_salida, num_huespedes, estado))
         con.commit()
 
-    flash("Reserva registrada correctamente.", "success")
+    flash("Reserva creada exitosamente desde el panel.", "success")
     return redirect(url_for("reservas_admin.panel_reservas"))
+
+
 
 
 # ======================================
