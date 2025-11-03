@@ -29,7 +29,7 @@
             Nueva Reserva
         </a>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Buscar por ID o cliente..." onkeyup="filterTable()">
+            <input type="text" id="searchInput" placeholder="Buscar..." onkeyup="filterTable()">
         </div>
     </div>
 
@@ -83,7 +83,7 @@
 </div>
 
 <!-- Modals -->
-<div id="viewModal" class="modal" style="display:none;">
+<div id="viewModal" class="modal">
     <div class="modal-content">
         <button class="btn-close" onclick="closeViewModal()">×</button>
         <h2>Detalles de la Reserva</h2>
@@ -94,7 +94,7 @@
     </div>
 </div>
 
-<div id="editModal" class="modal" style="display:none;">
+<div id="editModal" class="modal">
     <div class="modal-content">
         <button class="btn-close" onclick="closeEditModal()">×</button>
         <h2>Editar Reserva</h2>
@@ -102,27 +102,27 @@
             <input type="hidden" id="editId">
             <div class="form-group">
                 <label for="editClient">Cliente</label>
-                <input type="text" id="editClient" name="client" required>
+                <input type="text" id="editClient" name="cliente" required readonly>
             </div>
             <div class="form-group">
                 <label for="editRoom">Habitación</label>
-                <input type="text" id="editRoom" name="room" required>
+                <input type="text" id="editRoom" name="habitacion" required readonly>
             </div>
             <div class="form-group">
                 <label for="editCheckIn">Check-in</label>
-                <input type="date" id="editCheckIn" name="checkIn" required>
+                <input type="date" id="editCheckIn" name="fecha_entrada" required>
             </div>
             <div class="form-group">
                 <label for="editCheckOut">Check-out</label>
-                <input type="date" id="editCheckOut" name="checkOut" required>
+                <input type="date" id="editCheckOut" name="fecha_salida" required>
             </div>
              <div class="form-group">
                 <label for="editTotal">Total</label>
-                <input type="number" id="editTotal" name="total" step="0.01" required>
+                <input type="number" id="editTotal" name="total" step="0.01" required readonly>
             </div>
             <div class="form-group">
                 <label for="editStatus">Estado</label>
-                <select id="editStatus" name="status" required>
+                <select id="editStatus" name="estado" required>
                     <option value="Pendiente">Pendiente</option>
                     <option value="Confirmada">Confirmada</option>
                     <option value="Completada">Completada</option>
@@ -137,37 +137,32 @@
     </div>
 </div>
 
-<div id="newReservationModal" class="modal" style="display:none;">
+<div id="newReservationModal" class="modal">
     <div class="modal-content">
         <button class="btn-close" onclick="closeNewReservationModal()">×</button>
-        <h2>Crear Nueva Reserva</h2>
+        <h2>Crear nueva reserva</h2>
         <form id="newReservationForm" class="form">
             <div class="form-group">
                 <label for="newClient">Cliente</label>
-                <input type="text" id="newClient" name="id_cliente" placeholder="ID del Cliente" required>
+                <input type="text" id="newClient" name="id_cliente" placeholder="ID o Nombre del Cliente" required>
             </div>
             <div class="form-group">
                 <label for="newRoom">Habitación</label>
-                <input type="text" id="newRoom" name="id_habitacion" placeholder="ID de la Habitación" required>
+                <input type="text" id="newRoom" name="id_habitacion" placeholder="Número de Habitación" required>
             </div>
             <div class="form-group">
                 <label for="newCheckIn">Check-in</label>
-                <input type="date" id="newCheckIn" required>
+                <input type="date" id="newCheckIn" name="fecha_entrada" required>
             </div>
             <div class="form-group">
                 <label for="newCheckOut">Check-out</label>
-                <input type="date" id="newCheckOut" required>
-            </div>
-            <div class="form-group">
-                <label for="newTotal">Total</label>
-                <input type="number" id="newTotal" step="0.01" required>
+                <input type="date" id="newCheckOut" name="fecha_salida" required>
             </div>
             <div class="form-group">
                 <label for="newStatus">Estado</label>
                 <select id="newStatus" name="estado" required>
                     <option value="Pendiente">Pendiente</option>
                     <option value="Confirmada">Confirmada</option>
-                    <option value="Completada">Completada</option>
                     <option value="Cancelada">Cancelada</option>
                 </select>
             </div>
@@ -179,7 +174,7 @@
     </div>
 </div>
 
-<div id="deleteModal" class="modal" style="display:none;">
+<div id="deleteModal" class="modal">
     <div class="modal-content modal-small">
         <button class="btn-close" onclick="closeDeleteModal()">×</button>
         <h2>Eliminar Reserva</h2>
@@ -240,7 +235,7 @@ function viewReservation(id) {
         </div>
         <div class="view-field">
             <span class="view-field-label">Noches:</span>
-            <span class="view-field-value">${res.nights}</span>
+            <span class="view-field-value">${res.noches || 'N/A'}</span>
         </div>
         <div class="view-field">
             <span class="view-field-label">Total:</span>
