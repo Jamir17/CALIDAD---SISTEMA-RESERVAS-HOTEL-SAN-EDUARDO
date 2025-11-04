@@ -1,86 +1,92 @@
 {% extends "principal.html" %}
-{% block title %}Historial de reservas por cliente{% endblock %}
+{% block title %}RF07 - Histórico de Reservas{% endblock %}
+
 
 {% block content %}
-<div class="container-fluid py-3">
-    <div class="d-flex align-items-center mb-3">
-        <h4 class="fw-bold mb-0 me-3">
-            <i class="bi bi-people-fill text-primary"></i>
-            RF07 • Historial de reservas por cliente
-        </h4>
-        <small class="text-muted">Consulta para seguimiento y análisis</small>
+<div class="container">
+    <div class="header">
+        <div class="header-icon">📋</div>
+        <div class="header-content">
+            <h1>RF07 • Historial de reservas por cliente</h1>
+            <p>Consulta para seguimiento y análisis</p>
+        </div>
     </div>
 
-    <div class="row">
-        <!-- 🔍 Filtros -->
-        <div class="col-md-3">
-            <div class="card p-3 shadow-sm">
-                <h6 class="fw-bold mb-2">Buscar cliente</h6>
-                <input type="text" id="busquedaCliente" class="form-control mb-3"
-                       placeholder="Nombres o documento">
-
-                <h6 class="fw-bold">Filtros</h6>
-                <select id="estadoFiltro" class="form-select mb-2">
-                    <option value="Todos">Todos</option>
-                    <option value="Activa">Activa</option>
-                    <option value="Finalizada">Finalizada</option>
-                    <option value="Cancelada">Cancelada</option>
-                </select>
-
-                <label class="form-label">Rango de fechas:</label>
-                <div class="d-flex gap-2">
-                    <input type="date" id="fechaInicio" class="form-control">
-                    <input type="date" id="fechaFin" class="form-control">
+    <div class="main-grid">
+        <!-- PANEL IZQUIERDO -->
+        <div>
+            <div class="card">
+                <div class="card-title">Buscar cliente</div>
+                <div class="form-group">
+                    <label>Nombres o documento</label>
+                    <input type="text" placeholder="Ej: Juan Pérez o 1234567890" id="searchInput">
                 </div>
 
-                <div class="mt-3 d-flex justify-content-between">
-                    <button class="btn btn-primary btn-sm" id="aplicarFiltros">
-                        <i class="bi bi-funnel"></i> Aplicar
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" id="limpiarFiltros">
-                        <i class="bi bi-x-circle"></i> Limpiar
-                    </button>
+                <div class="card-title" style="margin-top: 2rem;">Filtros</div>
+                <div class="form-group">
+                    <label for="estadoFiltro">Estado de la reserva</label>
+                    <select id="estadoFiltro" class="form-select mb-2">
+                        <option value="Todos">Todos</option>
+                        <option value="Activa">Activa</option>
+                        <option value="Finalizada">Finalizada</option>
+                        <option value="Cancelada">Cancelada</option>
+                    </select>
                 </div>
 
-                <hr>
-                <h6 class="fw-bold">Exportar</h6>
-                <button class="btn btn-success w-100 btn-sm mb-2">
-                    <i class="bi bi-file-earmark-excel"></i> Exportar CSV
+                <div class="form-group">
+                    <label>Rango de fechas</label>
+                    <div class="date-range">
+                        <input type="date" id="dateFrom">
+                        <input type="date" id="dateTo">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    <span>🔍</span> Aplicar
                 </button>
-                <button class="btn btn-outline-secondary w-100 btn-sm">
-                    <i class="bi bi-printer"></i> Imprimir
+                <button class="btn btn-secondary" onclick="clearFilters()">
+                    <span>✕</span> Limpiar
+                </button>
+
+                <div class="card-title" style="margin-top: 2rem;">Exportar</div>
+                <button class="btn btn-success" onclick="exportCSV()">
+                    <span>📊</span> Exportar CSV
+                </button>
+                <button class="btn btn-secondary-alt" onclick="printData()">
+                    <span>🖨️</span> Imprimir
                 </button>
             </div>
         </div>
 
-        <!-- 📊 Resumen + Tabla -->
-        <div class="col-md-9">
-            <div class="card p-3 shadow-sm mb-3">
-                <h6 class="fw-bold">Resumen del cliente</h6>
-                <div class="row text-center mt-3">
-                    <div class="col-md-3">
-                        <p class="text-muted mb-1">Reservas totales</p>
-                        <h4 id="resTotal">0</h4>
+        <!-- PANEL DERECHO -->
+        <div>
+            <div class="card">
+                <div class="card-title">Resumen del cliente</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Reservas totales</div>
+                        <div class="stat-value" id="totalReservas">0</div>
                     </div>
-                    <div class="col-md-3">
-                        <p class="text-muted mb-1">Noches acumuladas</p>
-                        <h4 id="resNoches">0</h4>
+                    <div class="stat-card">
+                        <div class="stat-label">Noches acumuladas</div>
+                        <div class="stat-value" id="totalNoches">0</div>
                     </div>
-                    <div class="col-md-3">
-                        <p class="text-muted mb-1">Gasto total (S/)</p>
-                        <h4 id="resMonto">0.00</h4>
+                    <div class="stat-card">
+                        <div class="stat-label">Gasto total ($/)</div>
+                        <div class="stat-value" id="totalGasto">0.00</div>
                     </div>
-                    <div class="col-md-3">
-                        <p class="text-muted mb-1">Ticket promedio</p>
-                        <h4 id="resTicket">0.00</h4>
+                    <div class="stat-card">
+                        <div class="stat-label">Ticket promedio</div>
+                        <div class="stat-value" id="ticketPromedio">0.00</div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm">
-                <div class="table-responsive">
-                    <table class="table align-middle" id="tablaHistorial">
-                        <thead class="table-light">
+            <div class="card" style="margin-top: 2rem;">
+                <div class="card-title">Historial de reservas</div>
+                <div class="table-wrapper">
+                    <table id="reservasTable">
+                        <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Código</th>
@@ -89,11 +95,15 @@
                                 <th>Salida</th>
                                 <th>Noches</th>
                                 <th>Estado</th>
-                                <th>Monto (S/)</th>
+                                <th>Monto ($/)</th>
                             </tr>
                         </thead>
-                        <tbody id="tbodyHistorial">
-                            <tr><td colspan="8" class="text-center text-muted">Sin resultados</td></tr>
+                        <tbody>
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">
+                                    📭 Sin resultados
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -102,42 +112,4 @@
     </div>
 </div>
 
-<script>
-document.querySelector('#aplicarFiltros').addEventListener('click', cargarHistorial);
-
-function cargarHistorial() {
-    const nombre = document.getElementById('busquedaCliente').value;
-    const estado = document.getElementById('estadoFiltro').value;
-    const inicio = document.getElementById('fechaInicio').value;
-    const fin = document.getElementById('fechaFin').value;
-
-    fetch(`/admin/reservas-cliente/historial?nombre=${nombre}&estado=${estado}&fecha_inicio=${inicio}&fecha_fin=${fin}`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.getElementById('tbodyHistorial');
-            tbody.innerHTML = '';
-            if (data.reservas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Sin resultados</td></tr>';
-            } else {
-                data.reservas.forEach((r, i) => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${i+1}</td>
-                            <td>${r.codigo_confirmacion || '-'}</td>
-                            <td>${r.habitacion}</td>
-                            <td>${r.fecha_entrada}</td>
-                            <td>${r.fecha_salida}</td>
-                            <td>${r.noches}</td>
-                            <td><span class="badge bg-${r.estado === 'Cancelada' ? 'danger' : r.estado === 'Finalizada' ? 'secondary' : 'success'}">${r.estado}</span></td>
-                            <td>${r.monto.toFixed(2)}</td>
-                        </tr>`;
-                });
-            }
-            document.getElementById('resTotal').innerText = data.resumen.total_reservas;
-            document.getElementById('resNoches').innerText = data.resumen.total_noches;
-            document.getElementById('resMonto').innerText = data.resumen.total_monto.toFixed(2);
-            document.getElementById('resTicket').innerText = data.resumen.promedio_ticket.toFixed(2);
-        });
-}
-</script>
 {% endblock %}

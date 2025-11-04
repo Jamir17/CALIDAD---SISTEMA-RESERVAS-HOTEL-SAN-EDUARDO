@@ -1,136 +1,131 @@
-// Reservas form functionality
+// Datos de ejemplo (se mantendrán hasta conectar con el backend)
+const sampleData = [
+    { id: 1, codigo: 'RES-001', habitacion: '101', entrada: '2024-11-15', salida: '2024-11-18', noches: 3, estado: 'confirmed', monto: 450.00 },
+    { id: 2, codigo: 'RES-002', habitacion: '205', entrada: '2024-11-20', salida: '2024-11-25', noches: 5, estado: 'confirmed', monto: 850.00 },
+    { id: 3, codigo: 'RES-003', habitacion: '312', entrada: '2024-12-01', salida: '2024-12-03', noches: 2, estado: 'pending', monto: 300.00 },
+];
 
-// Precios por tipo de habitación
-const precios = {
-  standard: 120,
-  junior: 180,
-  presidential: 280
-};
+let currentData = [];
 
-// Nombres de habitaciones
-const nombresHabitaciones = {
-  standard: 'Habitación Standard',
-  junior: 'Habitación Junior',
-  presidential: 'Suite Presidential'
-};
-
-// Set minimum date to today
-document.addEventListener('DOMContentLoaded', function() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('checkin').setAttribute('min', today);
-  document.getElementById('checkout').setAttribute('min', today);
-
-  // Update summary on form changes
-  const form = document.getElementById('reservasForm');
-  form.addEventListener('input', updateSummary);
-  form.addEventListener('change', updateSummary);
-
-  // Prevent selecting checkout date before checkin
-  document.getElementById('checkin').addEventListener('change', function() {
-    const checkinDate = this.value;
-    document.getElementById('checkout').setAttribute('min', checkinDate);
-    updateSummary();
-  });
-
-  // Form submission
-  form.addEventListener('submit', handleSubmit);
-});
-
-function updateSummary() {
-  const checkin = document.getElementById('checkin').value;
-  const checkout = document.getElementById('checkout').value;
-  const habitacion = document.getElementById('habitacion').value;
-  const huespedes = document.getElementById('huespedes').value;
-
-  // Update dates
-  document.getElementById('summaryCheckin').textContent = 
-    checkin ? formatDate(checkin) : '--/--/----';
-  document.getElementById('summaryCheckout').textContent = 
-    checkout ? formatDate(checkout) : '--/--/----';
-
-  // Calculate nights
-  let noches = 0;
-  if (checkin && checkout) {
-    const checkinDate = new Date(checkin);
-    const checkoutDate = new Date(checkout);
-    const diffTime = checkoutDate - checkinDate;
-    noches = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (noches < 0) noches = 0;
-  }
-  document.getElementById('summaryNoches').textContent = noches;
-
-  // Update room type
-  document.getElementById('summaryHabitacion').textContent = 
-    habitacion ? nombresHabitaciones[habitacion] : 'No seleccionada';
-
-  // Update guests
-  document.getElementById('summaryHuespedes').textContent = 
-    huespedes || '0';
-
-  // Calculate total
-  let total = 0;
-  if (habitacion && noches > 0) {
-    total = precios[habitacion] * noches;
-  }
-  document.getElementById('summaryTotal').textContent = `S/. ${total.toFixed(2)}`;
+function loadData() {
+    currentData = [...sampleData];
+    updateStats();
+    renderTable();
 }
 
-function formatDate(dateString) {
-  const date = new Date(dateString + 'T00:00:00');
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
+function updateStats() {
+    const totalReservas = currentData.length;
+    const totalNoches = currentData.reduce((sum, r) => sum + r.noches, 0);
+    const totalGasto = currentData.reduce((sum, r) => sum + r.monto, 0);
+    const ticketPromedio = totalReservas > 0 ? totalGasto / totalReservas : 0;
+
+    document.getElementById('totalReservas').textContent = totalReservas;
+    document.getElementById('totalNoches').textContent = totalNoches;
+    document.getElementById('totalGasto').textContent = totalGasto.toFixed(2);
+    document.getElementById('ticketPromedio').textContent = ticketPromedio.toFixed(2);
 }
 
-function handleSubmit(e) {
-  e.preventDefault();
+function renderTable() {
+    const tbody = document.querySelector('#reservasTable tbody');
+    
+    if (currentData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">📭 Sin resultados</td></tr>';
+        return;
+    }
 
-  // Get form data
-  const formData = new FormData(e.target);
-  const data = Object.fromEntries(formData.entries());
-
-  // Validate dates
-  const checkinDate = new Date(data.checkin);
-  const checkoutDate = new Date(data.checkout);
-  
-  if (checkoutDate <= checkinDate) {
-    alert('La fecha de salida debe ser posterior a la fecha de llegada.');
-    return;
-  }
-
-  // Validate terms
-  if (!data.terminos) {
-    alert('Debe aceptar los términos y condiciones para continuar.');
-    return;
-  }
-
-  // Calculate nights and total
-  const diffTime = checkoutDate - checkinDate;
-  const noches = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  const total = precios[data.habitacion] * noches;
-
-  // Prepare reservation data
-  const reserva = {
-    ...data,
-    noches: noches,
-    total: total,
-    fecha_reserva: new Date().toISOString(),
-    estado: 'pendiente'
-  };
-
-  // Log reservation (in production, this would be sent to a server)
-  console.log('Reserva confirmada:', reserva);
-
-  // Show success message
-  alert(`¡Reserva confirmada!\n\nDetalles:\n- Habitación: ${nombresHabitaciones[data.habitacion]}\n- Llegada: ${formatDate(data.checkin)}\n- Salida: ${formatDate(data.checkout)}\n- Noches: ${noches}\n- Total: S/. ${total.toFixed(2)}\n\nRecibirá un correo de confirmación en breve.`);
-
-  // Reset form
-  e.target.reset();
-  updateSummary();
-
-  // Redirect to home page
-  setTimeout(() => {
-    window.location.href = 'index.html';
-  }, 2000);
+    tbody.innerHTML = currentData.map((r, idx) => `
+        <tr>
+            <td>${idx + 1}</td>
+            <td>${r.codigo}</td>
+            <td>${r.habitacion}</td>
+            <td>${formatDate(r.entrada)}</td>
+            <td>${formatDate(r.salida)}</td>
+            <td>${r.noches}</td>
+            <td>
+                <span class="status-badge status-${r.estado}">
+                    ${r.estado === 'confirmed' ? 'Confirmada' : 'Pendiente'}
+                </span>
+            </td>
+            <td>$${r.monto.toFixed(2)}</td>
+        </tr>
+    `).join('');
 }
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const type = document.getElementById('filterType').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+
+    currentData = sampleData.filter(r => {
+        const matchSearch = r.codigo.toLowerCase().includes(search) || r.habitacion.includes(search);
+        const matchType = !type || r.estado === type;
+        const matchDate = (!dateFrom || r.entrada >= dateFrom) && (!dateTo || r.salida <= dateTo);
+        
+        return matchSearch && matchType && matchDate;
+    });
+
+    updateStats();
+    renderTable();
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterType').value = '';
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    
+    loadData();
+}
+
+function exportCSV() {
+    if (currentData.length === 0) {
+        alert('No hay datos para exportar');
+        return;
+    }
+
+    let csv = 'Código,Habitación,Entrada,Salida,Noches,Estado,Monto\n';
+    csv += currentData.map(r => `${r.codigo},${r.habitacion},${r.entrada},${r.salida},${r.noches},${r.estado},${r.monto}`).join('\n');
+
+    const link = document.createElement('a');
+    link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    link.download = 'reservas.csv';
+    link.click();
+}
+
+function printData() {
+    window.print();
+}
+
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-ES');
+}
+
+// Asignación de eventos
+const form = document.getElementById('filterForm');
+if (form) {
+    form.addEventListener('submit', (e) => {
+        e.preventDefault(); // Evita que el formulario se envíe de la forma tradicional
+        applyFilters();
+    });
+    form.addEventListener('reset', (e) => {
+        // Da un pequeño tiempo para que el reset del navegador ocurra antes de recargar los datos
+        setTimeout(() => {
+            loadData();
+        }, 0);
+    });
+}
+
+const exportCsvBtn = document.getElementById('exportCsvBtn');
+if (exportCsvBtn) {
+    exportCsvBtn.addEventListener('click', exportCSV);
+}
+
+const printBtn = document.getElementById('printBtn');
+if (printBtn) {
+    printBtn.addEventListener('click', printData);
+}
+
+// Carga inicial de datos
+loadData();
