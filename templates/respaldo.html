@@ -1,181 +1,89 @@
 {% extends "principal.html" %}
+
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/respaldo.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <style>
-    /* 🎨 ESTILO MODERNO DEL PANEL DE RESPALDOS */
+<div class="container py-3">
 
-    body {
-      background-color: #f4f6f9;
-      font-family: 'Segoe UI', sans-serif;
-    }
+  <h4 class="title-section">Gestión de respaldos de base de datos</h4>
 
-    h3 {
-      color: #1f2937;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* Botones */
-    .btn-success {
-      background: #16a34a;
-      border: none;
-      box-shadow: 0 2px 4px rgba(22, 163, 74, 0.25);
-      transition: all 0.25s ease;
-    }
-
-    .btn-success:hover {
-      background: #15803d;
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: #3b82f6;
-      border: none;
-      color: white;
-      transition: all 0.25s ease;
-    }
-
-    .btn-primary:hover {
-      background: #2563eb;
-      transform: translateY(-1px);
-    }
-
-    .btn-warning {
-      background: #fbbf24;
-      border: none;
-      color: #000;
-      transition: 0.25s;
-    }
-
-    .btn-warning:hover {
-      background: #f59e0b;
-    }
-
-    .btn-danger {
-      background: #ef4444;
-      border: none;
-      transition: 0.25s;
-    }
-
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-
-    /* Tabla */
-    table {
-      width: 100%;
-      border-radius: 10px;
-      overflow: hidden;
-      background-color: #fff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    thead.table-dark {
-      background: #1e293b;
-      color: #fff;
-    }
-
-    tbody tr:hover {
-      background-color: #f9fafb;
-    }
-
-    td, th {
-      padding: 0.9rem;
-      vertical-align: middle;
-    }
-
-    td:last-child {
-      text-align: center;
-    }
-
-    .empty-state {
-      text-align: center;
-      color: #9ca3af;
-      font-style: italic;
-      padding: 16px 0;
-    }
-
-    /* Contenedor tabla */
-    .table-wrapper {
-      overflow-x: auto;
-      border-radius: 10px;
-    }
-
-    /* Espaciado superior */
-    .panel-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 1.2rem;
-    }
-  </style>
-
-  <h3 class="mb-4">Gestión de respaldos de base de datos</h3>
-
-  <!-- 🔘 BOTONES SUPERIORES -->
-  <div class="d-flex justify-content-start mb-3">
+  <div class="toolbar">
     <form action="{{ url_for('respaldo.ejecutar_respaldo') }}" method="POST">
-      <button class="btn btn-success px-3 py-2">
-        <i class="fa fa-database me-1"></i> Ejecutar respaldo ahora
+      <button class="btn-main">
+        <!-- ICONO BASE DE DATOS SVG -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M3 5v6c0 1.7 4 3 9 3s9-1.3 9-3V5"/>
+          <path d="M3 11v6c0 1.7 4 3 9 3s9-1.3 9-3v-6"/>
+        </svg>
+        Respaldar Ahora
       </button>
     </form>
-  </div>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+    <span class="schedule-info">
+      <!-- ICONO RELOJ SVG -->
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" fill="none"/>
+      </svg>
+      Respaldos programados: <strong>02:00 a.m.</strong>
+    </span>
+  </div>
 
   <div class="table-wrapper">
     <table class="table table-hover align-middle">
-      <thead class="table-dark">
+      <thead>
         <tr>
           <th>Fecha</th>
-          <th>Nombre del archivo</th>
-          <th>Tamaño (KB)</th>
-          <th>Acciones</th>
+          <th>Versión</th>
+          <th>Respaldado</th>
+          <th>Estado</th>
+          <th>Descargar</th>
         </tr>
       </thead>
       <tbody>
         {% for r in registros %}
         <tr>
           <td>{{ r.fecha }}</td>
-          <td>{{ r.nombre }}</td>
-          <td>{{ r.tamaño }}</td>
+          <td>4.0.0.{{ registros|length - loop.index0 }}</td>
+          
+          <!-- ✅ Check verde SVG -->
           <td>
-            <a class="btn btn-outline-secondary btn-sm"
-               href="{{ url_for('respaldo.descargar_respaldo', nombre=r.nombre) }}">
-              Descargar
+            <svg class="icon-success" viewBox="0 0 24 24">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+          </td>
+
+          <!-- ✅ Check verde :) -->
+          <td>
+            <svg class="icon-success" viewBox="0 0 24 24">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+          </td>
+
+          <!-- ⬇ Botón Descargar -->
+          <td>
+            <a class="btn-download"
+               href="{{ url_for('respaldo.descargar_respaldo', nombre=r.nombre) }}"
+               title="Descargar respaldo">
+              <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+                <path d="M5 19h14" stroke-linecap="round"/>
+              </svg>
             </a>
-            <form method="POST"
-                  action="{{ url_for('respaldo.restaurar_respaldo', nombre=r.nombre) }}"
-                  onsubmit="return confirm('¿Restaurar la base de datos desde {{ r.nombre }}? Esta acción es irreversible.')"
-                  style="display:inline;">
-              <button class="btn btn-warning btn-sm">Restaurar</button>
-            </form>
-            <form method="POST"
-                  action="{{ url_for('respaldo.eliminar_respaldo', nombre=r.nombre) }}"
-                  onsubmit="return confirm('¿Eliminar el respaldo {{ r.nombre }}?')"
-                  style="display:inline;">
-              <button class="btn btn-danger btn-sm">Eliminar</button>
-            </form>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="4" class="empty-state">No hay respaldos aún.</td></tr>
+        <tr>
+          <td colspan="5" class="empty-state">No hay respaldos aún.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
 </div>
 {% endblock %}

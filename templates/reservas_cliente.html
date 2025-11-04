@@ -4,13 +4,7 @@
 
 {% block content %}
 <div class="container">
-    <div class="header">
-        <div class="header-icon">📋</div>
-        <div class="header-content">
-            <h1>RF07 • Historial de reservas por cliente</h1>
-            <p>Consulta para seguimiento y análisis</p>
-        </div>
-    </div>
+
 
     <div class="main-grid">
         <!-- PANEL IZQUIERDO -->
@@ -42,18 +36,18 @@
                 </div>
 
                 <button class="btn btn-primary" onclick="applyFilters()">
-                    <span>🔍</span> Aplicar
+                    <span></span> Aplicar
                 </button>
                 <button class="btn btn-secondary" onclick="clearFilters()">
-                    <span>✕</span> Limpiar
+                    <span></span> Limpiar
                 </button>
 
                 <div class="card-title" style="margin-top: 2rem;">Exportar</div>
                 <button class="btn btn-success" onclick="exportCSV()">
-                    <span>📊</span> Exportar CSV
+                    <span></span> Exportar CSV
                 </button>
                 <button class="btn btn-secondary-alt" onclick="printData()">
-                    <span>🖨️</span> Imprimir
+                    <span></span> Imprimir
                 </button>
             </div>
         </div>
@@ -75,10 +69,7 @@
                         <div class="stat-label">Gasto total ($/)</div>
                         <div class="stat-value" id="totalGasto">0.00</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Ticket promedio</div>
-                        <div class="stat-value" id="ticketPromedio">0.00</div>
-                    </div>
+
                 </div>
             </div>
 
@@ -95,13 +86,13 @@
                                 <th>Salida</th>
                                 <th>Noches</th>
                                 <th>Estado</th>
-                                <th>Monto ($/)</th>
+                                <th>Monto (S/)</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">
-                                    📭 Sin resultados
+                                    Sin resultados
                                 </td>
                             </tr>
                         </tbody>

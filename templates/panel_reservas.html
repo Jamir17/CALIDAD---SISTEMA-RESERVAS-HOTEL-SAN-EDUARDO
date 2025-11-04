@@ -38,8 +38,6 @@
         <table class="table-reservas">
             <thead>
                 <tr>
-                    <th><input type="checkbox" id="selectAll"></th>
-                    <th>ID</th>
                     <th>Cliente</th>
                     <th>Habitación</th>
                     <th>Check-in</th>
@@ -53,8 +51,6 @@
             <tbody id="tableBody">
                 {% for r in reservas %}
                 <tr class="row-clickable">
-                    <td><input type="checkbox" class="row-checkbox"></td>
-                    <td>{{ r.id_reserva }}</td>
                     <td>{{ r.cliente }}</td>
                     <td><a href="#">{{ r.habitacion }}</a></td>
                     <td>{{ r.fecha_entrada.strftime('%d/%m/%Y') }}</td>
@@ -66,7 +62,6 @@
                     </td>
                     <td>
                         <div class="acciones">
-                            <button class="icon-btn view" onclick="viewReservation({{ r.id_reserva }})" title="Ver Detalles">👁️</button>
                             <button class="icon-btn edit" onclick="editReservation({{ r.id_reserva }})" title="Editar Reserva">✏️</button>
                             <button class="icon-btn delete" onclick="deleteReservation({{ r.id_reserva }})" title="Cancelar Reserva">🗑️</button>
                         </div>

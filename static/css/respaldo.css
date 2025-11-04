@@ -1,0 +1,99 @@
+body {
+  background: #f4f6f8;
+  font-family: 'Roboto', sans-serif;
+}
+
+.title-section {
+  font-size: 1.20rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #1f2937;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.btn-main {
+  background: #0d6efd;
+  border: none;
+  color: #fff;
+  font-size: .90rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: .25s ease;
+}
+
+.btn-main svg {
+  fill: white;
+}
+
+.btn-main:hover {
+  background: #0a58ca;
+  transform: translateY(-1px);
+}
+
+.schedule-info {
+  font-size: .85rem;
+  color: #374151;
+}
+
+/* Tabla con scroll */
+.table-wrapper {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: rgba(0,0,0,.05) 0px 2px 6px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: #e8edf3;
+  font-weight: 700;
+  z-index: 10;
+}
+
+tbody tr:hover {
+  background: #f1f7ff;
+}
+
+.icon-success {
+  width: 18px;
+  height: 18px;
+  color: #10b981;
+}
+
+.btn-download {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  transition: .25s;
+}
+
+.btn-download:hover {
+  background: #3b82f6;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 14px 0;
+  color: #6b7280;
+  font-style: italic;
+}

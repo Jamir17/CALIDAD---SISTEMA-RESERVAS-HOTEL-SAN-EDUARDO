@@ -80,12 +80,12 @@
         <div class="icono-exito">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         </div>
-        <h1>¡Pago Exitoso y Reserva Confirmada!</h1>
+        <h1>¡Pago exitoso y reserva confirmada!</h1>
         <p class="mensaje">Gracias por tu confianza. Hemos enviado un correo con los detalles de tu reserva.</p>
 
         {% if reserva %}
         <div class="resumen-reserva">
-            <h3>Resumen de tu Reserva</h3>
+            <h3>Resumen de tu reserva</h3>
             <p><strong>Nº de Reserva:</strong> #{{ reserva.id_reserva }}</p>
             <p><strong>Habitación:</strong> {{ reserva.hab_tipo }} Nº {{ reserva.hab_numero }}</p>
             <p><strong>Huésped:</strong> {{ reserva.cliente_nombres }} {{ reserva.cliente_apellidos }}</p>
