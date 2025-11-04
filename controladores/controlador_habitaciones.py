@@ -100,13 +100,20 @@ def habitaciones_cliente():
                 # Imagen principal
                 portada = _to_static_rel(row.get("imagen") or DEFAULT_REL)
 
-                # Galería
+                # Galería: Como las imágenes están asociadas a un id_habitacion específico (ej: id 1 para 'Individual'),
+                # primero buscamos una habitación de este TIPO que SÍ tenga imágenes en la tabla `imagenes_habitacion`.
+                # Luego, usamos ese id_habitacion para traer toda la galería.
                 cur.execute("""
                     SELECT ruta_imagen
                     FROM imagenes_habitacion
-                    WHERE id_habitacion = %s
+                    WHERE id_habitacion = (
+                        SELECT id_habitacion
+                        FROM imagenes_habitacion
+                        WHERE id_habitacion IN (SELECT id_habitacion FROM habitaciones WHERE id_tipo = %s)
+                        LIMIT 1
+                    )
                     ORDER BY id_imagen ASC
-                """, (row["id_habitacion"],))
+                """, (row["id_tipo"],))
                 gal = [_to_static_rel(g["ruta_imagen"]) for g in cur.fetchall()] or [portada]
 
                 # Comodidades
