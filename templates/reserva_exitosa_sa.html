@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Reserva de Servicios Confirmada - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+<style>
+.container-exito {
+    max-width: 650px;
+    margin: 120px auto 40px;
+    padding: 20px;
+}
+.card-exito {
+    background-color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 6px 25px rgba(0, 40, 119, 0.1);
+    padding: 30px;
+    text-align: center;
+    border-top: 5px solid #28a745;
+}
+.icono-exito {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background-color: #e9f7ef;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+.icono-exito svg {
+    width: 40px;
+    height: 40px;
+    color: #28a745;
+}
+.card-exito h1 {
+    font-size: 26px;
+    color: #0f2a63;
+    margin-bottom: 10px;
+}
+.card-exito .mensaje {
+    color: #555;
+    font-size: 16px;
+    margin-bottom: 25px;
+}
+.resumen-reserva {
+    text-align: left;
+    background: #f8faff;
+    border: 1px solid #d6e0ff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+.resumen-reserva h3 {
+    color: #0f2a63;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #d6e0ff;
+    padding-bottom: 10px;
+}
+.resumen-reserva p {
+    margin: 5px 0;
+    color: #333;
+}
+.servicios-lista {
+    margin-top: 10px;
+    padding-left: 15px;
+}
+.servicios-lista li {
+    margin-bottom: 6px;
+}
+.total {
+    font-size: 18px;
+    font-weight: bold;
+    color: #28a745;
+    margin-top: 10px;
+}
+.acciones-exito {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-exito">
+    <div class="card-exito">
+        <div class="icono-exito">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        </div>
+        <h1>¡Pago exitoso y reserva confirmada!</h1>
+        <p class="mensaje">Gracias por elegir nuestros servicios. Se ha enviado un correo con los detalles de tu reserva.</p>
+
+        {% if reserva %}
+        <div class="resumen-reserva">
+            <h3>Resumen de tu reserva</h3>
+            <p><strong>N° de Reserva:</strong> #{{ reserva.id_reserva_servicio }}</p>
+            <p><strong>Cliente:</strong> {{ reserva.cliente_nombres }} {{ reserva.cliente_apellidos }}</p>
+            <p><strong>Fecha de reserva:</strong>
+            {% if reserva.fecha_reserva.__class__.__name__ == 'date' or reserva.fecha_reserva.__class__.__name__ == 'datetime' %}
+                {{ reserva.fecha_reserva.strftime('%d/%m/%Y') }}
+            {% else %}
+                {{ reserva.fecha_reserva }}
+            {% endif %}
+            </p>
+
+            <h4>Servicios Reservados:</h4>
+            <ul class="servicios-lista">
+            {% for s in servicios %}
+                <li>
+                {{ s.nombre }}{% if s.cantidad %} × {{ s.cantidad }}{% endif %}
+                — S/ {{ "%.2f"|format(s.subtotal) }}
+                </li>
+            {% endfor %}
+            </ul>
+
+            <p class="total"><strong>Total Pagado:</strong> S/ {{ "%.2f"|format(reserva.total) }}</p>
+        </div>
+        {% endif %}
+
+        <div class="acciones-exito">
+            <a href="{{ url_for('servicios.listar_servicios') }}" class="btn btn-outline">Ver más servicios</a>
+            <a href="{{ url_for('perfil.ver_perfil') }}" class="btn btn-primary">Ir a Mi Perfil</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

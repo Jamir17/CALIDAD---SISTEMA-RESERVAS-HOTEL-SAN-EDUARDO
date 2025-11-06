@@ -388,20 +388,21 @@
     <div class="summary-card">
         <div class="summary-title">Resumen de tu Estancia</div>
 
-        <div class="summary-info">
-            <div class="summary-row">
-                <span class="summary-label">Habitación:</span>
-                <span class="summary-value">{{ reserva.tipo }} Nº {{ reserva.numero }}</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Fechas:</span>
-                <span class="summary-value">{{ reserva.entrada }} al {{ reserva.salida }}</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Noches:</span>
-                <span class="summary-value">{{ reserva.noches }} Noche{% if reserva.noches > 1 %}s{% endif %}</span>
-            </div>
+        {% if reserva.id_habitacion %}
+        <div class="summary-row">
+            <span class="summary-label">Habitación:</span>
+            <span class="summary-value">{{ reserva.tipo }} Nº {{ reserva.numero }}</span>
         </div>
+        <div class="summary-row">
+            <span class="summary-label">Fechas:</span>
+            <span class="summary-value">{{ reserva.entrada }} al {{ reserva.salida }}</span>
+        </div>
+        {% else %}
+        <div class="summary-row">
+            <span class="summary-label">Servicios:</span>
+            <span class="summary-value">{{ reserva.fecha }} – {{ reserva.hora }}</span>
+        </div>
+        {% endif %}
 
         <div class="summary-divider"></div>
 

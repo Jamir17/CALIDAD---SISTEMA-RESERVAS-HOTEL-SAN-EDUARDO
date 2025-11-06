@@ -71,8 +71,16 @@ def pago_reserva():
     if request.method == "POST":
         if request.is_json:
             datos = request.get_json()
+            # Si viene de servicios adicionales, no hay habitación asociada
+            if datos.get("tipo") == "Servicios adicionales":
+                datos["id_habitacion"] = None
+                datos["entrada"] = datos.get("fecha")
+                datos["salida"] = datos.get("fecha")
+                datos["noches"] = 1
+                datos["precio"] = 0  # no aplica habitación
             session["reserva_temp"] = datos
             return jsonify({"ok": True})
+
 
         # Si es POST desde el form de datos de huésped, los guarda y redirige
         reserva_temp = session.get("reserva_temp", {})
@@ -302,21 +310,54 @@ def mis_reservas():
         flash("Debes iniciar sesión.", "error")
         return redirect(url_for("usuarios.iniciosesion"))
 
-    id_usuario = session["usuario_id"]
+    uid = session["usuario_id"]
+
     con = obtener_conexion()
     with con.cursor() as cur:
+        # 🔷 HABITACIONES: solo las reservas con id_habitacion (LEFT JOIN + filtro NOT NULL)
         cur.execute("""
-            SELECT r.id_reserva, r.codigo_confirmacion, r.fecha_entrada, r.fecha_salida,
-                   r.num_huespedes, r.estado, t.nombre AS tipo, h.numero AS habitacion
+            SELECT r.id_reserva,
+                   r.fecha_entrada, r.fecha_salida,
+                   r.num_huespedes, r.estado,
+                   t.nombre AS tipo, h.numero AS habitacion
             FROM reservas r
-            JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
-            JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
-            WHERE r.id_usuario = %s
+            JOIN clientes c        ON c.id_cliente = r.id_cliente
+            LEFT JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            LEFT JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            WHERE c.id_usuario = %s
+              AND r.id_habitacion IS NOT NULL
             ORDER BY r.fecha_entrada DESC
-        """, (id_usuario,))
-        reservas = cur.fetchall()
+        """, (uid,))
+        reservas_habitaciones = cur.fetchall()
 
-    return render_template("mis_reservas.html", reservas=reservas, nombre=session.get("nombre"))
+        # 🔷 SERVICIOS: las que tienen líneas en reserva_servicio
+        cur.execute("""
+            SELECT r.id_reserva AS id_reserva_servicio,
+                   DATE(f.fecha_emision) AS fecha,
+                   f.total, f.estado,
+                   GROUP_CONCAT(CONCAT(s.nombre, ' x', rs.cantidad)
+                                ORDER BY s.nombre SEPARATOR ', ') AS servicios
+            FROM reservas r
+            JOIN clientes c          ON c.id_cliente = r.id_cliente
+            JOIN reserva_servicio rs ON rs.id_reserva = r.id_reserva
+            JOIN servicios s         ON s.id_servicio = rs.id_servicio
+            JOIN facturacion f       ON f.id_reserva = r.id_reserva
+            WHERE c.id_usuario = %s
+            GROUP BY r.id_reserva, f.fecha_emision, f.total, f.estado
+            ORDER BY f.fecha_emision DESC
+        """, (uid,))
+        reservas_servicios = cur.fetchall()
+
+    con.close()
+
+    # 👉 Asegúrate que tu template use estos nombres
+    return render_template(
+        "mis_reservas.html",
+        reservas_habitaciones=reservas_habitaciones,
+        reservas_servicios=reservas_servicios,
+        nombre=session.get("nombre")
+    )
+
 
 # ================================================
 # Detalle reserva
@@ -379,3 +420,55 @@ def cancelar_reserva(id_reserva):
 
     flash("Reserva cancelada con éxito.", "success")
     return redirect(url_for("reservas.mis_reservas"))
+
+
+
+
+
+
+@reservas_bp.route("/cliente/mis_reservas_todo")
+def mis_reservas_todo():
+    if not session.get("usuario_id"):
+        flash("Debes iniciar sesión.", "error")
+        return redirect(url_for("usuarios.iniciosesion"))
+
+    id_usuario = session["usuario_id"]
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        # 🏨 Reservas de habitaciones
+        cur.execute("""
+            SELECT r.id_reserva, r.fecha_entrada, r.fecha_salida,
+                r.num_huespedes, r.estado,
+                t.nombre AS tipo, h.numero AS habitacion
+            FROM reservas r
+            LEFT JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            LEFT JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            WHERE r.id_usuario = %s AND r.id_habitacion IS NOT NULL
+            ORDER BY r.fecha_entrada DESC
+        """, (id_usuario,))
+        reservas_habitaciones = cur.fetchall()
+
+        # 🧺 Reservas de servicios adicionales
+        cur.execute("""
+            SELECT r.id_reserva AS id_reserva_servicio,
+                f.fecha_emision AS fecha,
+                f.total, f.estado,
+                GROUP_CONCAT(s.nombre SEPARATOR ', ') AS servicios
+            FROM reservas r
+            JOIN reserva_servicio rs ON rs.id_reserva = r.id_reserva
+            JOIN servicios s ON s.id_servicio = rs.id_servicio
+            JOIN facturacion f ON f.id_reserva = r.id_reserva
+            WHERE r.id_usuario = %s
+            GROUP BY r.id_reserva, f.fecha_emision, f.total, f.estado
+            ORDER BY f.fecha_emision DESC
+        """, (id_usuario,))
+        reservas_servicios = cur.fetchall()
+
+    con.close()
+
+    return render_template(
+        "mis_reservas.html",
+        reservas_habitaciones=reservas_habitaciones,
+        reservas_servicios=reservas_servicios,
+        nombre=session.get("nombre")
+    )

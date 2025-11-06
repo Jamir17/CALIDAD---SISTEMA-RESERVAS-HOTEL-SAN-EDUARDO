@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}Pago de Servicios Adicionales - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --primary: #5b3fd8;
+  --secondary: #1ab394;
+  --dark: #1c2536;
+  --light: #f8fafb;
+  --border: #e8eef5;
+  --text-dark: #1c2536;
+  --text-light: #6b7280;
+  --error: #ef4444;
+  --success: #10b981;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  background: linear-gradient(135deg, var(--light) 0%, #f3f0ff 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container-pago {
+  max-width: 500px;
+  margin: 120px auto 40px;
+}
+
+/* HEADER */
+.payment-header {
+  background: linear-gradient(135deg, var(--dark) 0%, #2d3a4e 100%);
+  color: white;
+  padding: 30px 24px;
+  margin-bottom: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(28, 37, 54, 0.15);
+}
+
+.payment-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo-circle {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--primary) 0%, #7c5ce6 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(91, 63, 216, 0.3);
+}
+
+/* RESUMEN */
+.card-resumen {
+  background: #f8faff;
+  border: 1px solid #d6e0ff;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px;
+  font-size: 14px;
+}
+
+.card-resumen ul {
+  margin: 10px 0;
+  padding-left: 18px;
+}
+
+.total {
+  color: #1e8449;
+  font-weight: bold;
+}
+
+/* FORMULARIO */
+.payment-form {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.form {
+  padding: 28px 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(91, 63, 216, 0.1);
+}
+
+/* ROW */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* CVV / DATE */
+.date-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.separator {
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* SEGURIDAD */
+.security-section {
+  background: linear-gradient(135deg, rgba(26, 179, 148, 0.05), rgba(91, 63, 216, 0.05));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 24px;
+}
+
+.security-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+/* BOTÓN */
+.btn-pay {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, #7c5ce6 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: -0.3px;
+  box-shadow: 0 4px 15px rgba(91, 63, 216, 0.3);
+  margin-bottom: 16px;
+}
+
+.btn-pay:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(91, 63, 216, 0.4);
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-pago">
+  <!-- HEADER -->
+  <div class="payment-header">
+    <div class="payment-header-content">
+      <div class="logo-circle">H</div>
+      <div>
+        <h1>Hotel San Eduardo</h1>
+        <p>Pago de Servicios Adicionales</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="payment-form">
+    <!-- RESUMEN -->
+    <div class="card-resumen">
+      <p><strong>Servicios seleccionados:</strong></p>
+      <ul>
+        {% for s in reserva["servicios"] %}
+        <li>{{ s["nombre"] }} — S/. {{ "%.2f"|format(s["precio"]) }}</li>
+        {% endfor %}
+      </ul>
+      <p><strong>Fecha:</strong> {{ reserva["fecha"] }}</p>
+      <p><strong>Total a pagar:</strong>
+        <span class="total">S/. {{ "%.2f"|format(reserva["total"]) }}</span>
+      </p>
+    </div>
+
+    <!-- FORMULARIO -->
+    <form id="paymentForm" method="POST" action="{{ url_for('servicios.confirmar_pago') }}">
+      <div class="form">
+        <h3 class="section-label">Información de la Tarjeta</h3>
+
+        <div class="form-group">
+          <label for="cardholderName">Nombre del Titular</label>
+          <input type="text" id="cardholderName" name="cardholderName" placeholder="Exactamente como aparece en la tarjeta" required>
+          <span class="error-message" id="nameError"></span>
+        </div>
+
+        <div class="form-group">
+          <label for="cardNumber">Número de Tarjeta</label>
+          <input type="text" id="cardNumber" name="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required>
+          <span class="error-message" id="cardError"></span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha de Expiración</label>
+            <div class="date-inputs">
+              <input type="number" id="expiryMonth" name="expiryMonth" placeholder="MM" min="1" max="12" required>
+              <span class="separator">/</span>
+              <input type="number" id="expiryYear" name="expiryYear" placeholder="AA" min="24" max="99" required>
+            </div>
+            <span class="error-message" id="dateError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="cvv">CVV</label>
+            <input type="text" id="cvv" name="cvv" placeholder="•••" maxlength="4" required>
+            <span class="error-message" id="cvvError"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="security-section">
+        <p class="security-title">Pago 100% Seguro</p>
+        <p class="security-text">Tus datos están cifrados y protegidos mediante SSL de 256 bits.</p>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-pay">
+          <span class="btn-text">Procesar Pago</span>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polyline points="5 12 19 12"></polyline>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ===== VALIDACIÓN TARJETA =====
+const form = document.getElementById("paymentForm")
+const nameInput = document.getElementById("cardholderName")
+const numberInput = document.getElementById("cardNumber")
+const monthInput = document.getElementById("expiryMonth")
+const yearInput = document.getElementById("expiryYear")
+const cvvInput = document.getElementById("cvv")
+
+const errName = document.getElementById("nameError")
+const errNum = document.getElementById("cardError")
+const errDate = document.getElementById("dateError")
+const errCvv = document.getElementById("cvvError")
+
+numberInput.addEventListener("input", e => {
+  const value = e.target.value.replace(/\s/g,"").slice(0,16)
+  e.target.value = value.replace(/(\d{4})/g,"$1 ").trim()
+})
+
+form.addEventListener("submit", e => {
+  e.preventDefault()
+  if (validateAll()) {
+    const btn = form.querySelector(".btn-pay")
+    btn.disabled = true
+    btn.innerHTML = '<span class="btn-text">Procesando...</span>'
+    form.submit()
+  }
+})
+
+function validateAll(){
+  const valid = [validateName(), validateNumber(), validateDate(), validateCvv()]
+  return valid.every(v=>v)
+}
+
+function validateName(){
+  const v = nameInput.value.trim()
+  if(v.length<3){errName.textContent="Ingrese un nombre válido";return false}
+  errName.textContent="";return true
+}
+
+function validateNumber(){
+  const v = numberInput.value.replace(/\s/g,"")
+  if(v.length!==16){errNum.textContent="Debe tener 16 dígitos";return false}
+  errNum.textContent="";return true
+}
+
+function validateDate(){
+  const m=parseInt(monthInput.value), y=2000+parseInt(yearInput.value)
+  const now=new Date()
+  if(!m||!y){errDate.textContent="Fecha inválida";return false}
+  if(y<now.getFullYear()||(y===now.getFullYear()&&m<now.getMonth()+1)){errDate.textContent="Tarjeta expirada";return false}
+  errDate.textContent="";return true
+}
+
+function validateCvv(){
+  const v=cvvInput.value
+  if(v.length<3||v.length>4){errCvv.textContent="CVV inválido";return false}
+  errCvv.textContent="";return true
+}
+</script>
+{% endblock %}

@@ -5,35 +5,61 @@
 <section class="contenedor-principal">
   <div class="encabezado">
     <h1>Mis Reservas</h1>
-    <p>Administre y modifique sus reservas de hotel</p>
+    <p>Administre sus reservas de habitaciones y servicios adicionales</p>
   </div>
 
-  {% if reservas %}
-  <div class="reservas-grid">
-    {% for r in reservas %}
-    <div class="reserva-card">
-      <div class="card-header">
-        <h3>{{ r.tipo }} Nº {{ r.habitacion }}</h3>
-      </div>
-
-      <div class="card-body">
-        <p><strong>Fechas:</strong> {{ r.fecha_entrada }} → {{ r.fecha_salida }}</p>
-        <p><strong>Huéspedes:</strong> {{ r.num_huespedes }}</p>
-
-        <span class="estado {{ r.estado|lower }}">
-          {{ r.estado }}
-        </span>
-      </div>
-
-      <div class="card-footer">
-        <a href="{{ url_for('reservas.detalle_reserva', id_reserva=r.id_reserva) }}" class="btn-primario">Ver Detalles</a>
-      </div>
-    </div>
-    {% endfor %}
+  <!-- Botones de filtro -->
+  <div class="botones-filtro">
+    <button id="btnHabitaciones" class="btn-filtro activo">Habitaciones</button>
+    <button id="btnServicios" class="btn-filtro">Servicios adicionales</button>
   </div>
-  {% else %}
-  <p class="sin-reservas">No tienes reservas registradas.</p>
-  {% endif %}
+
+  <!-- 🏨 Reservas de habitaciones -->
+  <div id="reservasHabitaciones" class="reservas-grid">
+    {% if reservas_habitaciones %}
+      {% for r in reservas_habitaciones %}
+      <div class="reserva-card">
+        <div class="card-header">
+          <h3>{{ r.tipo }} Nº {{ r.habitacion }}</h3>
+        </div>
+        <div class="card-body">
+          <p><strong>Fechas:</strong> {{ r.fecha_entrada }} → {{ r.fecha_salida }}</p>
+          <p><strong>Huéspedes:</strong> {{ r.num_huespedes }}</p>
+          <span class="estado {{ r.estado|lower }}">{{ r.estado }}</span>
+        </div>
+        <div class="card-footer">
+          <a href="{{ url_for('reservas.detalle_reserva', id_reserva=r.id_reserva) }}" class="btn-primario">Ver Detalles</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="sin-reservas">No tienes reservas de habitaciones.</p>
+    {% endif %}
+  </div>
+
+  <!-- 🧺 Reservas de servicios -->
+  <div id="reservasServicios" class="reservas-grid oculto">
+    {% if reservas_servicios %}
+      {% for r in reservas_servicios %}
+      <div class="reserva-card">
+        <div class="card-header">
+          <h3>Servicios adicionales</h3>
+        </div>
+        <div class="card-body">
+          <p><strong>Servicios:</strong> {{ r.servicios }}</p>
+          <p><strong>Fecha:</strong> {{ r.fecha }}</p>
+          <p><strong>Total:</strong> S/. {{ "%.2f"|format(r.total) }}</p>
+          <span class="estado {{ r.estado|lower }}">{{ r.estado }}</span>
+        </div>
+        <div class="card-footer">
+          <a href="{{ url_for('servicios.reserva_exitosa_sa', id_reserva=r.id_reserva_servicio) }}" class="btn-primario">Ver Detalles</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="sin-reservas">No tienes reservas de servicios adicionales.</p>
+    {% endif %}
+  </div>
 </section>
 {% endblock %}
 
@@ -44,26 +70,40 @@
   margin: 80px auto;
   padding: 0 20px 100px;
 }
-.encabezado {
-  text-align: center;
-  margin-bottom: 30px;
-}
-.encabezado h1 {
-  font-size: 32px;
-  color: #0f2a63;
-  font-weight: 800;
-}
-.encabezado p {
-  color: #6b6b6b;
-  font-size: 15px;
-}
+.encabezado { text-align: center; margin-bottom: 30px; }
+.encabezado h1 { font-size: 32px; color: #0f2a63; font-weight: 800; }
+.encabezado p { color: #6b6b6b; font-size: 15px; }
 
+/* Botones de filtro */
+.botones-filtro {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 35px;
+}
+.btn-filtro {
+  background: #e9ecef;
+  border: none;
+  color: #0f2a63;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.btn-filtro.activo {
+  background: #0d6efd;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+}
+.btn-filtro:hover { background: #bfc6d1; }
+
+/* Cards */
 .reservas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 22px;
 }
-
 .reserva-card {
   background: #fff;
   border-radius: 12px;
@@ -75,25 +115,10 @@
   transform: translateY(-5px);
   box-shadow: 0 6px 18px rgba(0,0,0,.12);
 }
-
-.card-header {
-  background: #f4f7ff;
-  padding: 14px 18px;
-}
-.card-header h3 {
-  color: #0f2a63;
-  font-weight: 700;
-  margin: 0;
-}
-
-.card-body {
-  padding: 16px 18px;
-}
-.card-body p {
-  color: #333;
-  margin: 6px 0;
-  font-size: 14.5px;
-}
+.card-header { background: #f4f7ff; padding: 14px 18px; }
+.card-header h3 { color: #0f2a63; font-weight: 700; margin: 0; }
+.card-body { padding: 16px 18px; }
+.card-body p { color: #333; margin: 6px 0; font-size: 14.5px; }
 
 .estado {
   display: inline-block;
@@ -105,12 +130,10 @@
 }
 .estado.activa { background: #dcf9de; color: #198754; }
 .estado.cancelada { background: #ffe4e4; color: #c82333; }
+.estado.pagado, .estado.completada { background: #e5f0ff; color: #0d6efd; }
 .estado.pendiente { background: #fff4d2; color: #b88a00; }
 
-.card-footer {
-  text-align: center;
-  padding: 12px 18px 20px;
-}
+.card-footer { text-align: center; padding: 12px 18px 20px; }
 .btn-primario {
   background: #0d6efd;
   color: #fff;
@@ -121,12 +144,33 @@
   transition: background .2s ease;
 }
 .btn-primario:hover { background: #0b5ed7; }
-
-.sin-reservas {
-  text-align: center;
-  color: #555;
-  margin-top: 60px;
-  font-style: italic;
-}
+.sin-reservas { text-align: center; color: #555; margin-top: 60px; font-style: italic; }
+.oculto { display: none; }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Alternar entre pestañas
+document.addEventListener("DOMContentLoaded", () => {
+  const btnHab = document.getElementById("btnHabitaciones");
+  const btnServ = document.getElementById("btnServicios");
+  const gridHab = document.getElementById("reservasHabitaciones");
+  const gridServ = document.getElementById("reservasServicios");
+
+  btnHab.addEventListener("click", () => {
+    btnHab.classList.add("activo");
+    btnServ.classList.remove("activo");
+    gridHab.classList.remove("oculto");
+    gridServ.classList.add("oculto");
+  });
+
+  btnServ.addEventListener("click", () => {
+    btnServ.classList.add("activo");
+    btnHab.classList.remove("activo");
+    gridServ.classList.remove("oculto");
+    gridHab.classList.add("oculto");
+  });
+});
+</script>
 {% endblock %}

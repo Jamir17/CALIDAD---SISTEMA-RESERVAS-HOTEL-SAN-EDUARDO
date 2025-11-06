@@ -1,0 +1,240 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.payment-form {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+.header {
+  background-color: #d32f2f;
+  color: white;
+  padding: 20px;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Card Types */
+.card-types {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.card-type-section h3 {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.card-logos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card-logo {
+  height: 25px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Form */
+.form {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+/* Form Row */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Date Inputs */
+.date-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.date-inputs input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.date-inputs input:focus {
+  outline: none;
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.separator {
+  color: #999;
+  font-weight: bold;
+}
+
+/* CVV Input Group */
+.cvv-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cvv-input-group input {
+  flex: 1;
+}
+
+.card-icon {
+  width: 40px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Error Messages */
+.error-message {
+  display: block;
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 4px;
+  min-height: 16px;
+}
+
+/* Security Info */
+.security-info {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.openpay-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  font-size: 13px;
+  color: #666;
+}
+
+.openpay-logo {
+  height: 20px;
+  width: auto;
+  object-fit: contain;
+}
+
+.security-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #333;
+}
+
+.check-icon {
+  width: 20px;
+  height: 20px;
+  color: #4caf50;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Submit Button */
+.btn-pay {
+  width: 100%;
+  padding: 12px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.btn-pay:hover {
+  background-color: #b71c1c;
+}
+
+.btn-pay:active {
+  background-color: #9a1515;
+}
+
+.btn-pay:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .card-types {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .header h1 {
+    font-size: 18px;
+  }
+}

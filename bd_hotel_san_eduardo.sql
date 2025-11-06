@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS `facturacion` (
   CONSTRAINT `facturacion_ibfk_1` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`),
   CONSTRAINT `facturacion_ibfk_2` FOREIGN KEY (`id_tipo_pago`) REFERENCES `tipo_pago` (`id_tipo_pago`),
   CONSTRAINT `facturacion_ibfk_3` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.facturacion: ~6 rows (aproximadamente)
 INSERT INTO `facturacion` (`id_factura`, `id_reserva`, `id_tipo_pago`, `id_usuario`, `fecha_emision`, `total`, `estado`, `comprobante_pago`) VALUES
@@ -128,7 +128,10 @@ INSERT INTO `facturacion` (`id_factura`, `id_reserva`, `id_tipo_pago`, `id_usuar
 	(4, 4, 2, 6, '2025-10-31', 80.00, 'Pagado', NULL),
 	(5, 5, 2, 6, '2025-11-04', 480.00, 'Pagado', NULL),
 	(6, 6, 2, 6, '2025-11-04', 720.00, 'Pagado', NULL),
-	(7, 7, 2, 6, '2025-11-06', 205.00, 'Pagado', NULL);
+	(7, 7, 2, 6, '2025-11-06', 205.00, 'Pagado', NULL),
+	(8, 8, 2, 6, '2025-11-06', 80.00, 'Pagado', NULL),
+	(9, 9, 1, 6, '2025-11-06', 20.00, 'Pagado', NULL),
+	(10, 10, 1, 6, '2025-11-06', 20.00, 'Pagado', NULL);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.habitaciones
 CREATE TABLE IF NOT EXISTS `habitaciones` (
@@ -164,7 +167,7 @@ CREATE TABLE IF NOT EXISTS `historial_notificaciones` (
   PRIMARY KEY (`id_notificacion`),
   KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `historial_notificaciones_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.historial_notificaciones: ~6 rows (aproximadamente)
 INSERT INTO `historial_notificaciones` (`id_notificacion`, `id_usuario`, `tipo`, `correo_destino`, `asunto`, `estado`, `fecha_envio`) VALUES
@@ -174,7 +177,9 @@ INSERT INTO `historial_notificaciones` (`id_notificacion`, `id_usuario`, `tipo`,
 	(4, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmación de Reserva #4 • Hotel San Eduardo', 'Enviado', '2025-10-31 08:19:40'),
 	(5, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmación de Reserva #5 • Hotel San Eduardo', 'Enviado', '2025-11-04 09:50:13'),
 	(6, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmación de Reserva #6 • Hotel San Eduardo', 'Enviado', '2025-11-04 11:43:41'),
-	(7, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmación de Reserva #7 • Hotel San Eduardo', 'Enviado', '2025-11-06 00:51:45');
+	(7, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmación de Reserva #7 • Hotel San Eduardo', 'Enviado', '2025-11-06 00:51:45'),
+	(8, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmación de Reserva #8 • Hotel San Eduardo', 'Enviado', '2025-11-06 16:04:17'),
+	(9, 6, 'confirmacion', 'anghelojamircko@hotmail.com', 'Confirmación de Reserva #8 • Hotel San Eduardo', 'Enviado', '2025-11-06 16:04:20');
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.imagenes_habitacion
 CREATE TABLE IF NOT EXISTS `imagenes_habitacion` (
@@ -281,7 +286,7 @@ CREATE TABLE IF NOT EXISTS `reservas` (
   `id_reserva` int NOT NULL AUTO_INCREMENT,
   `codigo_confirmacion` varchar(50) DEFAULT NULL,
   `id_cliente` int NOT NULL,
-  `id_habitacion` int NOT NULL,
+  `id_habitacion` int DEFAULT NULL,
   `id_usuario` int DEFAULT NULL,
   `fecha_reserva` datetime DEFAULT CURRENT_TIMESTAMP,
   `fecha_entrada` date NOT NULL,
@@ -298,9 +303,9 @@ CREATE TABLE IF NOT EXISTS `reservas` (
   CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`),
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_habitacion`) REFERENCES `habitaciones` (`id_habitacion`),
   CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.reservas: ~6 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.reservas: ~10 rows (aproximadamente)
 INSERT INTO `reservas` (`id_reserva`, `codigo_confirmacion`, `id_cliente`, `id_habitacion`, `id_usuario`, `fecha_reserva`, `fecha_entrada`, `fecha_salida`, `num_huespedes`, `estado`, `motivo_cancelacion`, `fecha_cancelacion`) VALUES
 	(1, NULL, 6, 1, 7, '2025-10-17 04:52:52', '2025-10-16', '2025-10-18', 1, 'Cancelada', 'Cancelado por el cliente', '2025-10-17 00:01:25'),
 	(2, NULL, 6, 5, 7, '2025-10-17 04:52:52', '2025-10-16', '2025-10-19', 1, 'Finalizada', NULL, NULL),
@@ -308,7 +313,10 @@ INSERT INTO `reservas` (`id_reserva`, `codigo_confirmacion`, `id_cliente`, `id_h
 	(4, NULL, 5, 1, 6, '2025-10-31 08:19:37', '2025-10-31', '2025-11-01', 1, 'Finalizada', NULL, NULL),
 	(5, NULL, 5, 3, 6, '2025-11-04 09:50:11', '2025-11-05', '2025-11-09', 1, 'Finalizada', NULL, NULL),
 	(6, NULL, 5, 3, 6, '2025-11-04 11:43:39', '2025-11-05', '2025-11-11', 1, 'Activa', NULL, NULL),
-	(7, NULL, 5, 2, 6, '2025-11-06 00:51:42', '2025-11-06', '2025-11-08', 1, 'Activa', NULL, NULL);
+	(7, NULL, 5, 2, 6, '2025-11-06 00:51:42', '2025-11-06', '2025-11-08', 1, 'Activa', NULL, NULL),
+	(8, NULL, 5, 1, 6, '2025-11-06 16:04:15', '2025-11-07', '2025-11-08', 1, 'Activa', NULL, NULL),
+	(9, NULL, 5, NULL, 6, '2025-11-06 16:17:38', '2025-11-06', '2025-11-06', 1, 'Activa', NULL, NULL),
+	(10, NULL, 5, NULL, 6, '2025-11-06 16:39:20', '2025-11-06', '2025-11-06', 1, 'Activa', NULL, NULL);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.reserva_servicio
 CREATE TABLE IF NOT EXISTS `reserva_servicio` (
@@ -316,8 +324,11 @@ CREATE TABLE IF NOT EXISTS `reserva_servicio` (
   `id_reserva` int DEFAULT NULL,
   `id_cliente` int DEFAULT NULL,
   `id_servicio` int NOT NULL,
+  `fecha_uso` date DEFAULT NULL,
+  `hora_uso` time DEFAULT NULL,
   `cantidad` int DEFAULT '1',
-  `subtotal` decimal(10,2) NOT NULL,
+  `estado` varchar(20) DEFAULT 'Pendiente',
+  `subtotal` decimal(10,2) NOT NULL DEFAULT '0.00',
   `fecha` date DEFAULT NULL,
   `hora` time DEFAULT NULL,
   PRIMARY KEY (`id_reserva_servicio`),
@@ -327,24 +338,29 @@ CREATE TABLE IF NOT EXISTS `reserva_servicio` (
   CONSTRAINT `fk_reservaservicio_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE SET NULL,
   CONSTRAINT `fk_reservaservicio_reserva` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`) ON DELETE SET NULL,
   CONSTRAINT `fk_reservaservicio_servicio` FOREIGN KEY (`id_servicio`) REFERENCES `servicios` (`id_servicio`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.reserva_servicio: ~12 rows (aproximadamente)
-INSERT INTO `reserva_servicio` (`id_reserva_servicio`, `id_reserva`, `id_cliente`, `id_servicio`, `cantidad`, `subtotal`, `fecha`, `hora`) VALUES
-	(1, 2, NULL, 1, 1, 80.00, NULL, NULL),
-	(2, 2, NULL, 2, 1, 25.00, NULL, NULL),
-	(3, 2, NULL, 3, 1, 50.00, NULL, NULL),
-	(4, 2, NULL, 4, 1, 20.00, NULL, NULL),
-	(5, 2, NULL, 5, 1, 30.00, NULL, NULL),
-	(6, 3, NULL, 1, 1, 80.00, NULL, NULL),
-	(7, 3, NULL, 2, 1, 25.00, NULL, NULL),
-	(8, 3, NULL, 3, 1, 50.00, NULL, NULL),
-	(9, 3, NULL, 4, 1, 20.00, NULL, NULL),
-	(10, 3, NULL, 5, 1, 30.00, NULL, NULL),
-	(16, NULL, 6, 1, 1, 80.00, '2025-11-06', '06:00:00'),
-	(17, NULL, 6, 1, 1, 80.00, '2025-11-06', '06:00:00'),
-	(18, 7, NULL, 4, 1, 20.00, NULL, NULL),
-	(19, 7, NULL, 2, 1, 25.00, NULL, NULL);
+-- Volcando datos para la tabla bd_hotel_san_eduardo.reserva_servicio: ~15 rows (aproximadamente)
+INSERT INTO `reserva_servicio` (`id_reserva_servicio`, `id_reserva`, `id_cliente`, `id_servicio`, `fecha_uso`, `hora_uso`, `cantidad`, `estado`, `subtotal`, `fecha`, `hora`) VALUES
+	(1, 2, NULL, 1, NULL, NULL, 1, 'Pendiente', 80.00, NULL, NULL),
+	(2, 2, NULL, 2, NULL, NULL, 1, 'Pendiente', 25.00, NULL, NULL),
+	(3, 2, NULL, 3, NULL, NULL, 1, 'Pendiente', 50.00, NULL, NULL),
+	(4, 2, NULL, 4, NULL, NULL, 1, 'Pendiente', 20.00, NULL, NULL),
+	(5, 2, NULL, 5, NULL, NULL, 1, 'Pendiente', 30.00, NULL, NULL),
+	(6, 3, NULL, 1, NULL, NULL, 1, 'Pendiente', 80.00, NULL, NULL),
+	(7, 3, NULL, 2, NULL, NULL, 1, 'Pendiente', 25.00, NULL, NULL),
+	(8, 3, NULL, 3, NULL, NULL, 1, 'Pendiente', 50.00, NULL, NULL),
+	(9, 3, NULL, 4, NULL, NULL, 1, 'Pendiente', 20.00, NULL, NULL),
+	(10, 3, NULL, 5, NULL, NULL, 1, 'Pendiente', 30.00, NULL, NULL),
+	(16, NULL, 6, 1, NULL, NULL, 1, 'Pendiente', 80.00, '2025-11-06', '06:00:00'),
+	(17, NULL, 6, 1, NULL, NULL, 1, 'Pendiente', 80.00, '2025-11-06', '06:00:00'),
+	(18, 7, NULL, 4, NULL, NULL, 1, 'Pendiente', 20.00, NULL, NULL),
+	(19, 7, NULL, 2, NULL, NULL, 1, 'Pendiente', 25.00, NULL, NULL),
+	(20, NULL, 6, 4, '2025-11-06', '13:00:00', 1, 'Pendiente', 20.00, NULL, NULL),
+	(21, NULL, 6, 6, '2025-11-06', '13:00:00', 1, 'Pendiente', 90.00, NULL, NULL),
+	(22, NULL, 6, 8, '2025-11-06', '13:00:00', 1, 'Pendiente', 40.00, NULL, NULL),
+	(23, 9, NULL, 4, NULL, NULL, 1, 'Pendiente', 20.00, NULL, NULL),
+	(24, 10, NULL, 4, NULL, NULL, 1, 'Pendiente', 20.00, NULL, NULL);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.roles
 CREATE TABLE IF NOT EXISTS `roles` (
@@ -367,27 +383,28 @@ CREATE TABLE IF NOT EXISTS `servicios` (
   `descripcion` text,
   `precio` decimal(10,2) NOT NULL,
   `estado` tinyint DEFAULT '1',
+  `tipo_disponibilidad` enum('multiple','unico') DEFAULT 'unico',
   PRIMARY KEY (`id_servicio`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.servicios: ~5 rows (aproximadamente)
-INSERT INTO `servicios` (`id_servicio`, `nombre`, `descripcion`, `precio`, `estado`) VALUES
-	(1, 'Spa', 'Acceso al spa con sauna y jacuzzi', 80.00, 1),
-	(2, 'Piscina', 'Uso de piscina con toallas incluidas', 25.00, 1),
-	(3, 'Coworking', 'Acceso a sala coworking por día', 50.00, 1),
-	(4, 'Lavandería', 'Servicio de lavado y planchado', 20.00, 1),
-	(5, 'Desayuno buffet', 'Desayuno completo en el restaurante', 30.00, 1),
-	(6, 'Spa y masajes relajantes', 'Sesión de spa con masajes y aromaterapia.', 90.00, 1),
-	(7, 'Sauna y jacuzzi', 'Acceso por 1 hora al sauna seco y jacuzzi.', 60.00, 1),
-	(8, 'Gimnasio', 'Uso libre del gimnasio con entrenador disponible.', 40.00, 1),
-	(9, 'Piscina', 'Acceso a la piscina por el día, incluye toalla.', 25.00, 1),
-	(10, 'Desayuno buffet', 'Desayuno completo en el restaurante.', 30.00, 1),
-	(11, 'Almuerzo ejecutivo', 'Menú del día con bebida y postre.', 40.00, 1),
-	(12, 'Cena gourmet', 'Cena especial con entrada, plato fuerte y vino.', 55.00, 1),
-	(13, 'Servicio de bar o coctelería', 'Acceso al bar con carta de cócteles y snacks.', 35.00, 1),
-	(14, 'Sala de coworking', 'Espacio equipado para trabajo remoto por día.', 50.00, 1),
-	(15, 'Salón de conferencias o reuniones', 'Alquiler por hora del salón con proyector.', 150.00, 1),
-	(16, 'Tour local', 'Recorrido guiado por los principales atractivos de Chiclayo.', 120.00, 1);
+-- Volcando datos para la tabla bd_hotel_san_eduardo.servicios: ~16 rows (aproximadamente)
+INSERT INTO `servicios` (`id_servicio`, `nombre`, `descripcion`, `precio`, `estado`, `tipo_disponibilidad`) VALUES
+	(1, 'Spa', 'Acceso al spa con sauna y jacuzzi', 80.00, 0, 'unico'),
+	(2, 'Piscina', 'Uso de piscina con toallas incluidas', 25.00, 0, 'multiple'),
+	(3, 'Coworking', 'Acceso a sala coworking por día', 50.00, 0, 'unico'),
+	(4, 'Lavandería', 'Servicio de lavado y planchado', 20.00, 1, 'unico'),
+	(5, 'Desayuno buffet', 'Desayuno completo en el restaurante', 30.00, 0, 'unico'),
+	(6, 'Spa y masajes relajantes', 'Sesión de spa con masajes y aromaterapia.', 90.00, 1, 'unico'),
+	(7, 'Sauna y jacuzzi', 'Acceso por 30 minutos al sauna seco y jacuzzi.', 60.00, 1, 'unico'),
+	(8, 'Gimnasio', 'Uso libre del gimnasio con entrenador disponible.', 40.00, 1, 'unico'),
+	(9, 'Piscina', 'Acceso a la piscina por el día, incluye toalla.', 25.00, 1, 'multiple'),
+	(10, 'Desayuno buffet', 'Desayuno completo en el restaurante.', 30.00, 1, 'multiple'),
+	(11, 'Almuerzo ejecutivo', 'Menú del día con bebida y postre.', 40.00, 1, 'multiple'),
+	(12, 'Cena gourmet', 'Cena especial con entrada, plato fuerte y vino.', 55.00, 1, 'multiple'),
+	(13, 'Servicio de bar o coctelería', 'Acceso al bar con carta de cócteles y snacks.', 35.00, 1, 'multiple'),
+	(14, 'Sala de coworking', 'Espacio equipado para trabajo remoto por día.', 50.00, 1, 'unico'),
+	(15, 'Salón de conferencias o reuniones', 'Alquiler por hora del salón con proyector.', 150.00, 1, 'unico'),
+	(16, 'Tour local', 'Recorrido guiado por los principales atractivos de Chiclayo.', 120.00, 1, 'multiple');
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.servicio_reservado
 CREATE TABLE IF NOT EXISTS `servicio_reservado` (
@@ -429,8 +446,8 @@ CREATE TABLE IF NOT EXISTS `tipo_pago` (
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.tipo_pago: ~4 rows (aproximadamente)
 INSERT INTO `tipo_pago` (`id_tipo_pago`, `descripcion`) VALUES
-	(1, 'Efectivo'),
-	(2, 'Tarjeta'),
+	(1, 'Transferencia bancaria'),
+	(2, 'Tarjeta de credito/debito'),
 	(3, 'Yape'),
 	(4, 'Plin');
 

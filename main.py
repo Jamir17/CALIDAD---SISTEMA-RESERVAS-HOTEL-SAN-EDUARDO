@@ -14,7 +14,6 @@ from controladores.controlador_gestion_usuarios_roles import gestion_usuarios_ro
 from controladores.controlador_reservas_cliente import reservas_cliente_bp
 from controladores.controlador_serviciosadicionales import servicios
 
-
 app = Flask(__name__)
 app.secret_key = "clave-super-segura"
 

@@ -283,141 +283,307 @@
     top: auto;
   }
 }
+
+/* ===============================
+   🎨 ESTILO PANEL DE SELECCIÓN
+   =============================== */
+#listaServicios {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#listaServicios li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 0;
+  color: #000000;
+  font-size: 0.9rem;
+}
+
+#listaServicios li:last-child {
+  border-bottom: none;
+}
+
+.servicio-info {
+  flex: 1;
+  max-width: 140px; /* controla el ancho del nombre */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
+}
+
+.servicio-nombre {
+  font-weight: 600;
+  color: #000000;
+}
+
+.servicio-hora {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.servicio-precio {
+  min-width: 60px;
+  text-align: right;
+  font-weight: 600;
+}
+
+.eliminar-servicio {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: rgb(255, 0, 0);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 2px 6px;
+  transition: background 0.2s;
+}
+
+.eliminar-servicio:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 </style>
 
 
-<!-- ================= JS ================= -->
 <script>
-const serviciosSeleccionados = [];
-const selectHora = document.getElementById("horaUso");
-const contenedor = document.querySelector(".grid-servicios");
+document.addEventListener("DOMContentLoaded", () => {
+  const serviciosSeleccionados = [];
+  const selectHora = document.getElementById("horaUso");
+  const contenedor = document.querySelector(".grid-servicios");
+  const btnFiltrar = document.getElementById("btnFiltrar") || document.getElementById("btnAplicar");
+  const btnConfirmar = document.getElementById("btnConfirmar");
+  const inputFecha = document.getElementById("fechaUso");
 
-// Generar horas (06:00 - 21:00, cada 30 min)
-function generarHoras() {
-  selectHora.innerHTML = '<option value="">-- Seleccione hora --</option>';
-  for (let h = 6; h <= 21; h++) {
-    for (let m of [0, 30]) {
-      const hora = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
-      const opt = document.createElement("option");
-      opt.value = hora;
-      opt.textContent = hora;
-      selectHora.appendChild(opt);
+  // =============================
+  // 🕒 GENERAR HORAS (06:00 - 21:00)
+  // =============================
+  function generarHoras() {
+    if (!selectHora || !inputFecha) return;
+    selectHora.innerHTML = '<option value="">-- Seleccione hora --</option>';
+    selectHora.disabled = false;
+
+    const hoy = new Date();
+    const fechaSeleccionada = inputFecha.value ? new Date(inputFecha.value + "T00:00:00") : null;
+    inputFecha.min = hoy.toISOString().split("T")[0];
+
+    const esHoy =
+      fechaSeleccionada &&
+      fechaSeleccionada.getFullYear() === hoy.getFullYear() &&
+      fechaSeleccionada.getMonth() === hoy.getMonth() &&
+      fechaSeleccionada.getDate() === hoy.getDate();
+
+    let horaInicio = 6, minutoInicio = 0;
+
+    if (esHoy) {
+      const ahora = new Date();
+      horaInicio = ahora.getHours();
+      minutoInicio = ahora.getMinutes();
+      if (minutoInicio > 0 && minutoInicio <= 30) minutoInicio = 30;
+      else if (minutoInicio > 30) {
+        horaInicio += 1;
+        minutoInicio = 0;
+      }
+      if (horaInicio >= 21) {
+        selectHora.innerHTML = '<option>No hay horarios disponibles hoy</option>';
+        selectHora.disabled = true;
+        return;
+      }
+    }
+
+    for (let h = horaInicio; h <= 21; h++) {
+      for (let m of [0, 30]) {
+        if (esHoy) {
+          const horaGenerada = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), h, m);
+          if (horaGenerada <= hoy) continue;
+        }
+        const hora = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+        selectHora.appendChild(new Option(hora, hora));
+      }
+    }
+
+    if (selectHora.options.length === 1) {
+      selectHora.innerHTML = '<option>No hay horarios disponibles hoy</option>';
+      selectHora.disabled = true;
     }
   }
-}
-generarHoras();
 
-// =============================
-// 🧠 FILTRAR SERVICIOS DISPONIBLES
-// =============================
-document.getElementById("btnFiltrar").addEventListener("click", async () => {
-  const fecha = document.getElementById("fechaUso").value;
-  const hora = document.getElementById("horaUso").value;
-  if (!fecha || !hora) return mostrarMensaje("Seleccione una fecha y hora válidas.", "error");
+  generarHoras();
+  inputFecha.addEventListener("change", generarHoras);
 
-  const resp = await fetch("/servicios/disponibles", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ fecha, hora })
-  });
-  const data = await resp.json();
+  // =============================
+  // 🔍 FILTRAR SERVICIOS DISPONIBLES
+  // =============================
+  if (btnFiltrar) {
+    btnFiltrar.addEventListener("click", async () => {
+      const fecha = inputFecha.value;
+      const hora = selectHora.value;
+      if (!fecha || !hora)
+        return mostrarMensaje("Seleccione una fecha y hora válidas.", "error");
 
-  if (!data.ok) return mostrarMensaje(data.msg, "error");
+      const resp = await fetch("/servicios/disponibles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fecha, hora })
+      });
 
-  mostrarServicios(data.servicios);
-  mostrarMensaje(`Servicios actualizados para ${fecha} a las ${hora}.`, "ok");
-});
+      const data = await resp.json();
+      if (!data.ok) return mostrarMensaje(data.msg, "error");
 
-// =============================
-// 🎨 RENDERIZAR SERVICIOS
-// =============================
-function mostrarServicios(servicios) {
-  contenedor.innerHTML = "";
-  if (servicios.length === 0) {
-    contenedor.innerHTML = `<p class="text-muted text-center">No hay servicios disponibles en ese horario.</p>`;
-    return;
+      mostrarServicios(data.servicios);
+      mostrarMensaje(`Servicios disponibles para ${fecha} a las ${hora}.`, "ok");
+    });
   }
 
-  servicios.forEach(s => {
-    const card = `
-      <div class="card-servicio">
-        <img src="/static/img/servicios/default.jpg">
-        <div class="info">
-          <h5>${s.nombre}</h5>
-          <p class="desc">${s.descripcion}</p>
-          <p class="precio">S/ ${parseFloat(s.precio).toFixed(2)}</p>
-          <button class="btn-agregar" data-id="${s.id_servicio}" data-nombre="${s.nombre}" data-precio="${s.precio}">
-            Agregar
-          </button>
-        </div>
-      </div>`;
-    contenedor.insertAdjacentHTML("beforeend", card);
-  });
+  // =============================
+  // 🎨 MOSTRAR SERVICIOS DISPONIBLES
+  // =============================
+  function mostrarServicios(servicios) {
+    contenedor.innerHTML = "";
+    if (!servicios || servicios.length === 0) {
+      contenedor.innerHTML = `<p class="text-muted text-center">No hay servicios disponibles en ese horario.</p>`;
+      return;
+    }
 
-  document.querySelectorAll(".btn-agregar").forEach(btn => {
-    btn.addEventListener("click", () => {
+    servicios.forEach(s => {
+      const card = `
+        <div class="card-servicio">
+          <img src="/static/img/servicios/default.jpg" alt="${s.nombre}">
+          <div class="info">
+            <h5>${s.nombre}</h5>
+            <p class="desc">${s.descripcion}</p>
+            <p class="precio">S/ ${parseFloat(s.precio).toFixed(2)}</p>
+            <button class="btn-agregar" data-id="${s.id_servicio}" data-nombre="${s.nombre}" data-precio="${s.precio}">
+              Agregar
+            </button>
+          </div>
+        </div>`;
+      contenedor.insertAdjacentHTML("beforeend", card);
+    });
+  }
+
+  // =============================
+  // 🧠 DELEGACIÓN DE EVENTOS "AGREGAR"
+  // =============================
+  contenedor.addEventListener("click", e => {
+    if (e.target.classList.contains("btn-agregar")) {
+      const btn = e.target;
       const id = btn.dataset.id;
       const nombre = btn.dataset.nombre;
       const precio = parseFloat(btn.dataset.precio);
-      const existente = serviciosSeleccionados.find(s => s.id === id);
-      if (existente) existente.qty++;
-      else serviciosSeleccionados.push({ id, nombre, precio, qty: 1 });
+      const hora = selectHora.value;
+
+      if (!hora) return mostrarMensaje("Debe seleccionar una hora antes de agregar.", "error");
+
+      serviciosSeleccionados.push({ id, nombre, precio, hora, qty: 1 });
       renderLista();
+      mostrarMensaje(`✅ ${nombre} agregado para las ${hora}`, "ok");
+    }
+  });
+
+  // =============================
+  // 🧾 RENDER LISTA DE SERVICIOS SELECCIONADOS
+  // =============================
+  function renderLista() {
+    const lista = document.getElementById("listaServicios");
+    const totalEl = document.getElementById("total");
+    lista.innerHTML = "";
+    let total = 0;
+
+    serviciosSeleccionados.forEach((s, i) => {
+      total += s.precio * s.qty;
+      lista.innerHTML += `
+        <li>
+          <div class="servicio-info">
+            <div class="servicio-nombre">${s.nombre}</div>
+            <div class="servicio-hora">${s.hora}</div>
+          </div>
+          <div class="servicio-precio">
+            S/ ${(s.precio * s.qty).toFixed(2)}
+          </div>
+          <button class="eliminar-servicio" data-index="${i}">✕</button>
+        </li>`;
     });
-  });
-}
 
-// =============================
-// 💾 RENDER LISTA DE SELECCIÓN
-// =============================
-function renderLista() {
-  const lista = document.getElementById("listaServicios");
-  const totalEl = document.getElementById("total");
-  const btnConfirmar = document.getElementById("btnConfirmar");
-  lista.innerHTML = "";
-  let total = 0;
+    totalEl.textContent = total.toFixed(2);
+    btnConfirmar.disabled = total === 0;
+  }
 
-  serviciosSeleccionados.forEach(s => {
-    total += s.precio * s.qty;
-    lista.innerHTML += `<li>${s.nombre} <span>S/ ${(s.precio * s.qty).toFixed(2)}</span></li>`;
+  // 🗑️ ELIMINAR SERVICIO DEL PANEL
+  document.getElementById("listaServicios").addEventListener("click", e => {
+    if (e.target.classList.contains("eliminar-servicio")) {
+      const index = e.target.dataset.index;
+      serviciosSeleccionados.splice(index, 1);
+      renderLista();
+    }
   });
 
-  totalEl.textContent = total.toFixed(2);
-  btnConfirmar.disabled = total === 0;
-}
 
-// =============================
-// 🚀 CONFIRMAR RESERVA
-// =============================
-document.getElementById("btnConfirmar").addEventListener("click", async () => {
-  const id_cliente = {{ session.get('usuario_id', 'null') }};
-  const fecha = document.getElementById("fechaUso").value;
-  const hora = document.getElementById("horaUso").value;
-  if (!id_cliente) return mostrarMensaje("Debe iniciar sesión para continuar.", "error");
-  if (!fecha || !hora) return mostrarMensaje("Seleccione fecha y hora de uso.", "error");
+  // =============================
+  // 🚀 CONFIRMAR RESERVA (VALIDAR + GUARDAR + REDIRIGIR)
+  // =============================
+  btnConfirmar.addEventListener("click", async () => {
+    const id_cliente = {{ session.get('usuario_id', 'null') }};
+    const fecha = inputFecha.value;
 
-  const resp = await fetch("/servicios/reservar", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id_cliente, fecha, hora, servicios: serviciosSeleccionados })
+    if (!id_cliente) return mostrarMensaje("Debe iniciar sesión para continuar.", "error");
+    if (!fecha) return mostrarMensaje("Seleccione una fecha válida.", "error");
+    if (serviciosSeleccionados.length === 0)
+      return mostrarMensaje("Debe seleccionar al menos un servicio.", "error");
+
+    // 1️⃣ Validar la reserva
+    const validar = await fetch("/servicios/reservar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_cliente, fecha, servicios: serviciosSeleccionados })
+    });
+
+    const rptaValidar = await validar.json();
+    if (!rptaValidar.ok) return mostrarMensaje(rptaValidar.msg, "error");
+
+    // 2️⃣ Guardar la reserva en sesión (para mostrar en el pago)
+    const payload = {
+      tipo: "Servicios adicionales",
+      fecha,
+      servicios: serviciosSeleccionados,
+      total: serviciosSeleccionados.reduce((sum, s) => sum + (s.precio * (s.qty || 1)), 0)
+    };
+
+    const guardar = await fetch("/servicios/pago", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const dataGuardar = await guardar.json();
+    if (!dataGuardar.ok)
+      return mostrarMensaje("Error al preparar la reserva para el pago.", "error");
+
+    // 3️⃣ Redirigir correctamente al nuevo módulo
+    mostrarMensaje("Redirigiendo al pago...", "ok");
+    setTimeout(() => {
+      window.location.href = "{{ url_for('servicios.pago_servicios') }}";
+    }, 1200);
   });
-  const data = await resp.json();
-  mostrarMensaje(data.msg, data.ok ? "ok" : "error");
-  if (data.ok) setTimeout(() => location.reload(), 2000);
+
+
+  // =============================
+  // ✨ MENSAJES BONITOS
+  // =============================
+  function mostrarMensaje(texto, tipo) {
+    const alerta = document.createElement("div");
+    alerta.className = `alert ${tipo === "ok" ? "alert-success" : "alert-danger"} position-fixed top-0 start-50 translate-middle-x mt-3 shadow`;
+    alerta.style.zIndex = "3000";
+    alerta.textContent = texto;
+    document.body.appendChild(alerta);
+    setTimeout(() => alerta.remove(), 2500);
+  }
 });
-
-// =============================
-// ✨ MENSAJES ELEGANTES
-// =============================
-function mostrarMensaje(texto, tipo) {
-  const alerta = document.createElement("div");
-  alerta.className = `alert ${tipo === "ok" ? "alert-success" : "alert-danger"} position-fixed top-0 start-50 translate-middle-x mt-3 shadow`;
-  alerta.style.zIndex = "3000";
-  alerta.textContent = texto;
-  document.body.appendChild(alerta);
-  setTimeout(() => alerta.remove(), 2500);
-}
 </script>
-
 
 {% endblock %}

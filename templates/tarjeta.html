@@ -521,9 +521,25 @@ body {
             .total { color: #1e8449; font-weight: bold; }
         </style>
         <div class="card-resumen">
-             <p><strong>Habitación:</strong> {{ reserva.tipo }} Nº {{ reserva.numero }}</p>
-             <p><strong>Huésped:</strong> {{ reserva.huesped.nombre }}</p>
-             <p><strong>Total a Pagar:</strong> <span class="total">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span></p>
+          {% if reserva and ('tipo' in reserva) %}
+            <p><strong>Habitación:</strong> {{ reserva["tipo"] }} Nº {{ reserva["numero"] }}</p>
+            <p><strong>Huésped:</strong> {{ reserva["huesped"]["nombre"] if reserva["huesped"] else '---' }}</p>
+          {% elif reserva and ('servicios' in reserva) %}
+            <p><strong>Servicios:</strong></p>
+            <ul>
+              {% for s in reserva["servicios"] %}
+                <li>{{ s["nombre"] }} — S/. {{ "%.2f"|format(s["precio"]) }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>No hay información de reserva disponible.</p>
+          {% endif %}
+
+          {% if reserva and ('total' in reserva) %}
+            <p><strong>Total a Pagar:</strong>
+              <span class="total">S/. {{ "%.2f"|format(reserva["total"]) }}</span>
+            </p>
+          {% endif %}
         </div>
 
         <!-- Improved card selection with better visual hierarchy -->
