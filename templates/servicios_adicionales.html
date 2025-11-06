@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+{% block title %}Servicios Adicionales - Hotel San Eduardo{% endblock %}
+
+{% block content %}
+<div class="layout-servicios">
+
+  <!-- PANEL IZQUIERDO -->
+  <aside class="panel filtros">
+    <h2>Filtrar Reserva</h2>
+
+    <label for="fechaUso">Fecha de uso</label>
+    <input type="date" id="fechaUso" name="fechaUso" min="{{ fecha_actual }}" required>
+
+    <label for="horaUso">Hora de uso</label>
+    <select id="horaUso" name="horaUso" required>
+      <option value="">-- Seleccione hora --</option>
+    </select>
+
+    <button id="btnFiltrar" class="btn-buscar w-100">Aplicar</button>
+  </aside>
+
+  <!-- SERVICIOS DISPONIBLES -->
+  <section class="listado">
+    <div class="grid-servicios">
+      {% for s in servicios %}
+      <div class="card-servicio">
+        <img src="{{ url_for('static', filename='img/servicios/' + s['nombre']|lower|replace(' ', '_') + '.jpg') }}"
+             alt="{{ s['nombre'] }}"
+             onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/servicios/default.jpg') }}';">
+        <div class="info">
+          <h5>{{ s['nombre'] }}</h5>
+          <p class="desc">{{ s['descripcion'] }}</p>
+          <p class="precio">S/ {{ '%.2f'|format(s['precio']|float) }}</p>
+          <button class="btn-agregar"
+                  data-id="{{ s['id_servicio'] }}"
+                  data-nombre="{{ s['nombre'] }}"
+                  data-precio="{{ s['precio'] }}">
+            Agregar
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- PANEL DERECHO -->
+  <aside class="panel resumen">
+    <h2>Tu Selección</h2>
+    <ul id="listaServicios"></ul>
+    <p class="total">Total: S/ <span id="total">0.00</span></p>
+    <button id="btnConfirmar" class="btn-confirmar" disabled>Confirmar Reserva</button>
+  </aside>
+</div>
+
+<!-- ================= ESTILOS ================= -->
+<style>
+/* ===========================
+   🔹 Diseño general
+=========================== */
+.layout-servicios {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 24px;
+  padding: 80px 40px;
+  background: #f8faff;
+}
+
+/* ===========================
+   🔹 Paneles base
+=========================== */
+.panel {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.06);
+  height: fit-content;
+}
+
+/* ===========================
+   🔹 Panel de Filtros (izquierdo)
+=========================== */
+.filtros {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  border-radius: 16px;
+  min-width: 260px;
+}
+
+.filtros h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f2a63;
+  margin-bottom: 12px;
+}
+
+.filtros label {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 10px;
+  font-size: 0.95rem;
+}
+
+.filtros input,
+.filtros select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 5px;
+  border: 1px solid #d5e0ff;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  background: #f9fafb;
+  transition: border-color 0.2s ease;
+}
+
+.filtros input:focus,
+.filtros select:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.btn-buscar {
+  margin-top: 16px;
+  width: 100%;
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-buscar:hover {
+  background: #0b5ed7;
+}
+
+/* ===========================
+   🔹 Tarjetas de Servicios
+=========================== */
+.listado h3 {
+  margin-bottom: 10px;
+  color: #0f2a63;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.grid-servicios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card-servicio {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.card-servicio:hover {
+  transform: translateY(-3px);
+}
+
+.card-servicio img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.card-servicio .info {
+  padding: 12px;
+  text-align: center;
+}
+
+.card-servicio h5 {
+  font-size: 1.1rem;
+  color: #0f2a63;
+  margin-bottom: 6px;
+}
+
+.card-servicio .desc {
+  color: #64748b;
+  font-size: 0.9rem;
+  min-height: 40px;
+}
+
+.card-servicio .precio {
+  color: #16a34a;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.btn-agregar {
+  background: #198754;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s ease;
+}
+
+.btn-agregar:hover {
+  background: #157347;
+}
+
+/* ===========================
+   🔹 Panel de Resumen (derecho)
+=========================== */
+.resumen {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  border-radius: 16px;
+}
+
+.resumen h2 {
+  color: #0f2a63;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.resumen ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resumen ul li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dashed #cbd5e1;
+  color: #1e293b;
+}
+
+.total {
+  font-weight: 700;
+  margin-top: 10px;
+  text-align: right;
+  color: #0f172a;
+}
+
+.btn-confirmar {
+  width: 100%;
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-confirmar:hover {
+  background: #0b5ed7;
+}
+
+.btn-confirmar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===========================
+   🔹 Responsive (tablets/móviles)
+=========================== */
+@media (max-width: 992px) {
+  .layout-servicios {
+    grid-template-columns: 1fr;
+    padding: 40px 20px;
+  }
+
+  .filtros,
+  .resumen {
+    position: relative;
+    top: auto;
+  }
+}
+</style>
+
+
+<!-- ================= JS ================= -->
+<script>
+const serviciosSeleccionados = [];
+const selectHora = document.getElementById("horaUso");
+const contenedor = document.querySelector(".grid-servicios");
+
+// Generar horas (06:00 - 21:00, cada 30 min)
+function generarHoras() {
+  selectHora.innerHTML = '<option value="">-- Seleccione hora --</option>';
+  for (let h = 6; h <= 21; h++) {
+    for (let m of [0, 30]) {
+      const hora = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+      const opt = document.createElement("option");
+      opt.value = hora;
+      opt.textContent = hora;
+      selectHora.appendChild(opt);
+    }
+  }
+}
+generarHoras();
+
+// =============================
+// 🧠 FILTRAR SERVICIOS DISPONIBLES
+// =============================
+document.getElementById("btnFiltrar").addEventListener("click", async () => {
+  const fecha = document.getElementById("fechaUso").value;
+  const hora = document.getElementById("horaUso").value;
+  if (!fecha || !hora) return mostrarMensaje("Seleccione una fecha y hora válidas.", "error");
+
+  const resp = await fetch("/servicios/disponibles", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ fecha, hora })
+  });
+  const data = await resp.json();
+
+  if (!data.ok) return mostrarMensaje(data.msg, "error");
+
+  mostrarServicios(data.servicios);
+  mostrarMensaje(`Servicios actualizados para ${fecha} a las ${hora}.`, "ok");
+});
+
+// =============================
+// 🎨 RENDERIZAR SERVICIOS
+// =============================
+function mostrarServicios(servicios) {
+  contenedor.innerHTML = "";
+  if (servicios.length === 0) {
+    contenedor.innerHTML = `<p class="text-muted text-center">No hay servicios disponibles en ese horario.</p>`;
+    return;
+  }
+
+  servicios.forEach(s => {
+    const card = `
+      <div class="card-servicio">
+        <img src="/static/img/servicios/default.jpg">
+        <div class="info">
+          <h5>${s.nombre}</h5>
+          <p class="desc">${s.descripcion}</p>
+          <p class="precio">S/ ${parseFloat(s.precio).toFixed(2)}</p>
+          <button class="btn-agregar" data-id="${s.id_servicio}" data-nombre="${s.nombre}" data-precio="${s.precio}">
+            Agregar
+          </button>
+        </div>
+      </div>`;
+    contenedor.insertAdjacentHTML("beforeend", card);
+  });
+
+  document.querySelectorAll(".btn-agregar").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const nombre = btn.dataset.nombre;
+      const precio = parseFloat(btn.dataset.precio);
+      const existente = serviciosSeleccionados.find(s => s.id === id);
+      if (existente) existente.qty++;
+      else serviciosSeleccionados.push({ id, nombre, precio, qty: 1 });
+      renderLista();
+    });
+  });
+}
+
+// =============================
+// 💾 RENDER LISTA DE SELECCIÓN
+// =============================
+function renderLista() {
+  const lista = document.getElementById("listaServicios");
+  const totalEl = document.getElementById("total");
+  const btnConfirmar = document.getElementById("btnConfirmar");
+  lista.innerHTML = "";
+  let total = 0;
+
+  serviciosSeleccionados.forEach(s => {
+    total += s.precio * s.qty;
+    lista.innerHTML += `<li>${s.nombre} <span>S/ ${(s.precio * s.qty).toFixed(2)}</span></li>`;
+  });
+
+  totalEl.textContent = total.toFixed(2);
+  btnConfirmar.disabled = total === 0;
+}
+
+// =============================
+// 🚀 CONFIRMAR RESERVA
+// =============================
+document.getElementById("btnConfirmar").addEventListener("click", async () => {
+  const id_cliente = {{ session.get('usuario_id', 'null') }};
+  const fecha = document.getElementById("fechaUso").value;
+  const hora = document.getElementById("horaUso").value;
+  if (!id_cliente) return mostrarMensaje("Debe iniciar sesión para continuar.", "error");
+  if (!fecha || !hora) return mostrarMensaje("Seleccione fecha y hora de uso.", "error");
+
+  const resp = await fetch("/servicios/reservar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id_cliente, fecha, hora, servicios: serviciosSeleccionados })
+  });
+  const data = await resp.json();
+  mostrarMensaje(data.msg, data.ok ? "ok" : "error");
+  if (data.ok) setTimeout(() => location.reload(), 2000);
+});
+
+// =============================
+// ✨ MENSAJES ELEGANTES
+// =============================
+function mostrarMensaje(texto, tipo) {
+  const alerta = document.createElement("div");
+  alerta.className = `alert ${tipo === "ok" ? "alert-success" : "alert-danger"} position-fixed top-0 start-50 translate-middle-x mt-3 shadow`;
+  alerta.style.zIndex = "3000";
+  alerta.textContent = texto;
+  document.body.appendChild(alerta);
+  setTimeout(() => alerta.remove(), 2500);
+}
+</script>
+
+
+{% endblock %}
