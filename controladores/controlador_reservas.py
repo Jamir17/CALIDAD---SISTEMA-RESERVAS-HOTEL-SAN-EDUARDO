@@ -109,15 +109,29 @@ def pago_reserva():
     if request.method == "POST":
         if request.is_json:
             datos = request.get_json()
-            # Si viene de servicios adicionales, no hay habitación asociada
-            if datos.get("tipo") == "Servicios adicionales":
-                datos["id_habitacion"] = None
-                datos["entrada"] = datos.get("fecha")
-                datos["salida"] = datos.get("fecha")
-                datos["noches"] = 1
-                datos["precio"] = 0  # no aplica habitación
-            session["reserva_temp"] = datos
+
+            # 🔹 Si el frontend envía una lista de reservas (varias habitaciones)
+            if isinstance(datos, list):
+                # Tomamos solo la primera habitación (por ahora manejamos una por pago)
+                reserva = datos[0]
+            else:
+                reserva = datos
+
+            # 🔹 Validar que haya estructura mínima
+            if not isinstance(reserva, dict):
+                return jsonify({"ok": False, "error": "Formato JSON no válido"}), 400
+
+            # 🔹 Si viene de servicios adicionales
+            if reserva.get("tipo") == "Servicios adicionales":
+                reserva["id_habitacion"] = None
+                reserva["entrada"] = reserva.get("fecha")
+                reserva["salida"] = reserva.get("fecha")
+                reserva["noches"] = 1
+                reserva["precio"] = 0
+
+            session["reserva_temp"] = reserva
             return jsonify({"ok": True})
+
 
 
         # Si es POST desde el form de datos de huésped, los guarda y redirige

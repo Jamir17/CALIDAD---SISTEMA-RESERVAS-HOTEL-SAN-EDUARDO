@@ -428,11 +428,33 @@
 }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
+
+/* ===== Scroll interno en el panel de resumen ===== */
+.panel.resumen {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 140px); /* Ajusta según tu layout */
+  overflow: hidden;
+}
+
+#resumenContenido {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Scroll visual agradable */
+#resumenContenido::-webkit-scrollbar {
+  width: 8px;
+}
+#resumenContenido::-webkit-scrollbar-thumb {
+  background: #0d6efd;
+  border-radius: 6px;
+}
+
 </style>
 
 {% endblock %}
-
-
 
 
 {% block extra_js %}
