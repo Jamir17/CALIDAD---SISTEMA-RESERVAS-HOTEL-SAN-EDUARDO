@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Nuestras Habitaciones - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+  {{ super() }}
+  <style>
+    /* Añadimos un poco de espacio superior para que no quede pegado al header */
+    .rooms-section {
+      padding-top: 120px;
+      padding-bottom: 60px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Habitaciones -->
+    <section id="habitaciones" class="rooms-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Nuestras Habitaciones</h2>
+          <p>Espacios elegantes y confortables para una estancia inolvidable</p>
+        </div>
+
+        <div class="rooms-grid">
+          <article class="room-card">
+            <div class="room-image">
+              <img src="{{ url_for('static', filename='img/habitacion_1.jpg') }}" alt="Habitación Estándar">
+              <div class="room-price">120/noche</div>
+            </div>
+            <div class="room-content">
+              <h3>Habitación Estándar</h3>
+              <div class="room-features">
+                <span class="badge">18m²</span>
+                <span class="badge">1 huéspedes</span>
+                <span class="badge">Una cama Doble</span>
+                <span class="badge">WiFi gratuito</span>
+                <span class="badge">Baño privado</span>
+                <span class="badge">Tv de Pantalla Plana</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="room-card">
+            <div class="room-image">
+              <img src="{{ url_for('static', filename='img/habitacion_2.jpg') }}" alt="Suite Junior">
+              <div class="room-price">280/noche</div>
+            </div>
+            <div class="room-content">
+              <h3>Habitación Doble - 2 camas</h3>
+              <div class="room-features">
+                <span class="badge">18m²</span>
+                <span class="badge">4 huéspedes</span>
+                <span class="badge">Sala de estar</span>
+                <span class="badge">WiFi gratuito</span>
+                <span class="badge">Baño privado</span>
+                <span class="badge">Tv de Pantalla Plana</span>
+              </div>
+            </div>
+            
+          </article>
+
+          <article class="room-card">
+            <div class="room-image">
+              <img src="{{ url_for('static', filename='img/habitacion_3.jpg') }}" alt="Suite Presidencial">
+              <div class="room-price">€450/noche</div>
+            </div>
+            <div class="room-content">
+              <h3>Habitación Triple</h3>
+              <div class="room-features">
+                <span class="badge">18m²</span>
+                <span class="badge">5 huéspedes</span>
+                <span class="badge">Terraza privada</span>
+                <span class="badge">WiFi gratuito</span>
+                <span class="badge">Baño privado</span>
+                <span class="badge">Tv de Pantalla Plana</span>
+              </div>
+            </div>
+          </article>
+           <article class="room-card">
+            <div class="room-image">
+              <img src="{{ url_for('static', filename='img/habitacion_4.jpg') }}" alt="Suite Presidencial">
+              <div class="room-price">550/noche</div>
+            </div>
+            <div class="room-content">
+              <h3>Habitación Doble Estándar</h3>
+              <div class="room-features">
+                <span class="badge">18m²</span>
+                <span class="badge">6 huéspedes</span>
+                <span class="badge">Vistas a un patio interio</span>
+                <span class="badge">WiFi gratuito</span>
+                <span class="badge">Baño privado</span>
+                <span class="badge">Tv de Pantalla Plana</span>
+              </div>
+            </div>
+          </article>
+              <article class="room-card">
+            <div class="room-image">
+              <img src="{{ url_for('static', filename='img/habitacion_5.jpg') }}" alt="Suite Presidencial">
+              <div class="room-price">450/noche</div>
+            </div>
+            <div class="room-content">
+              <h3>Suite Presidencial</h3>
+              <div class="room-features">
+                <span class="badge">50m²</span>
+                <span class="badge">6 huéspedes</span>
+                <span class="badge">Terraza privada</span>
+                <span class="badge">WiFi gratuito</span>
+                <span class="badge">Baño privado</span>
+                <span class="badge">Tv de Pantalla Plana con Cable</span>
+                <span class="badge">Aire acondicionado</span>
+                <span class="badge">Jacuzzi</span>
+                <span class="badge">Piscina</span>
+              </div>
+            </div>
+          </article>
+              <article class="room-card">
+            <div class="room-image">
+              <img src="{{ url_for('static', filename='img/habitacion_6.jpg') }}" alt="Suite Presidencial">
+              <div class="room-price">80/noche</div>
+            </div>
+            <div class="room-content">
+              <h3>Habitación Indivudual</h3>
+              <div class="room-features">
+                <span class="badge">180m²</span>
+                <span class="badge">1 huéspedes</span>
+                <span class="badge">Una cama Sencilla</span>
+                <span class="badge">WiFi gratuito</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+{% endblock %}

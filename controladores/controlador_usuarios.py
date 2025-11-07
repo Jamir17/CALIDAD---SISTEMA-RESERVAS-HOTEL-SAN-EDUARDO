@@ -200,7 +200,7 @@ def contacto():
             con = obtener_conexion()
             with con.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO contacto (nombre, correo, mensaje)
+                    INSERT INTO mensajes_contacto (nombre, correo, mensaje)
                     VALUES (%s, %s, %s)
                 """, (nombre, correo, mensaje))
             con.commit()
