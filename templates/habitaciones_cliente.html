@@ -7,7 +7,6 @@
   <aside class="panel filtros">
     <h2>Buscar</h2>
     <form method="GET" action="{{ request.path }}">
-
       <label>Fecha de entrada</label>
       <input type="date" name="fecha_entrada" value="{{ fecha_entrada or '' }}">
 
@@ -51,10 +50,7 @@
           </div>
 
           <p class="desc">{{ h.descripcion }}</p>
-
-          <div class="meta">
-            <span>👥 {{ h.capacidad }} personas</span>
-          </div>
+          <div class="meta"><span>👥 {{ h.capacidad }} personas</span></div>
 
           {% if h.comodidades %}
           <div class="chips">
@@ -74,7 +70,7 @@
         </div>
       </article>
 
-      <!-- Modal de detalles con carrusel -->
+      <!-- Modal Detalles -->
       <div id="modal-{{ h.id_habitacion }}" class="modal">
         <div class="modal-content">
           <span class="close" data-close>&times;</span>
@@ -82,15 +78,14 @@
           <p class="modal-sub">{{ h.descripcion }}</p>
 
           <div class="carousel">
-            <div class="carousel-inner">
-              {% for img in h.galeria %}
-                <img src="{{ url_for('static', filename=img) }}"
-                     alt="Foto {{ loop.index }}"
-                     class="carousel-item"
-                     onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
-              {% endfor %}
-            </div>
+            {% for img in h.galeria %}
+              <img src="{{ url_for('static', filename=img) }}"
+                   alt="Foto {{ loop.index }}"
+                   class="carousel-item"
+                   onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
+            {% endfor %}
           </div>
+
           <div class="modal-actions">
             <button class="btn-primary"
                     onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }}, true)">
@@ -105,15 +100,16 @@
     {% endif %}
   </section>
 
-  <!-- Derecha: Tu Reserva (sticky) -->
+  <!-- Derecha: Tu Reserva -->
   <aside class="panel resumen">
     <h2>Tu Reserva</h2>
     <div id="resumenContenido">
       <p>No has seleccionado ninguna habitación.</p>
     </div>
+    <button class="btn-accion pago" id="btnContinuar" onclick="continuarPago()" disabled>💳 Continuar Reserva</button>
   </aside>
 
-  <!-- Contenedor para notificaciones dinámicas -->
+  <!-- Contenedor de notificaciones -->
   <div id="notificacion-container"></div>
 </div>
 
@@ -145,11 +141,22 @@
     {% endif %}
   </div>
 </div>
+
+<!-- Modal de advertencia (sin sesión) -->
+<div id="modal-login" class="modal-alert">
+  <div class="modal-content-alert">
+    <p>⚠️ Debes iniciar sesión para poder realizar reservas.</p>
+  </div>
+</div>
 {% endblock %}
+
+
+
+
 
 {% block extra_css %}
 <style>
-/* ====== Layout general (col-izq, centro con scroll, col-der sticky) */
+/* ====== Layout general (col-izq, centro con scroll, col-der sticky) ====== */
 .layout-rooms {
   display: grid;
   grid-template-columns: 280px 1fr 320px;
@@ -159,7 +166,7 @@
   min-height: 100vh;
 }
 
-/* Paneles laterales */
+/* ===== Paneles laterales ===== */
 .panel {
   background: #fff;
   border-radius: 14px;
@@ -170,21 +177,33 @@
   top: 84px;
 }
 
-/* Filtros */
+/* ===== Filtros ===== */
 .filtros h2 { margin-bottom: 8px; color:#0f2a63; }
 .filtros label { display:block; font-weight:600; margin-top:10px; }
 .filtros input, .filtros select {
-  width: 100%; padding: 9px 10px; margin-top: 4px;
-  border: 1px solid #d5e0ff; border-radius: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  margin-top: 4px;
+  border: 1px solid #d5e0ff;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
 }
 .btn-buscar {
-  margin-top: 14px; width: 100%;
-  background:#0d6efd; color:#fff; border:none;
-  padding:10px; border-radius:10px; font-weight:700; cursor:pointer
+  margin-top: 14px;
+  width: 100%;
+  background:#0d6efd;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+  transition: background .2s ease;
 }
 .btn-buscar:hover { background:#0b5ed7; }
 
-/* Centro con scroll */
+/* ===== Centro con scroll ===== */
 .listado {
   max-height: calc(100vh - 140px);
   overflow-y: auto;
@@ -193,22 +212,33 @@
 .listado::-webkit-scrollbar { width: 8px; }
 .listado::-webkit-scrollbar-thumb { background: #0d6efd; border-radius: 6px; }
 
-/* Card de habitación */
+/* ===== Card de habitación ===== */
 .card {
-  display:flex; gap:18px; align-items: stretch;
-  background:#fff; border-radius:14px; padding:12px;
+  display:flex;
+  gap:18px;
+  align-items: stretch;
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
   box-shadow: 0 2px 8px rgba(16,24,40,.06);
   margin-bottom: 18px;
+  transition: box-shadow .2s ease;
 }
 .card:hover { box-shadow:0 6px 16px rgba(16,24,40,.1); }
 
 .card-media img {
-  width: 320px; height: 200px; object-fit: cover; border-radius:10px;
+  width: 320px;
+  height: 200px;
+  object-fit: cover;
+  border-radius:10px;
 }
 
 .card-body { flex: 1; display:flex; flex-direction:column; }
 .card-head {
-  display:flex; justify-content:space-between; align-items:baseline; gap:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:12px;
 }
 .card-head h3 { margin:0; color:#0f2a63; }
 .price { text-align:right; min-width: 150px; }
@@ -221,68 +251,131 @@
 
 .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
 .chip {
-  padding:5px 10px; border-radius:9999px; background:#eef2ff; color:#3442b9;
-  border:1px solid #d4d9ff; font-size:12px; font-weight:600;
+  padding:5px 10px;
+  border-radius:9999px;
+  background:#eef2ff;
+  color:#3442b9;
+  border:1px solid #d4d9ff;
+  font-size:12px;
+  font-weight:600;
 }
 
 .actions { display:flex; gap:12px; margin-top:auto; }
 .btn-outline, .btn-primary {
-  padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+  border:none;
+  transition: all .2s ease;
 }
-.btn-outline { background:#ecf2ff; color:#0f2a63; border:1px solid #d5e0ff; }
+.btn-outline {
+  background:#ecf2ff;
+  color:#0f2a63;
+  border:1px solid #d5e0ff;
+}
 .btn-outline:hover { background:#dfe8ff; }
 .btn-primary { background:#0d6efd; color:#fff; }
 .btn-primary:hover { background:#0b5ed7; }
 
-/* Resumen */
+/* ===== Resumen (panel derecho) ===== */
 .resumen h2 { color:#0f2a63; margin-bottom:10px; }
 #resumenContenido p { margin:6px 0; }
 .btn-accion {
-  width: 100%; margin-top:10px; padding:10px; border:none; border-radius:10px;
-  font-weight:800; cursor:pointer;
+  width: 100%;
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  font-weight:800;
+  cursor:pointer;
+  transition: background .2s ease;
 }
 .btn-accion.serv { background:#f0ad4e; color:#fff; }
 .btn-accion.serv:hover { background:#ea9a2b; }
 .btn-accion.pago { background:#28a745; color:#fff; }
 .btn-accion.pago:hover { background:#218838; }
+.btn-accion:disabled {
+  background: #adb5bd;
+  color: #f8f9fa;
+  cursor: not-allowed;
+}
 
-/* Modal genérico */
-.modal { display:none; position: fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000;
-  place-items: center; padding:16px; }
+/* ===== Modal genérico ===== */
+.modal {
+  display:none;
+  position: fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  z-index:1000;
+  place-items: center;
+  padding:16px;
+}
 .modal.show { display:grid; }
 .modal-content {
-  background:#fff; border-radius:14px; padding:18px; width:min(900px, 96vw);
-  max-height: 92vh; overflow:auto; position:relative;
+  background:#fff;
+  border-radius:14px;
+  padding:18px;
+  width:min(900px, 96vw);
+  max-height: 92vh;
+  overflow:auto;
+  position:relative;
   box-shadow: 0 8px 22px rgba(16,24,40,.25);
 }
-.close { position:absolute; right:14px; top:8px; font-size:26px; cursor:pointer; }
+.close {
+  position:absolute;
+  right:14px;
+  top:8px;
+  font-size:26px;
+  cursor:pointer;
+}
 .modal-sub { color:#4b5563; margin:4px 0 10px; }
 .carousel { display:flex; gap:10px; overflow-x:auto; }
-.carousel-inner { display: flex; gap: 10px; padding-bottom: 10px; }
 .carousel-item {
-  width:260px; height:180px; object-fit:cover; border-radius:10px;
-  cursor: pointer; border: 3px solid transparent; transition: border-color .2s;
+  width:260px;
+  height:180px;
+  object-fit:cover;
+  border-radius:10px;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: border-color .2s;
 }
 .carousel-item:hover { border-color: #a7caff; }
 .carousel-item.selected { border-color: #0d6efd; }
 
-/* Modal servicios */
-.servicios-list { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+/* ===== Modal servicios ===== */
+.servicios-list {
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
 .serv-item {
-  display:flex; justify-content:space-between; align-items:center;
-  border:1px solid #e5e7eb; border-radius:10px; padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:10px;
 }
 .serv-item label { display:flex; gap:10px; align-items:center; }
-.serv-item .qty { width:70px; padding:6px; border:1px solid #d1d5db; border-radius:8px; }
-.modal-actions { display:flex; justify-content:flex-end; margin-top:10px; }
-.modal-actions { margin-top: 16px; }
+.serv-item .qty {
+  width:70px;
+  padding:6px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+}
+.modal-actions {
+  display:flex;
+  justify-content:flex-end;
+  margin-top:10px;
+}
 .empty { color:#6b7280; }
 
-/* Animación */
+/* ===== Animación general ===== */
 .fade-in { animation:fade .25s ease; }
 @keyframes fade { from { opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
-/* Notificación dinámica (Toast) */
+/* ===== Notificaciones (Toast) ===== */
 #notificacion-container {
   position: fixed;
   bottom: 20px;
@@ -293,7 +386,7 @@
   gap: 10px;
 }
 .notificacion-toast {
-  background-color: #28a745; /* Éxito */
+  background-color: #28a745;
   color: white;
   padding: 16px 24px;
   border-radius: 10px;
@@ -311,58 +404,134 @@
 @keyframes toast-in { to { opacity: 1; transform: translateX(0); } }
 @keyframes toast-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
 
+/* ===== Modal de advertencia (sin sesión iniciada) ===== */
+.modal-alert {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadein .3s ease;
+}
+.modal-content-alert {
+  background: #ffeaea;
+  color: #b91c1c;
+  padding: 20px 28px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  font-weight: 600;
+  text-align: center;
+  min-width: 320px;
+  border: 2px solid #fca5a5;
+}
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
 </style>
+
 {% endblock %}
+
+
+
 
 {% block extra_js %}
 <script>
 // ===== Datos globales desde Flask =====
-const TODOS_LOS_SERVICIOS = JSON.parse('{{ servicios_json|default('[]')|safe }}');
+const TODOS_LOS_SERVICIOS = JSON.parse('{{ servicios_json|default("[]")|safe }}');
+let reservas = []; // ahora permite varias habitaciones
 
 
-// ===== Validación de Fechas en Filtros =====
-document.addEventListener('DOMContentLoaded', () => {
+// ===== Validación y restauración de filtros =====
+window.onload = () => {
   const fechaEntradaInput = document.querySelector('[name="fecha_entrada"]');
   const fechaSalidaInput = document.querySelector('[name="fecha_salida"]');
+  const tipoSelect = document.querySelector('[name="tipo"]');
+  const huespedesInput = document.querySelector('[name="huespedes"]');
 
-  // 1. Establecer la fecha mínima para la entrada como hoy
+  // Fecha mínima de entrada
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalizar a medianoche
-  const todayString = today.toISOString().split('T')[0];
-  fechaEntradaInput.min = todayString;
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
+  fechaEntradaInput.min = todayStr;
 
-  // 2. Validar que la fecha de entrada no sea pasada
+  // === Restaurar filtros, pero priorizando los valores del servidor ===
+  const filtrosPrevios = JSON.parse(localStorage.getItem("filtrosReserva") || "{}");
+
+  // Si Flask ya inyectó valores (vienen del backend tras Buscar), actualiza localStorage
+  if (fechaEntradaInput.value) filtrosPrevios.fecha_entrada = fechaEntradaInput.value;
+  if (fechaSalidaInput.value) filtrosPrevios.fecha_salida = fechaSalidaInput.value;
+  if (tipoSelect.value) filtrosPrevios.tipo = tipoSelect.value;
+  if (huespedesInput.value) filtrosPrevios.huespedes = huespedesInput.value;
+
+  // Guarda el último estado correcto
+  localStorage.setItem("filtrosReserva", JSON.stringify(filtrosPrevios));
+
+  // Asegura que los inputs muestren esos valores
+  fechaEntradaInput.value = filtrosPrevios.fecha_entrada || "";
+  fechaSalidaInput.value = filtrosPrevios.fecha_salida || "";
+  tipoSelect.value = filtrosPrevios.tipo || "";
+  huespedesInput.value = filtrosPrevios.huespedes || "";
+
+  // Ajustar mínimo de salida
+  if (fechaEntradaInput.value) {
+    const nextDay = new Date(fechaEntradaInput.value);
+    nextDay.setDate(nextDay.getDate() + 1);
+    fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
+  }
+
+  // ===== Validar fecha de entrada =====
   fechaEntradaInput.addEventListener('change', () => {
-    const selectedDate = new Date(fechaEntradaInput.value);
-    if (selectedDate < today) {
-      alert('La fecha de entrada no puede ser una fecha pasada.');
-      fechaEntradaInput.value = fechaEntradaInput.min;
+    const entrada = new Date(fechaEntradaInput.value);
+    entrada.setHours(0, 0, 0, 0);
+
+    if (entrada.getTime() < today.getTime() - 86400000) {
+      alert('La fecha de entrada no puede ser pasada.');
+      fechaEntradaInput.value = todayStr;
+      return;
     }
 
-    // 3. Actualizar la fecha mínima de salida
-    if (fechaEntradaInput.value) {
-      const nextDay = new Date(fechaEntradaInput.value);
-      nextDay.setDate(nextDay.getDate() + 1); // +1 para el día siguiente, +1 para que sea seleccionable
-      fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
+    // Actualizar mínimo de salida
+    const nextDay = new Date(entrada);
+    nextDay.setDate(nextDay.getDate() + 1);
+    fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
+  });
+
+  // ===== Validar fecha de salida =====
+  fechaSalidaInput.addEventListener('change', () => {
+    const salida = new Date(fechaSalidaInput.value);
+    const entrada = new Date(fechaEntradaInput.value);
+    salida.setHours(0, 0, 0, 0);
+    entrada.setHours(0, 0, 0, 0);
+
+    if (salida < today) {
+      alert('La fecha de salida no puede ser una fecha pasada.');
+      fechaSalidaInput.value = '';
+      return;
+    }
+
+    if (salida <= entrada) {
+      alert('La fecha de salida debe ser posterior a la de entrada.');
+      fechaSalidaInput.value = '';
     }
   });
-});
-
-
-// ===== Estado temporal de la reserva seleccionada (solo front) =====
-let reserva = {
-  tipo: null,
-  numero: null,
-  precio: 0,
-  noches: 0,
-  entrada: null,
-  salida: null,
-  id_habitacion: null,
-  imagen_seleccionada: null,
-  servicios: []  // {id, nombre, precio, qty}
 };
 
-function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = false){
+
+// ===== Guardar filtros si no hay sesión =====
+function guardarFiltrosTemporal() {
+  const filtros = {
+    fecha_entrada: document.querySelector('[name="fecha_entrada"]').value,
+    fecha_salida: document.querySelector('[name="fecha_salida"]').value,
+    tipo: document.querySelector('[name="tipo"]').value,
+    huespedes: document.querySelector('[name="huespedes"]').value
+  };
+  localStorage.setItem("filtrosReserva", JSON.stringify(filtros));
+}
+
+
+// ===== Seleccionar habitación =====
+function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = false) {
   const entrada = document.querySelector('[name="fecha_entrada"]').value;
   const salida  = document.querySelector('[name="fecha_salida"]').value;
 
@@ -370,209 +539,203 @@ function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = 
     alert('Selecciona las fechas de entrada y salida.');
     return;
   }
+
   const d1 = new Date(entrada);
   const d2 = new Date(salida);
-  if (d2 <= d1) { alert('La fecha de salida debe ser posterior a la de entrada.'); return; }
+  if (d2 <= d1) {
+    alert('La fecha de salida debe ser posterior a la entrada.');
+    return;
+  }
 
-  const noches = (d2 - d1) / (1000*60*60*24);
-
+  const noches = (d2 - d1) / (1000 * 60 * 60 * 24);
   let imagenSeleccionada = null;
   const modal = document.getElementById(`modal-${idHabitacion}`);
 
   if (desdeModal && modal) {
     const imgSelected = modal.querySelector('.carousel-item.selected');
-    if (imgSelected) {
-      imagenSeleccionada = imgSelected.src;
-    }
-    // Cerrar modal después de seleccionar
+    if (imgSelected) imagenSeleccionada = imgSelected.src;
     modal.classList.remove('show');
   }
 
-  // Si no se seleccionó una, usar la de la tarjeta
   if (!imagenSeleccionada) {
-    const cardImg = document.querySelector(`.card button[data-open="modal-${idHabitacion}"]`).closest('.card').querySelector('.card-media img');
+    const cardImg = document
+      .querySelector(`.card button[data-open="modal-${idHabitacion}"]`)
+      .closest('.card')
+      .querySelector('.card-media img');
     imagenSeleccionada = cardImg.src;
   }
 
-  reserva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: imagenSeleccionada, servicios: [] };
+  const nueva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: imagenSeleccionada, servicios: [] };
 
-  // Condición: si la reserva es > 10 noches, añadir servicios gratis
+  // Evitar duplicados
+  if (!reservas.some(r => r.id_habitacion === idHabitacion)) reservas.push(nueva);
+
+  // Servicios gratis si estancia > 3 noches
   if (noches > 3) {
     const desayuno = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'desayuno buffet');
     const lavanderia = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'lavandería');
-
-    if (desayuno) {
-      reserva.servicios.push({ id: desayuno.id_servicio, nombre: desayuno.nombre, precio: 0.00, qty: 1 });
-    }
-    if (lavanderia) {
-      reserva.servicios.push({ id: lavanderia.id_servicio, nombre: lavanderia.nombre, precio: 0.00, qty: 1 });
-    }
-    mostrarNotificacion('¡Felicidades! Por tu estancia larga, hemos incluido Desayuno y Lavandería sin costo.');
+    if (desayuno) nueva.servicios.push({ id: desayuno.id_servicio, nombre: desayuno.nombre, precio: 0, qty: 1 });
+    if (lavanderia) nueva.servicios.push({ id: lavanderia.id_servicio, nombre: lavanderia.nombre, precio: 0, qty: 1 });
+    mostrarNotificacion('🎉 Por tu estancia larga, tienes Desayuno y Lavandería gratis.');
   }
 
   renderResumen();
 }
 
-function mostrarNotificacion(mensaje) {
-  const container = document.getElementById('notificacion-container');
-  if (!container) return;
 
-  const toast = document.createElement('div');
-  toast.className = 'notificacion-toast';
-  toast.innerHTML = `<span>🎉</span> ${mensaje}`;
-  container.appendChild(toast);
-
-  // Auto-eliminar después de 5 segundos
-  setTimeout(() => {
-    toast.classList.add('out');
-    toast.addEventListener('animationend', () => toast.remove());
-  }, 5000);
-}
-
-function renderResumen(){
+// ===== Renderizar resumen =====
+function renderResumen() {
   const cont = document.getElementById('resumenContenido');
-  if (!reserva.id_habitacion) {
+  const btnContinuar = document.getElementById('btnContinuar');
+
+  if (!reservas.length) {
     cont.innerHTML = '<p>No has seleccionado ninguna habitación.</p>';
+    btnContinuar.disabled = true;
     return;
   }
 
-  // total base
-  let total = reserva.precio * reserva.noches;
+  let html = '';
+  let totalGlobal = 0;
 
-  // total servicios
-  let totalServ = 0;
-  reserva.servicios.forEach(s => totalServ += (s.precio * s.qty));
+  reservas.forEach(r => {
+    const totalHab = r.precio * r.noches;
+    let descuento = 0;
+    if (r.noches >= 30) descuento = 0.25;
+    else if (r.noches >= 15) descuento = 0.20;
+    else if (r.noches >= 8) descuento = 0.10;
 
-  // --- Lógica de Descuento por Larga Estancia ---
-  let descuentoPorcentaje = 0;
-  if (reserva.noches >= 30) {
-    descuentoPorcentaje = 0.25; // 25%
-  } else if (reserva.noches >= 15) {
-    descuentoPorcentaje = 0.20; // 20%
-  } else if (reserva.noches >= 8) {
-    descuentoPorcentaje = 0.10; // 10%
-  }
+    const descMonto = totalHab * descuento;
+    const servTotal = r.servicios.reduce((a, s) => a + (s.precio * s.qty), 0);
+    const totalFinal = totalHab - descMonto + servTotal;
+    totalGlobal += totalFinal;
 
-  const montoDescuento = total * descuentoPorcentaje;
-  const subtotalHabitacion = total - montoDescuento;
-  const totalFinal = subtotalHabitacion + totalServ;
-
-  cont.innerHTML = `
-    ${reserva.imagen_seleccionada ?
-      `<img src="${reserva.imagen_seleccionada}" alt="Habitación seleccionada" style="width:100%; border-radius:8px; margin-bottom:10px;">` : ''
-    }
-    <p><strong>${reserva.tipo} Nº ${reserva.numero}</strong></p>
-    <p><strong>Fechas:</strong> ${reserva.entrada} → ${reserva.salida}</p>
-    <p><strong>Noches:</strong> ${reserva.noches}</p>
-    <p><strong>Precio por noche:</strong> S/. ${reserva.precio.toFixed(2)}</p>
-    ${montoDescuento > 0 ? `
-      <p><strong>Subtotal Habitación:</strong> S/. ${total.toFixed(2)}</p>
-      <p style="color: #28a745;"><strong>Descuento Larga Estancia (${(descuentoPorcentaje * 100).toFixed(0)}%):</strong> - S/. ${montoDescuento.toFixed(2)}</p>
-    ` : ''}
-    <p><strong>Servicios:</strong> S/. ${totalServ.toFixed(2)}</p>
-    <hr style="border-top: 1px dashed #ccc; margin: 8px 0;">
-    <p><strong>Total a Pagar:</strong> <span style="color:#0f9d58; font-weight:800; font-size: 1.2em;">S/. ${totalFinal.toFixed(2)}</span></p>
-    <button class="btn-accion serv" onclick="abrirServicios()">🧾 Agregar Servicios Adicionales</button>
-    <button class="btn-accion pago" onclick="continuarPago()">💳 Continuar Reserva</button>
-  `;
-}
-
-function abrirServicios(){
-  const m = document.getElementById('modal-servicios');
-  if(!m){ alert('No hay servicios configurados.'); return; }
-  // Reset checkboxes / qty
-  document.querySelectorAll('#formServicios input[name="srv"]').forEach(chk=>{
-    chk.checked = false;
+    html += `
+      <div class="reserva-item">
+        <img src="${r.imagen_seleccionada}" style="width:100%;border-radius:8px;margin-bottom:6px;">
+        <p><strong>${r.tipo} Nº ${r.numero}</strong></p>
+        <p>${r.entrada} → ${r.salida} (${r.noches} noches)</p>
+        <p>Precio: S/. ${r.precio.toFixed(2)}</p>
+        ${descMonto > 0 ? `<p style="color:#28a745;">Descuento: -S/. ${descMonto.toFixed(2)}</p>` : ""}
+        <p>Servicios: S/. ${servTotal.toFixed(2)}</p>
+        <hr>
+      </div>`;
   });
-  document.querySelectorAll('#formServicios .qty').forEach(q=>{ q.value = 1; q.disabled = true; });
 
-  m.classList.add('show');
+  html += `<p><strong>Total General:</strong> <span style="color:#0f9d58;font-weight:800;font-size:1.2em;">S/. ${totalGlobal.toFixed(2)}</span></p>
+           <button class="btn-accion serv" onclick="abrirServicios()">🧾 Agregar Servicios Adicionales</button>`;
+  cont.innerHTML = html;
+  btnContinuar.disabled = false;
 }
 
-// habilitar cantidad al marcar
-document.addEventListener('change', (e)=>{
-  if(e.target.matches('#formServicios input[name="srv"]')){
-    const row = e.target.closest('.serv-item');
-    const qty = row.querySelector('.qty');
+
+// ===== Modal de servicios =====
+function abrirServicios() {
+  const m = document.getElementById('modal-servicios');
+  if (!m) return;
+  m.classList.add('show');
+  document.querySelectorAll('#formServicios input[name="srv"]').forEach(chk => { chk.checked = false; });
+  document.querySelectorAll('#formServicios .qty').forEach(q => { q.value = 1; q.disabled = true; });
+}
+
+document.addEventListener('change', e => {
+  if (e.target.matches('#formServicios input[name="srv"]')) {
+    const qty = e.target.closest('.serv-item').querySelector('.qty');
     qty.disabled = !e.target.checked;
   }
 });
 
-// aplicar servicios a la reserva
 const btnAplicar = document.getElementById('aplicarServicios');
-if(btnAplicar){
-  btnAplicar.addEventListener('click', ()=>{
+if (btnAplicar) {
+  btnAplicar.addEventListener('click', () => {
     const seleccionados = [];
-    document.querySelectorAll('#formServicios input[name="srv"]:checked').forEach(chk=>{
+    document.querySelectorAll('#formServicios input[name="srv"]:checked').forEach(chk => {
       const row = chk.closest('.serv-item');
-      const qty = parseInt(row.querySelector('.qty').value || '1', 10);
+      const qty = parseInt(row.querySelector('.qty').value || '1');
       const precio = parseFloat(chk.dataset.precio);
-      const id = parseInt(chk.value, 10);
+      const id = parseInt(chk.value);
       const nombre = row.querySelector('strong').textContent.trim();
       seleccionados.push({ id, nombre, precio, qty });
     });
-    reserva.servicios = seleccionados;
+    reservas.forEach(r => r.servicios = seleccionados);
     document.getElementById('modal-servicios').classList.remove('show');
     renderResumen();
   });
 }
 
-// avanzar a pago (ruta de ejemplo)
+
+// ===== Continuar al pago =====
 function continuarPago() {
-  if (!reserva.id_habitacion) {
+  if (!reservas.length) {
     alert('Selecciona una habitación primero.');
     return;
   }
 
   fetch('/reservas/cliente/pago_reserva', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(reserva)
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(reservas)
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.ok) {
-      window.location.href = '/reservas/cliente/pago_reserva';
+  .then(async res => {
+    if (res.redirected && res.url.includes("iniciar-sesion")) {
+      guardarFiltrosTemporal();
+      document.getElementById("modal-login").style.display = "flex";
+      setTimeout(() => { window.location.href = res.url; }, 1800);
+      return;
+    }
 
+    const data = await res.json();
+    if (data.ok) {
+      localStorage.removeItem("filtrosReserva");
+      window.location.href = '/reservas/cliente/pago_reserva';
     } else {
       alert('Error al preparar la reserva.');
     }
   })
-  .catch(err => alert('Error de conexión.'));
+  .catch(() => {
+    guardarFiltrosTemporal();
+    document.getElementById("modal-login").style.display = "flex";
+    setTimeout(() => { document.getElementById("modal-login").style.display = "none"; }, 2000);
+  });
 }
 
-// ===== Selección de imagen en Modal =====
-document.addEventListener('click', (e) => {
+
+// ===== Notificación tipo toast =====
+function mostrarNotificacion(msg) {
+  const cont = document.getElementById('notificacion-container');
+  const div = document.createElement('div');
+  div.className = 'notificacion-toast';
+  div.textContent = msg;
+  cont.appendChild(div);
+  setTimeout(() => { div.classList.add('out'); div.addEventListener('animationend', () => div.remove()); }, 4000);
+}
+
+
+// ===== Carrusel de imágenes =====
+document.addEventListener('click', e => {
   if (e.target.classList.contains('carousel-item')) {
     const modal = e.target.closest('.modal');
-    if (!modal) return;
-
-    // Quitar 'selected' de otras imágenes en el mismo carrusel
-    modal.querySelectorAll('.carousel-item').forEach(img => img.classList.remove('selected'));
-    // Añadir 'selected' a la imagen clickeada
+    modal.querySelectorAll('.carousel-item').forEach(i => i.classList.remove('selected'));
     e.target.classList.add('selected');
   }
 });
 
-// ===== Modales (detalles y servicios) =====
-document.addEventListener('click', (e)=>{
-  const openBtn = e.target.closest('[data-open]');
-  if(openBtn){
-    const id = openBtn.getAttribute('data-open');
-    const m = document.getElementById(id);
-    if(m) {
+
+// ===== Abrir / cerrar modales =====
+document.addEventListener('click', e => {
+  const open = e.target.closest('[data-open]');
+  if (open) {
+    const m = document.getElementById(open.dataset.open);
+    if (m) {
       m.classList.add('show');
-      // Pre-seleccionar la primera imagen del carrusel si no hay ninguna seleccionada
-      const firstImg = m.querySelector('.carousel-item');
-      if (firstImg && !m.querySelector('.carousel-item.selected')) {
-        firstImg.classList.add('selected');
-      }
+      const first = m.querySelector('.carousel-item');
+      if (first && !m.querySelector('.carousel-item.selected')) first.classList.add('selected');
     }
   }
   if (e.target.matches('[data-close]') || e.target.classList.contains('modal')) {
     const m = e.target.closest('.modal') || document.querySelector('.modal.show');
-    if(m) m.classList.remove('show');
+    if (m) m.classList.remove('show');
   }
 });
 </script>
+
 {% endblock %}

@@ -3,36 +3,74 @@ from bd import obtener_conexion
 import json
 import os
 from werkzeug.utils import secure_filename
+from datetime import datetime
 
 reservas_bp = Blueprint("reservas", __name__)
 
-# Listado de habitaciones
 @reservas_bp.route("/cliente/habitaciones")
 def habitaciones_cliente():
     if not session.get("usuario_id"):
         flash("Debes iniciar sesión.", "error")
         return redirect(url_for("usuarios.iniciosesion"))
 
+    # Leer y normalizar fechas del GET
+    fecha_entrada = request.args.get("fecha_entrada") or ""
+    fecha_salida = request.args.get("fecha_salida") or ""
+    tipo = request.args.get("tipo") or ""
+    huespedes = request.args.get("huespedes") or ""
+
+    # Normalizar formato YYYY-MM-DD (evita desfases por zona horaria)
+    def normalizar(fecha_str):
+        try:
+            fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
+            return fecha.strftime("%Y-%m-%d")
+        except Exception:
+            return ""
+
+    fecha_entrada = normalizar(fecha_entrada)
+    fecha_salida = normalizar(fecha_salida)
+
     con = obtener_conexion()
     with con.cursor() as cur:
-        cur.execute("""
+        query = """
             SELECT h.id_habitacion, h.numero, h.estado,
                    t.nombre AS tipo, t.descripcion, t.precio_base
             FROM habitaciones h
             JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
-            ORDER BY t.precio_base ASC
-        """)
+            WHERE 1=1
+        """
+        params = []
+
+        if tipo:
+            query += " AND t.nombre = %s"
+            params.append(tipo)
+        if huespedes:
+            query += " AND h.capacidad >= %s"
+            params.append(huespedes)
+
+        query += " ORDER BY t.precio_base ASC"
+
+        cur.execute(query, tuple(params))
         habitaciones = cur.fetchall()
 
-        # Obtener servicios para el modal
+        cur.execute("SELECT DISTINCT nombre FROM tipo_habitacion ORDER BY nombre")
+        tipos_unicos = cur.fetchall()
+
         cur.execute("SELECT id_servicio, nombre, precio FROM servicios WHERE estado = 1")
         servicios = cur.fetchall()
 
-    return render_template("habitaciones_cliente.html",
-                           habitaciones=habitaciones,
-                           servicios=servicios,
-                           servicios_json=json.dumps(servicios),
-                           nombre=session.get("nombre"))
+    return render_template(
+        "habitaciones_cliente.html",
+        habitaciones=habitaciones,
+        tipos_unicos=tipos_unicos,
+        servicios=servicios,
+        servicios_json=json.dumps(servicios),
+        fecha_entrada=fecha_entrada,
+        fecha_salida=fecha_salida,
+        tipo=tipo,
+        huespedes=huespedes,
+        nombre=session.get("nombre")
+    )
 
 # Detalle de habitación
 @reservas_bp.route("/cliente/habitacion/<int:id_habitacion>")
