@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS `actividad` (
   CONSTRAINT `fk_actividad_reserva` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.actividad: ~10 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.actividad: ~9 rows (aproximadamente)
 INSERT INTO `actividad` (`id_actividad`, `accion`, `id_reserva`, `id_habitacion`, `nuevo_estado_hab`, `fecha_hora`) VALUES
 	(1, 'Check-in', 2, 5, 'Ocupada', '2025-10-21 01:08:45'),
 	(2, 'Check-out', 2, 5, 'En Limpieza', '2025-10-21 01:08:52'),
@@ -90,16 +90,17 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   UNIQUE KEY `num_documento` (`num_documento`),
   UNIQUE KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `fk_cliente_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.clientes: ~6 rows (aproximadamente)
 INSERT INTO `clientes` (`id_cliente`, `tipo_documento`, `num_documento`, `nombres`, `apellidos`, `nacionalidad`, `direccion`, `telefono`, `correo`, `id_usuario`) VALUES
-	(1, 'CE', '66666666666666666666', 'Anghelo Jamir', 'Merino Mayra', 'Pakistán', 'Husares de Junin 868', '+51942030088', 'jamir_merino@hotmail.com', 1),
+	(1, 'CE', '66666666666666666666', 'Anghelo Jamir', 'Merino Mayra', 'Pakistán', 'Husares de Junin 868', '+51942030088', 'jamir_anghelo@hotmail.com', 1),
 	(2, 'Pasaporte', '111111111111', 'Jamir', 'Casa', 'España', 'Carlos Castañeda 637', '+1111111111111', 'jamir@lsp.com', 3),
 	(3, 'CE', '111111112', 'LILIANA', 'MAYRA', 'Estados Unidos', 'Carlos Castañeda 637', '+1111111111111111', 'lorena@lsp.com', 4),
 	(4, 'CE', '123456789', 'Jose', 'Fiestas', 'Venezuela', 'San Pucta 123', '+58123456789', 'josefiestas@gmail.com', 5),
 	(5, 'DNI', '16712223', 'Lorena', 'Merino', 'Perú', 'Carlos Castañeda 637', '+51971868785', 'lorena_yjl@hotmail.com', 6),
-	(6, 'DNI', '72318705', 'Jamir', 'Merino Mayra', 'Perú', 'Carlos Castañeda 640', '+51942030088', 'jamir@gmail.com', 7);
+	(6, 'DNI', '72318704', 'Jamir', 'Merino Mayra', 'Perú', 'Carlos Castañeda 640', '+51942030088', 'jamir@gmail.com', 7),
+	(7, 'DNI', '72318705', 'Jamir', 'Merino Mayra', 'España', 'Husares de Junin 868', '+51942030088', 'jamir_merino@hotmail.com', 8);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.facturacion
 CREATE TABLE IF NOT EXISTS `facturacion` (
@@ -118,9 +119,9 @@ CREATE TABLE IF NOT EXISTS `facturacion` (
   CONSTRAINT `facturacion_ibfk_1` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`),
   CONSTRAINT `facturacion_ibfk_2` FOREIGN KEY (`id_tipo_pago`) REFERENCES `tipo_pago` (`id_tipo_pago`),
   CONSTRAINT `facturacion_ibfk_3` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.facturacion: ~10 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.facturacion: ~6 rows (aproximadamente)
 INSERT INTO `facturacion` (`id_factura`, `id_reserva`, `id_tipo_pago`, `id_usuario`, `fecha_emision`, `total`, `estado`, `comprobante_pago`) VALUES
 	(1, 1, 4, 7, '2025-10-16', 160.00, 'Pagado', '67283a6ab49e7.jpeg'),
 	(2, 2, 3, 7, '2025-10-16', 745.00, 'Pagado', 'IMG_0672.png'),
@@ -181,9 +182,9 @@ CREATE TABLE IF NOT EXISTS `historial_notificaciones` (
   PRIMARY KEY (`id_notificacion`),
   KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `historial_notificaciones_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.historial_notificaciones: ~9 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.historial_notificaciones: ~6 rows (aproximadamente)
 INSERT INTO `historial_notificaciones` (`id_notificacion`, `id_usuario`, `tipo`, `correo_destino`, `asunto`, `estado`, `fecha_envio`) VALUES
 	(1, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmacion - Hotel San Eduardo', 'Enviado', '2025-10-21 01:39:06'),
 	(2, 6, 'confirmacion', 'jamir.merino.17@hotmail.com', 'Confirmación de Reserva #3 • Hotel San Eduardo', 'Enviado', '2025-10-21 01:40:15'),
@@ -280,6 +281,20 @@ CREATE TABLE IF NOT EXISTS `promocion_habitacion` (
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.promocion_habitacion: ~0 rows (aproximadamente)
 
+-- Volcando estructura para tabla bd_hotel_san_eduardo.recuperacion
+CREATE TABLE IF NOT EXISTS `recuperacion` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `usuario_id` int NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `expiracion` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `recuperacion_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id_usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla bd_hotel_san_eduardo.recuperacion: ~0 rows (aproximadamente)
+
 -- Volcando estructura para tabla bd_hotel_san_eduardo.reportes
 CREATE TABLE IF NOT EXISTS `reportes` (
   `id_reporte` int NOT NULL AUTO_INCREMENT,
@@ -319,9 +334,9 @@ CREATE TABLE IF NOT EXISTS `reservas` (
   CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`),
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_habitacion`) REFERENCES `habitaciones` (`id_habitacion`),
   CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.reservas: ~23 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.reservas: ~6 rows (aproximadamente)
 INSERT INTO `reservas` (`id_reserva`, `codigo_confirmacion`, `id_cliente`, `id_habitacion`, `id_usuario`, `fecha_reserva`, `fecha_entrada`, `fecha_salida`, `num_huespedes`, `estado`, `motivo_cancelacion`, `fecha_cancelacion`) VALUES
 	(1, NULL, 6, 1, 7, '2025-10-17 04:52:52', '2025-10-16', '2025-10-18', 1, 'Cancelada', 'Cancelado por el cliente', '2025-10-17 00:01:25'),
 	(2, NULL, 6, 5, 7, '2025-10-17 04:52:52', '2025-10-16', '2025-10-19', 1, 'Finalizada', NULL, NULL),
@@ -370,7 +385,7 @@ CREATE TABLE IF NOT EXISTS `reserva_servicio` (
   CONSTRAINT `fk_reservaservicio_servicio` FOREIGN KEY (`id_servicio`) REFERENCES `servicios` (`id_servicio`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.reserva_servicio: ~19 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.reserva_servicio: ~12 rows (aproximadamente)
 INSERT INTO `reserva_servicio` (`id_reserva_servicio`, `id_reserva`, `id_cliente`, `id_servicio`, `fecha_uso`, `hora_uso`, `cantidad`, `estado`, `subtotal`, `fecha`, `hora`) VALUES
 	(1, 2, NULL, 1, NULL, NULL, 1, 'Pendiente', 80.00, NULL, NULL),
 	(2, 2, NULL, 2, NULL, NULL, 1, 'Pendiente', 25.00, NULL, NULL),
@@ -399,7 +414,7 @@ CREATE TABLE IF NOT EXISTS `roles` (
   PRIMARY KEY (`id_rol`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.roles: ~4 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.roles: ~3 rows (aproximadamente)
 INSERT INTO `roles` (`id_rol`, `nombre_rol`) VALUES
 	(1, 'Administrador'),
 	(2, 'Recepcionista'),
@@ -417,7 +432,7 @@ CREATE TABLE IF NOT EXISTS `servicios` (
   PRIMARY KEY (`id_servicio`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.servicios: ~16 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.servicios: ~5 rows (aproximadamente)
 INSERT INTO `servicios` (`id_servicio`, `nombre`, `descripcion`, `precio`, `estado`, `tipo_disponibilidad`) VALUES
 	(1, 'Spa', 'Acceso al spa con sauna y jacuzzi', 80.00, 0, 'unico'),
 	(2, 'Piscina', 'Uso de piscina con toallas incluidas', 25.00, 0, 'multiple'),
@@ -496,16 +511,17 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   UNIQUE KEY `correo` (`correo`),
   KEY `id_rol` (`id_rol`),
   CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.usuarios: ~6 rows (aproximadamente)
 INSERT INTO `usuarios` (`id_usuario`, `dni`, `nombres`, `apellidos`, `correo`, `password_hash`, `telefono`, `estado`, `id_rol`) VALUES
-	(1, '00000000', 'Anghelo Jamir', 'Merino Mayra', 'jamir_merino@hotmail.com', '$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51942030088', 1, 4),
+	(1, '00000000', 'Anghelo Jamir', 'Merino Mayra', 'jamir_anghelo@hotmail.com', '$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51942030088', 1, 4),
 	(3, NULL, 'Jamir', 'Casa', 'jamir@lsp.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+1111111111111', 1, 3),
 	(4, NULL, 'LILIANA', 'MAYRA', 'lorena@lsp.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+1111111111111111', 1, 3),
 	(5, NULL, 'Jose', 'Fiestas', 'josefiestas@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+58123456789', 1, 3),
-	(6, '16712223', 'Lorena', 'Merino', 'lorena_yjl@hotmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51971868785', 1, 3),
-	(7, '72318705', 'Jamir', 'Merino Mayra', 'jamir@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51942030088', 1, 1);
+	(6, '16712223', 'Lorena', 'Merino', 'lorena_yjl@hotmail.com', '$argon2id$v=19$m=65536,t=3,p=4$1jPejfoJEw5sZWnw7wFOdg$c7rPZxZumY2NZqJOZ90jH2q1BKzkweowNul4fSE4sDk', '+51971868785', 1, 3),
+	(7, '72318704', 'Jamir', 'Merino Mayra', 'jamir@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51942030088', 1, 1),
+	(8, '72318705', 'Jamir', 'Merino Mayra', 'jamir_merino@hotmail.com', '$argon2id$v=19$m=65536,t=3,p=4$sCuxQ29bn++odGShDO06Kg$ww5OdRxnAhSX5Y6UMeU3I5lf5+IDHP1KVv4UXhnZR0Y', '+51942030088', 1, 3);
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

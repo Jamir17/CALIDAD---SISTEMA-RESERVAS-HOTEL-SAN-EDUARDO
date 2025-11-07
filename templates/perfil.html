@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Mi Perfil - Hotel San Eduardo{% endblock %}
 
 {% block extra_css %}
@@ -9,7 +8,7 @@
 {% block content %}
 <section class="profile-section">
   <div class="container">
-    <h1 class="page-title">Mi Perfil</h1>
+    <h1 class="page-title">Mi perfil</h1>
     <p class="page-sub">Gestiona tu información personal y preferencias</p>
 
     <!-- Mensajes Flash -->
@@ -24,7 +23,7 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
-    
+
     <div class="grid">
       <!-- Columna Izquierda -->
       <div>
@@ -37,7 +36,6 @@
           <div class="badge">Cliente</div>
           <div class="divider"></div>
           <div class="list">
-            <div class="li">Correo: {{ usuario.correo }}</div>
             <div class="li">Teléfono: {{ usuario.telefono }}</div>
             <div class="li">Dirección: {{ usuario.direccion or 'No especificada' }}</div>
           </div>
@@ -45,9 +43,10 @@
 
         <section class="card stats">
           <h3 class="card-title">Estadísticas</h3>
-          <div class="row"><div class="key">Total de Reservas</div><div class="val">5</div></div>
-          <div class="divider"></div>
-          <div class="row"><div class="key">Puntos Acumulados</div><div class="val big">250</div></div>
+          <div class="row">
+            <div class="key">Total de Reservas</div>
+            <div class="val">{{ usuario.total_reservas or 0 }}</div>
+          </div>
         </section>
       </div>
 
@@ -55,26 +54,45 @@
       <div>
         <section class="card">
           <div class="form-head">
-            <div><h3 class="card-title">Información Personal</h3><p class="form-sub">Actualiza tus datos personales</p></div>
-            <button id="btnEdit" class="btn btn-ghost" type="button">✏️ Editar</button>
+            <div>
+              <h3 class="card-title">Información Personal</h3>
+              <p class="form-sub">Actualiza tus datos personales</p>
+            </div>
+            <button id="btnEdit" class="btn btn-ghost" type="button">Editar</button>
           </div>
+
           <form id="profileForm" method="POST" action="{{ url_for('perfil.ver_perfil') }}">
             <div class="grid-form">
-              <div class="field"><label for="nombres">Nombre</label><input id="nombres" name="nombres" type="text" value="{{ usuario.nombres }}" disabled></div>
-              <div class="field"><label for="apellidos">Apellido</label><input id="apellidos" name="apellidos" type="text" value="{{ usuario.apellidos }}" disabled></div>
-              <div class="field" style="grid-column:1 / -1"><label for="correo">Correo Electrónico</label><input id="correo" type="email" value="{{ usuario.correo }}" readonly title="El correo no se puede modificar."></div>
-              <div class="field" style="grid-column:1 / -1"><label for="telefono">Teléfono</label><input id="telefono" name="telefono" type="text" value="{{ usuario.telefono }}" disabled></div>
-              <div class="field" style="grid-column:1 / -1"><label for="direccion">Dirección</label><input id="direccion" name="direccion" type="text" value="{{ usuario.direccion or '' }}" disabled></div>
+              <div class="field">
+                <label for="nombres">Nombre</label>
+                <input id="nombres" name="nombres" type="text" value="{{ usuario.nombres }}" disabled>
+              </div>
+
+              <div class="field">
+                <label for="apellidos">Apellido</label>
+                <input id="apellidos" name="apellidos" type="text" value="{{ usuario.apellidos }}" disabled>
+              </div>
+
+              <div class="field" style="grid-column:1 / -1">
+                <label for="telefono">Teléfono</label>
+                <input id="telefono" name="telefono" type="text" value="{{ usuario.telefono }}" disabled>
+              </div>
+
+              <div class="field" style="grid-column:1 / -1">
+                <label for="direccion">Dirección</label>
+                <input id="direccion" name="direccion" type="text" value="{{ usuario.direccion or '' }}" disabled>
+              </div>
             </div>
+
             <div class="actions">
               <button id="btnCancel" class="btn btn-secondary" type="button" disabled>Cancelar</button>
-              <button id="btnSave" class="btn btn-primary" type="submit" disabled>Guardar Cambios</button>
+              <button id="btnSave" class="btn btn-primary" type="submit" disabled>Guardar cambios</button>
             </div>
           </form>
         </section>
 
         <section class="card">
-          <h3 class="card-title">Preferencias de Notificación</h3>
+          <h3 class="card-title">Preferencias de notificación</h3>
           <p class="card-sub">Configura cómo quieres recibir actualizaciones</p>
           <div class="pref"><div><strong>Ofertas y Promociones</strong><p>Recibe ofertas especiales por email</p></div><input type="checkbox" checked></div>
           <div class="divider"></div>
@@ -86,10 +104,10 @@
 </section>
 
 <!-- Modal de confirmación -->
-<div class="modal-overlay" id="modalSuccess" aria-hidden="true" role="dialog" aria-labelledby="modalSuccessTitle" aria-describedby="modalSuccessMessage">
-  <div class="modal-success" role="document" tabindex="-1">
-    <div class="checkmark" aria-hidden="true">
-      <svg viewBox="0 0 52 52" width="52" height="52" focusable="false">
+<div class="modal-overlay" id="modalSuccess" aria-hidden="true" role="dialog">
+  <div class="modal-success" role="document">
+    <div class="checkmark">
+      <svg viewBox="0 0 52 52" width="52" height="52">
         <path d="M14 27 l7 7 l17 -17" />
       </svg>
     </div>
@@ -102,24 +120,17 @@
 {% block extra_js %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // --- Lógica para el modal de éxito ---
+  // --- Modal de éxito ---
   const successDiv = document.getElementById("successMessage");
   if (successDiv) {
     const modal = document.getElementById("modalSuccess");
-    const title = document.getElementById("modalSuccessTitle");
     const msg = successDiv.dataset.message;
-    if (title && msg) title.textContent = msg;
-
+    if (msg) document.getElementById("modalSuccessTitle").textContent = msg;
     modal.classList.add("open");
-    modal.setAttribute("aria-hidden", "false");
-
-    setTimeout(() => {
-      modal.classList.remove("open");
-      modal.setAttribute("aria-hidden", "true");
-    }, 1000);
+    setTimeout(() => modal.classList.remove("open"), 1500);
   }
 
-  // --- Lógica para editar/guardar/cancelar el formulario ---
+  // --- Lógica de edición ---
   const form = document.getElementById('profileForm');
   const btnEdit = document.getElementById('btnEdit');
   const btnSave = document.getElementById('btnSave');
@@ -128,9 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function toggleForm(editable) {
     inputs.forEach(input => {
-      if (!input.readOnly) { // No habilitar campos como email o DNI
-        input.disabled = !editable;
-      }
+      input.disabled = !editable;
     });
     btnSave.disabled = !editable;
     btnCancel.disabled = !editable;
@@ -142,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   btnCancel.addEventListener('click', () => {
-    form.reset(); // Restaura los valores originales del HTML
+    form.reset();
     toggleForm(false);
   });
 });

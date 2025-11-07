@@ -60,10 +60,17 @@ def ver_perfil():
         return redirect(url_for("perfil.ver_perfil"))
 
     # --- Lógica para mostrar el perfil (GET) ---
+# --- Lógica para mostrar el perfil (GET) ---
     con = obtener_conexion()
     with con.cursor() as cur:
         cur.execute("""
-            SELECT u.nombres, u.apellidos, u.correo, u.telefono, c.tipo_documento, c.num_documento, c.direccion, c.nacionalidad
+            SELECT 
+                u.nombres, 
+                u.apellidos, 
+                u.correo, 
+                u.telefono, 
+                c.direccion,
+                (SELECT COUNT(*) FROM reservas r WHERE r.id_usuario = u.id_usuario) AS total_reservas
             FROM usuarios u
             LEFT JOIN clientes c ON u.id_usuario = c.id_usuario
             WHERE u.id_usuario = %s
