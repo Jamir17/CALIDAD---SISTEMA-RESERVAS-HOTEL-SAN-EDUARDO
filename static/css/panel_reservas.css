@@ -272,43 +272,7 @@
 /* =================================
    Estilos para Modales
    ================================= */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1050;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
 
-.modal.active {
-  display: flex;
-  opacity: 1;
-}
-
-.modal-content {
-  background: var(--card);
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  padding: 2rem;
-  transform: scale(0.95);
-  transition: transform 0.3s ease;
-}
-
-.modal.active .modal-content {
-  transform: scale(1);
-}
 
 .modal-content.modal-small {
   max-width: 400px;
@@ -421,3 +385,46 @@
 .btn-primary { background-color: var(--primary); color: white; }
 .btn-secondary { background-color: var(--border); color: var(--text-primary); }
 .btn-danger { background-color: var(--danger); color: white; }
+
+/* ========================
+   Scroll y Filtros
+   ======================== */
+.table-wrap.scrollable {
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 6px var(--shadow);
+}
+
+/* Barra de filtros */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filters input[type="text"],
+.filters input[type="date"],
+.filters select {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filters input:focus,
+.filters select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
