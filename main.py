@@ -44,6 +44,11 @@ app.register_blueprint(webchat_bp, url_prefix="/webchat")
 def index():
     return render_template("index.html", nombre=session.get("nombre"))
 
+@app.route("/habitaciones-principales")
+def habitaciones_principales():
+    """Muestra la página estática con todas las habitaciones."""
+    return render_template("habitacionprincipal.html")
+
 # ====== ARRANQUE ======
 if __name__ == "__main__":
     app.run(debug=True)
