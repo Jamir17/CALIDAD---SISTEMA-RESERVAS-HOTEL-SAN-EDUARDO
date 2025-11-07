@@ -4,6 +4,7 @@ import json
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
+from decimal import Decimal
 
 reservas_bp = Blueprint("reservas", __name__)
 
@@ -13,13 +14,11 @@ def habitaciones_cliente():
         flash("Debes iniciar sesión.", "error")
         return redirect(url_for("usuarios.iniciosesion"))
 
-    # Leer y normalizar fechas del GET
     fecha_entrada = request.args.get("fecha_entrada") or ""
     fecha_salida = request.args.get("fecha_salida") or ""
     tipo = request.args.get("tipo") or ""
     huespedes = request.args.get("huespedes") or ""
 
-    # Normalizar formato YYYY-MM-DD (evita desfases por zona horaria)
     def normalizar(fecha_str):
         try:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
@@ -33,26 +32,49 @@ def habitaciones_cliente():
     con = obtener_conexion()
     with con.cursor() as cur:
         query = """
-            SELECT h.id_habitacion, h.numero, h.estado,
-                   t.nombre AS tipo, t.descripcion, t.precio_base
+            SELECT 
+                h.id_habitacion, h.numero, h.estado,
+                t.nombre AS tipo, t.descripcion, t.precio_base, t.capacidad,
+                COALESCE(t.comodidades, '') AS comodidades,
+                h.imagen AS portada
             FROM habitaciones h
             JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
             WHERE 1=1
         """
         params = []
 
+        # Filtro por tipo
         if tipo:
             query += " AND t.nombre = %s"
             params.append(tipo)
+
+        # Filtro por capacidad
         if huespedes:
-            query += " AND h.capacidad >= %s"
-            params.append(huespedes)
+            query += " AND t.capacidad >= %s"
+            params.append(int(huespedes))
+
+        # Filtro por disponibilidad (si hay fechas)
+        if fecha_entrada and fecha_salida:
+            query += """
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM reservas r
+                    WHERE r.id_habitacion = h.id_habitacion
+                      AND r.estado IN ('Activa', 'Pendiente')
+                      -- SOLAPAMIENTO: [fecha_entrada, fecha_salida)
+                      AND r.fecha_entrada < %s
+                      AND r.fecha_salida > %s
+                )
+            """
+            # IMPORTANTE: primero va la fecha de salida buscada, luego la de entrada
+            params.extend([fecha_salida, fecha_entrada])
 
         query += " ORDER BY t.precio_base ASC"
 
         cur.execute(query, tuple(params))
         habitaciones = cur.fetchall()
 
+        # combos
         cur.execute("SELECT DISTINCT nombre FROM tipo_habitacion ORDER BY nombre")
         tipos_unicos = cur.fetchall()
 
@@ -64,13 +86,15 @@ def habitaciones_cliente():
         habitaciones=habitaciones,
         tipos_unicos=tipos_unicos,
         servicios=servicios,
-        servicios_json=json.dumps(servicios),
+        servicios_json=json.dumps(servicios, default=str),
         fecha_entrada=fecha_entrada,
         fecha_salida=fecha_salida,
         tipo=tipo,
         huespedes=huespedes,
         nombre=session.get("nombre")
     )
+
+
 
 # Detalle de habitación
 @reservas_bp.route("/cliente/habitacion/<int:id_habitacion>")
@@ -97,31 +121,33 @@ def ver_habitacion(id_habitacion):
     return render_template("reserva_cliente.html", habitacion=habitacion, nombre=session.get("nombre"))
 
 
-# ================================================
-#  RUTA para recibir la reserva y mostrar pago
-# ================================================
+
+def json_safe(x):
+    if isinstance(x, Decimal):
+        return float(x)
+    if isinstance(x, (list, tuple)):
+        return [json_safe(i) for i in x]
+    if isinstance(x, dict):
+        return {k: json_safe(v) for k, v in x.items()}
+    return x
+
 @reservas_bp.route("/cliente/pago_reserva", methods=["POST", "GET"])
 def pago_reserva():
     if not session.get("usuario_id"):
         return redirect(url_for("usuarios.iniciosesion"))
 
-    # Si es POST desde habitaciones_cliente, guarda la reserva en sesión
+    # =======================================================
+    # POST → Guarda reserva en sesión o procesa pago
+    # =======================================================
     if request.method == "POST":
+        # 🔹 JSON (desde habitaciones_cliente)
         if request.is_json:
             datos = request.get_json()
-
-            # 🔹 Si el frontend envía una lista de reservas (varias habitaciones)
-            if isinstance(datos, list):
-                # Tomamos solo la primera habitación (por ahora manejamos una por pago)
-                reserva = datos[0]
-            else:
-                reserva = datos
-
-            # 🔹 Validar que haya estructura mínima
+            reserva = datos[0] if isinstance(datos, list) else datos
             if not isinstance(reserva, dict):
                 return jsonify({"ok": False, "error": "Formato JSON no válido"}), 400
 
-            # 🔹 Si viene de servicios adicionales
+            # Si es servicios adicionales
             if reserva.get("tipo") == "Servicios adicionales":
                 reserva["id_habitacion"] = None
                 reserva["entrada"] = reserva.get("fecha")
@@ -129,42 +155,129 @@ def pago_reserva():
                 reserva["noches"] = 1
                 reserva["precio"] = 0
 
-            session["reserva_temp"] = reserva
+            # 🔐 Guardar SIEMPRE en sesión con conversión profunda
+            session["reserva_temp"] = json_safe(reserva)
             return jsonify({"ok": True})
 
-
-
-        # Si es POST desde el form de datos de huésped, los guarda y redirige
-        reserva_temp = session.get("reserva_temp", {})
-        reserva_temp['huesped'] = {
+        # 🔹 POST del formulario
+        reserva_temp = dict(session.get("reserva_temp", {}))  # copia
+        reserva_temp["huesped"] = {
             "nombre": request.form.get("nombre_huesped"),
             "documento": request.form.get("documento_huesped"),
             "telefono": request.form.get("telefono_huesped"),
             "correo": request.form.get("correo_huesped"),
         }
-        # Guardar el método de pago seleccionado
-        reserva_temp['id_tipo_pago'] = request.form.get("tipo_pago")
-        session["reserva_temp"] = reserva_temp
 
-        # Si el pago es con tarjeta (ID 2), ir al form de tarjeta.
-        # Si no, confirmar directamente.
-        if reserva_temp['id_tipo_pago'] == '2':
-            return redirect(url_for('reservas.tarjeta'))
-        else:
-            return redirect(url_for('reservas.confirmar_reserva'))
+        tipo_pago = request.form.get("tipo_pago")
+        reserva_temp["id_tipo_pago"] = tipo_pago
 
-    # Si es GET → muestra el HTML de pago
+        # Recalcular totales en tipos seguros
+        def to_float(v): return float(v) if isinstance(v, Decimal) else (v or 0)
+        total_servicios = sum(to_float(s.get("precio", 0)) for s in reserva_temp.get("servicios", []))
+        total_estancia = to_float(reserva_temp.get("precio", 0)) * to_float(reserva_temp.get("noches", 0))
+        reserva_temp["total"] = round(total_servicios + total_estancia, 2)
+
+        # 🔐 Volver a guardar en sesión, ya normalizado
+        session["reserva_temp"] = json_safe(reserva_temp)
+
+        # 💳 Tarjeta → redirigir
+        if tipo_pago == "2":
+            return redirect(url_for("reservas.tarjeta"))
+
+        # 🧾 Transferencia/Yape/Plin → guardar comprobante
+        comprobante_field = None
+        if tipo_pago == "1":
+            comprobante_field = "comprobante_transferencia"
+        elif tipo_pago == "3":
+            comprobante_field = "comprobante_yape"
+        elif tipo_pago == "4":
+            comprobante_field = "comprobante_plin"
+
+        comprobante_filename = None
+        if comprobante_field:
+            file = request.files.get(comprobante_field)
+            if file and file.filename:
+                carpeta = os.path.join("static", "img", "comprobantes")
+                os.makedirs(carpeta, exist_ok=True)
+                nombre_seguro = secure_filename(file.filename)
+                ruta_guardado = os.path.join(carpeta, nombre_seguro)
+                file.save(ruta_guardado)
+                comprobante_filename = ruta_guardado  # ruta relativa
+
+        # 🧩 Obtener el id_cliente asociado al usuario logueado
+        con = obtener_conexion()
+        with con.cursor() as cur:
+            cur.execute("SELECT id_cliente FROM clientes WHERE id_usuario = %s", (session["usuario_id"],))
+            cliente = cur.fetchone()
+
+        if not cliente:
+            flash("No se encontró cliente asociado al usuario actual.", "error")
+            return redirect(url_for("reservas.habitaciones_cliente"))
+
+        id_cliente = cliente["id_cliente"]
+
+        # 🏨 Registrar reserva si no existe
+        id_reserva = reserva_temp.get("id_reserva")
+        if not id_reserva:
+            with con.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO reservas (id_cliente, id_habitacion, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    id_cliente,  # ✅ ahora el correcto
+                    reserva_temp.get("id_habitacion"),
+                    session.get("usuario_id"),
+                    reserva_temp.get("entrada"),
+                    reserva_temp.get("salida"),
+                    1,
+                    "Activa"
+                ))
+                id_reserva = cur.lastrowid
+                con.commit()
+                reserva_temp["id_reserva"] = id_reserva
+                session["reserva_temp"] = json_safe(reserva_temp)
+
+        # 🧮 Registrar facturación
+        with con.cursor() as cur:
+            cur.execute("""
+                INSERT INTO facturacion (id_reserva, id_tipo_pago, id_usuario, fecha_emision, total, estado, comprobante_pago)
+                VALUES (%s, %s, %s, CURDATE(), %s, %s, %s)
+            """, (
+                id_reserva,
+                tipo_pago,
+                session.get("usuario_id"),
+                float(reserva_temp.get("total", 0)),
+                "Pagado",
+                comprobante_filename
+            ))
+            con.commit()
+
+        # ✅ limpiar y redirigir
+        session.pop("reserva_temp", None)
+        return redirect(url_for("reservas.reserva_exitosa", id_reserva=id_reserva))
+
+    # =======================================================
+    # GET → Mostrar página de pago
+    # =======================================================
     reserva_temp = session.get("reserva_temp")
     if not reserva_temp:
         flash("No hay datos de reserva seleccionados.", "error")
         return redirect(url_for("reservas.habitaciones_cliente"))
-    
-    # Obtener tipos de pago para el formulario
+
+    # Asegurar totales antes de renderizar
+    def to_float(v): return float(v) if isinstance(v, Decimal) else (v or 0)
+    total_servicios = sum(to_float(s.get("precio", 0)) for s in reserva_temp.get("servicios", []))
+    total_estancia = to_float(reserva_temp.get("precio", 0)) * to_float(reserva_temp.get("noches", 0))
+    reserva_temp["total"] = round(total_servicios + total_estancia, 2)
+
+    session["reserva_temp"] = json_safe(reserva_temp)
+
+    # Tipos de pago
     con = obtener_conexion()
     with con.cursor() as cur:
         cur.execute("SELECT id_tipo_pago, descripcion FROM tipo_pago")
         tipos_pago = cur.fetchall()
-    
+
     return render_template("pago_reserva.html", reserva=reserva_temp, tipos_pago=tipos_pago)
 
 

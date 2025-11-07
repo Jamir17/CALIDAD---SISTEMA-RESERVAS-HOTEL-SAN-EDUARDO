@@ -9,7 +9,6 @@
         color: #333;
     }
 
-    /* BREADCRUMB */
     .breadcrumb {
         max-width: 1400px;
         margin: 100px auto 0;
@@ -23,7 +22,6 @@
         text-decoration: none;
     }
 
-    /* MAIN CONTAINER */
     .main-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -33,19 +31,10 @@
         gap: 2rem;
     }
 
-    /* FORM SECTION */
     .form-section {
         background: white;
         border-radius: 8px;
         padding: 2rem;
-    }
-
-    .form-block {
-        margin-bottom: 2rem;
-    }
-
-    .form-block:last-child {
-        margin-bottom: 0;
     }
 
     .block-header {
@@ -67,8 +56,6 @@
         align-items: center;
         justify-content: center;
         font-weight: bold;
-        font-size: 0.95rem;
-        flex-shrink: 0;
     }
 
     .block-title {
@@ -77,7 +64,6 @@
         color: #1f2937;
     }
 
-    /* FORM FIELDS */
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -101,24 +87,20 @@
         color: #374151;
     }
 
-    .form-group input,
-    .form-group select {
+    .form-group input {
         padding: 0.75rem;
         border: 1px solid #d1d5db;
         border-radius: 6px;
         font-size: 0.95rem;
-        font-family: inherit;
         transition: border-color 0.3s;
     }
 
-    .form-group input:focus,
-    .form-group select:focus {
+    .form-group input:focus {
         outline: none;
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-    /* RADIO OPTIONS */
     .radio-group {
         display: flex;
         flex-direction: column;
@@ -146,143 +128,25 @@
         accent-color: #3b82f6;
     }
 
-    .radio-option input[type="radio"]:checked + label {
-        color: #1f2937;
-    }
-
-    .radio-option label {
-        cursor: pointer;
-        margin: 0;
-        font-weight: 500;
-    }
-
-    /* SUMMARY SIDEBAR */
-    .summary-card {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        position: sticky;
-        top: 100px;
-        height: fit-content;
-    }
-
-    .summary-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-    }
-
-    .summary-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-        font-size: 0.9rem;
-    }
-
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.9rem;
-    }
-
-    .summary-label {
-        opacity: 0.9;
-    }
-
-    .summary-value {
-        font-weight: 600;
-    }
-
-    .summary-divider {
-        height: 1px;
-        background: rgba(255, 255, 255, 0.2);
-        margin: 1rem 0;
-    }
-
-    .summary-total {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .summary-total-label {
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .summary-total-amount {
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    /* BENEFITS */
-    .benefits-section {
-        margin-top: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .benefit-item {
-        display: flex;
-        gap: 0.75rem;
-        font-size: 0.85rem;
-        align-items: flex-start;
-    }
-
-    .benefit-icon {
-        width: 18px;
-        height: 18px;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        margin-top: 2px;
-    }
-
-    /* SECURITY ALERT */
-    .security-alert {
-        background: #ecfdf5;
-        border-left: 4px solid #10b981;
+    .bloque-metodo {
+        margin-left: 2.2rem;
+        margin-top: 0.5rem;
         padding: 1rem;
+        border-left: 3px solid #3b82f6;
+        background: #f9fafb;
         border-radius: 6px;
-        margin-top: 1rem;
-        font-size: 0.9rem;
     }
 
-    .security-alert-title {
-        color: #047857;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .bloque-metodo.oculto {
+        display: none;
     }
 
-    .security-alert-text {
-        color: #065f46;
+    .bloque-metodo img {
+        display: block;
+        margin: 0.5rem 0;
+        border-radius: 6px;
     }
 
-    .check-icon {
-        width: 18px;
-        height: 18px;
-        background: #10b981;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-    }
-
-    /* BUTTON */
     .submit-btn {
         width: 100%;
         padding: 1rem;
@@ -301,145 +165,214 @@
         background-color: #2563eb;
     }
 
-    /* RESPONSIVE */
+    .summary-card {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+
+    .summary-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-total-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
     @media (max-width: 768px) {
         .main-container {
             grid-template-columns: 1fr;
         }
 
-        .form-row {
-            grid-template-columns: 1fr;
-        }
-
         .summary-card {
             position: static;
-            order: -1; /* Mover resumen arriba en móviles */
+            order: -1;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- BREADCRUMB -->
 <nav class="breadcrumb">
-    <a href="{{ url_for('reservas.habitaciones_cliente') }}">Reserva</a> / Confirmación de pago
+    <a href="{{ url_for('reservas.habitaciones_cliente') }}">Reserva</a> / Pago
 </nav>
 
-<!-- MAIN -->
 <div class="main-container">
-    <!-- FORM -->
     <div class="form-section">
-        <form method="POST" action="{{ url_for('reservas.pago_reserva') }}">
-            <!-- BLOCK 1 -->
-            <div class="form-block">
-                <div class="block-header">
-                    <div class="block-number">1</div>
-                    <div class="block-title">Datos del Huésped Principal</div>
-                </div>
+        <form method="POST" action="{{ url_for('reservas.pago_reserva') }}" enctype="multipart/form-data">
+            <!-- BLOQUE 1 - DATOS DEL HUESPED -->
+            <div class="block-header">
+                <div class="block-number">1</div>
+                <div class="block-title">Datos del Huésped Principal</div>
+            </div>
 
-                <div class="form-row full">
+            <div class="form-row full">
+                <div class="form-group">
+                    <label for="nombre_huesped">Nombres y Apellidos</label>
+                    <input type="text" id="nombre_huesped" name="nombre_huesped" value="{{ session.get('nombre', '') }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="documento_huesped">N° de Documento (DNI/Pasaporte)</label>
+                    <input type="text" id="documento_huesped" name="documento_huesped" required>
+                </div>
+                <div class="form-group">
+                    <label for="telefono_huesped">Teléfono</label>
+                    <input type="tel" id="telefono_huesped" name="telefono_huesped" required>
+                </div>
+            </div>
+
+            <div class="form-row full">
+                <div class="form-group">
+                    <label for="correo_huesped">Correo Electrónico (opcional)</label>
+                    <input type="email" id="correo_huesped" name="correo_huesped" placeholder="Para enviar confirmación adicional" value="{{ session.get('correo', '') }}">
+                </div>
+            </div>
+
+            <!-- BLOQUE 2 - METODO DE PAGO -->
+            <div class="block-header" style="margin-top:2rem;">
+                <div class="block-number">2</div>
+                <div class="block-title">Método de Pago</div>
+            </div>
+
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="tipo_pago" value="1" data-metodo="transferencia" checked>
+                    <span>Transferencia bancaria</span>
+                </label>
+                <div id="bloque-transferencia" class="bloque-metodo">
+                    <p><strong>Banco de Crédito del Perú (BCP)</strong><br>N° xxx-xxx</p>
+                    <p><strong>Banco Interbank</strong><br>N° xxx-xxx</p>
                     <div class="form-group">
-                        <label for="nombre_huesped">Nombres y Apellidos</label>
-                        <input type="text" id="nombre_huesped" name="nombre_huesped" required>
+                        <label>Subir comprobante:</label>
+                        <input type="file" name="comprobante_transferencia" accept=".jpg,.jpeg,.png">
                     </div>
                 </div>
 
-                <div class="form-row">
+                <label class="radio-option">
+                    <input type="radio" name="tipo_pago" value="2" data-metodo="tarjeta">
+                    <span>Tarjeta de crédito/débito</span>
+                </label>
+
+                <label class="radio-option">
+                    <input type="radio" name="tipo_pago" value="3" data-metodo="yape">
+                    <span>Yape</span>
+                </label>
+                <div id="bloque-yape" class="bloque-metodo oculto">
+                    <img src="{{ url_for('static', filename='img/yape.jpg') }}" alt="Yape QR" width="180">
                     <div class="form-group">
-                        <label for="documento_huesped">Nº de Documento (DNI/Pasaporte)</label>
-                        <input type="text" id="documento_huesped" name="documento_huesped" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="telefono_huesped">Teléfono</label>
-                        <input type="tel" id="telefono_huesped" name="telefono_huesped" required>
+                        <label>Subir comprobante:</label>
+                        <input type="file" name="comprobante_yape" accept=".jpg,.jpeg,.png">
                     </div>
                 </div>
 
-                <div class="form-row full">
+                <label class="radio-option">
+                    <input type="radio" name="tipo_pago" value="4" data-metodo="plin">
+                    <span>Plin</span>
+                </label>
+                <div id="bloque-plin" class="bloque-metodo oculto">
+                    <img src="{{ url_for('static', filename='img/plin.jpg') }}" alt="Plin QR" width="180">
                     <div class="form-group">
-                        <label for="correo_huesped">Correo Electrónico (opcional)</label>
-                        <input type="email" id="correo_huesped" name="correo_huesped" placeholder="Para enviar confirmación adicional">
+                        <label>Subir comprobante:</label>
+                        <input type="file" name="comprobante_plin" accept=".jpg,.jpeg,.png">
                     </div>
                 </div>
             </div>
 
-            <!-- BLOCK 2 -->
-            <div class="form-block">
-                <div class="block-header">
-                    <div class="block-number">2</div>
-                    <div class="block-title">Método de Pago</div>
-                </div>
-
-                <div class="radio-group">
-                    {% for tipo in tipos_pago %}
-                    <label class="radio-option">
-                        <input type="radio" name="tipo_pago" value="{{ tipo.id_tipo_pago }}" {% if loop.first %}checked{% endif %} required>
-                        <label style="cursor: pointer;">{{ tipo.descripcion }}</label>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <button type="submit" class="submit-btn">Continuar al Pago</button>
+            <button type="submit" class="submit-btn" id="btnConfirmarPago">Confirmar y Pagar</button>
         </form>
     </div>
 
-    <!-- SIDEBAR SUMMARY -->
+    <!-- PANEL DERECHA - RESUMEN -->
     <div class="summary-card">
         <div class="summary-title">Resumen de tu Estancia</div>
 
-        {% if reserva.id_habitacion %}
         <div class="summary-row">
-            <span class="summary-label">Habitación:</span>
-            <span class="summary-value">{{ reserva.tipo }} Nº {{ reserva.numero }}</span>
+            <span>Habitación:</span>
+            <span>{{ reserva.tipo }} Nº {{ reserva.numero }}</span>
         </div>
         <div class="summary-row">
-            <span class="summary-label">Fechas:</span>
-            <span class="summary-value">{{ reserva.entrada }} al {{ reserva.salida }}</span>
+            <span>Fechas:</span>
+            <span>{{ reserva.entrada }} al {{ reserva.salida }}</span>
         </div>
-        {% else %}
+
+        {% if reserva.servicios %}
+        <hr class="my-2">
+        {% for s in reserva.servicios %}
         <div class="summary-row">
-            <span class="summary-label">Servicios:</span>
-            <span class="summary-value">{{ reserva.fecha }} – {{ reserva.hora }}</span>
+            <div>
+                <strong>{{ s.nombre }}</strong><br>
+                <small>{{ s.hora }}</small>
+            </div>
+            <span>S/. {{ "%.2f"|format(s.precio) }}</span>
         </div>
+        {% endfor %}
         {% endif %}
 
-        <div class="summary-divider"></div>
-
-        <div class="summary-info">
-            <div class="summary-row">
-                <span class="summary-label">Subtotal</span>
-                <span class="summary-value">S/. {{ (reserva.precio * reserva.noches) | round(2) }}</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Servicios</span>
-                <span class="summary-value">S/. {{ (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0) | round(2) }}</span>
-            </div>
-        </div>
+        {% set total_servicios = reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0 %}
+        {% set total_estancia = (reserva.precio * reserva.noches) if reserva.precio and reserva.noches else 0 %}
+        {% set total_general = total_estancia + total_servicios %}
 
         <div class="summary-total">
-            <span class="summary-total-label">Total a Pagar</span>
-            <span class="summary-total-amount">S/. {{ (reserva.precio * reserva.noches + (reserva.servicios | map(attribute='precio') | sum if reserva.servicios else 0)) | round(2) }}</span>
-        </div>
-
-        <div class="benefits-section">
-            <div class="benefit-item">
-                <div class="benefit-icon">●</div>
-                <div><strong>Check-in después de las 3 PM</strong><br>Check-out antes de las 11 AM</div>
-            </div>
-            <div class="benefit-item">
-                <div class="benefit-icon">●</div>
-                <div><strong>Cancelación gratuita</strong><br>Hasta 48 horas antes</div>
-            </div>
-        </div>
-
-        <div class="security-alert">
-            <div class="security-alert-title">
-                <div class="check-icon">✓</div>
-                Tu pago está protegido
-            </div>
-            <div class="security-alert-text">Garantía de seguridad en todas las transacciones</div>
+            <span>Total a pagar</span>
+            <span class="summary-total-amount">S/. {{ "%.2f"|format(total_general) }}</span>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const radios = document.querySelectorAll('input[name="tipo_pago"]');
+  const bloques = document.querySelectorAll('.bloque-metodo');
+  const btn = document.getElementById("btnConfirmarPago");
+
+  radios.forEach(radio => {
+    radio.addEventListener("change", () => {
+      bloques.forEach(div => div.classList.add("oculto"));
+      const metodo = radio.dataset.metodo;
+
+        if (metodo === "tarjeta") {
+        btn.disabled = true;
+        btn.textContent = "Procesando...";
+
+        // Enviar el formulario normalmente al backend (POST)
+        setTimeout(() => {
+            document.querySelector("form").submit();
+        }, 300);
+
+        } else {
+        btn.disabled = false;
+        btn.textContent = "Confirmar y Pagar";
+        const bloqueActivo = document.getElementById(`bloque-${metodo}`);
+        if (bloqueActivo) bloqueActivo.classList.remove("oculto");
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

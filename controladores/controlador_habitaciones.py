@@ -65,7 +65,7 @@ def habitaciones_cliente():
             """)
             servicios = cur.fetchall()
 
-            # 🔹 Habitaciones disponibles
+            # 🔹 Habitaciones base
             query = """
                 SELECT
                     h.id_habitacion,
@@ -84,9 +84,31 @@ def habitaciones_cliente():
             """
             params = [DEFAULT_REL]
 
+            # 🔹 Filtro por tipo
             if tipo:
                 query += " AND t.nombre = %s"
                 params.append(tipo)
+
+            # 🔹 Filtro de disponibilidad por fechas
+            if fecha_entrada and fecha_salida:
+                query += """
+                    AND h.id_habitacion NOT IN (
+                        SELECT r.id_habitacion
+                        FROM reservas r
+                        WHERE r.id_habitacion IS NOT NULL
+                          AND r.estado IN ('Activa', 'Pendiente')
+                          AND (
+                              (r.fecha_entrada < %s AND r.fecha_salida > %s)
+                              OR (r.fecha_entrada BETWEEN %s AND %s)
+                              OR (r.fecha_salida BETWEEN %s AND %s)
+                          )
+                    )
+                """
+                params += [
+                    fecha_salida, fecha_entrada,
+                    fecha_entrada, fecha_salida,
+                    fecha_entrada, fecha_salida
+                ]
 
             query += " ORDER BY t.precio_base ASC, h.numero ASC"
             cur.execute(query, params)
@@ -97,12 +119,9 @@ def habitaciones_cliente():
                 if (row.get("capacidad") or 0) < huespedes:
                     continue
 
-                # Imagen principal
                 portada = _to_static_rel(row.get("imagen") or DEFAULT_REL)
 
-                # Galería: Como las imágenes están asociadas a un id_habitacion específico (ej: id 1 para 'Individual'),
-                # primero buscamos una habitación de este TIPO que SÍ tenga imágenes en la tabla `imagenes_habitacion`.
-                # Luego, usamos ese id_habitacion para traer toda la galería.
+                # Galería
                 cur.execute("""
                     SELECT ruta_imagen
                     FROM imagenes_habitacion
@@ -116,7 +135,6 @@ def habitaciones_cliente():
                 """, (row["id_tipo"],))
                 gal = [_to_static_rel(g["ruta_imagen"]) for g in cur.fetchall()] or [portada]
 
-                # Comodidades
                 cstr = (row.get("comodidades") or "").strip()
                 amenities = [x.strip() for x in cstr.split(",") if x.strip()]
 
@@ -138,6 +156,7 @@ def habitaciones_cliente():
         print("❌ Error cargando habitaciones:", e)
     finally:
         con.close()
+
 
     return render_template(
         "habitaciones_cliente.html",
