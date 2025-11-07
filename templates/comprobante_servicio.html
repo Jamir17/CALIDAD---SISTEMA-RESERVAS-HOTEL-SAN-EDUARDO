@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprobante de servicios - Hotel San Eduardo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7f9fb;
+            color: #333;
+            margin: 0;
+            padding: 30px;
+        }
+        .recibo {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h2 {
+            color: #0f2a63;
+            margin: 0;
+        }
+        .datos p {
+            margin: 6px 0;
+        }
+        .servicios {
+            margin-top: 10px;
+        }
+        .servicios li {
+            margin-bottom: 6px;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            text-align: right;
+            margin-top: 15px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+        }
+        .print-btn {
+            display: block;
+            margin: 15px auto 0;
+            background: #28a745;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            text-align: center;
+            width: 180px;
+        }
+        @media print {
+            .print-btn { display: none; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+    <div class="recibo">
+        <div class="header">
+            <h2>HOTEL SAN EDUARDO</h2>
+            <p>Comprobante de Servicios</p>
+            <small>Emitido el {{ reserva.fecha_reserva.strftime('%d/%m/%Y') if reserva.fecha_reserva.__class__.__name__ in ['date','datetime'] else reserva.fecha_reserva }}</small>
+        </div>
+
+        <div class="datos">
+            <p><strong>Cliente:</strong> {{ reserva.cliente_nombres }} {{ reserva.cliente_apellidos }}</p>
+            <p><strong>N° Reserva:</strong> #{{ reserva.id_reserva_servicio }}</p>
+        </div>
+
+        <div class="servicios">
+            <h4>Servicios Reservados:</h4>
+            <ul>
+                {% for s in servicios %}
+                <li>
+                    {{ s.nombre }}{% if s.cantidad %} × {{ s.cantidad }}{% endif %} — S/ {{ "%.2f"|format(s.subtotal) }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <p class="total">Total Pagado: S/. {{ "%.2f"|format(reserva.total) }}</p>
+
+        <a href="#" class="print-btn" onclick="window.print()">Imprimir o guardar PDF</a>
+
+        <div class="footer">
+            <p>Gracias por confiar en Hotel San Eduardo.</p>
+            <p>Dirección: Av. Principal 123, Chiclayo | Tel: (074) 123456</p>
+        </div>
+    </div>
+</body>
+</html>

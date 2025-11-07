@@ -97,7 +97,12 @@
         <div class="acciones-exito">
             <a href="{{ url_for('habitaciones.habitaciones_cliente') }}" class="btn btn-outline">Ver más habitaciones</a>
             <a href="{{ url_for('perfil.ver_perfil') }}" class="btn btn-primary">Ir a Mi Perfil</a>
+            <a href="{{ url_for('reservas.descargar_comprobante', id_reserva=reserva.id_reserva) }}" 
+            class="btn btn-success">
+            Descargar comprobante
+            </a>
         </div>
+        
     </div>
 </div>
 {% endblock %}

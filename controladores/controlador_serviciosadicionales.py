@@ -3,6 +3,7 @@ from datetime import date
 from bd import obtener_conexion
 import json, decimal
 from datetime import datetime
+from flask import make_response
 
 servicios = Blueprint('servicios', __name__, url_prefix='/servicios')
 
@@ -310,3 +311,50 @@ def tarjeta():
         return redirect(url_for("servicios.pago_servicios"))
     return render_template("tarjeta_servicios.html", reserva=reserva_temp)
 
+
+@servicios.route("/descargar_comprobante_sa/<int:id_reserva>")
+def descargar_comprobante_sa(id_reserva):
+    if not session.get("usuario_id"):
+        return redirect(url_for("usuarios.iniciosesion"))
+
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        # 🧾 Datos generales de la reserva
+        cur.execute("""
+            SELECT 
+                r.id_reserva            AS id_reserva_servicio,
+                c.nombres               AS cliente_nombres,
+                c.apellidos             AS cliente_apellidos,
+                DATE(f.fecha_emision)   AS fecha_reserva,
+                f.total                 AS total
+            FROM reservas r
+            JOIN clientes c   ON r.id_cliente = c.id_cliente
+            JOIN facturacion f ON f.id_reserva = r.id_reserva
+            WHERE r.id_reserva = %s
+        """, (id_reserva,))
+        reserva = cur.fetchone()
+
+        # 🧩 Servicios asociados
+        cur.execute("""
+            SELECT s.nombre, rs.cantidad, rs.subtotal
+            FROM reserva_servicio rs
+            JOIN servicios s ON s.id_servicio = rs.id_servicio
+            WHERE rs.id_reserva = %s
+        """, (id_reserva,))
+        servicios = cur.fetchall()
+
+    con.close()
+
+    # Si no se encuentra la reserva
+    if not reserva:
+        flash("No se encontró el comprobante o no tienes permiso para verlo.", "error")
+        return redirect(url_for("servicios.listar_servicios"))
+
+    # Renderizar el comprobante HTML
+    html_content = render_template("comprobante_servicio.html", reserva=reserva, servicios=servicios)
+
+    # Retornar el HTML como descarga directa
+    response = make_response(html_content)
+    response.headers["Content-Disposition"] = f"attachment; filename=comprobante_servicio_{id_reserva}.html"
+    response.headers["Content-Type"] = "text/html; charset=utf-8"
+    return response

@@ -5,6 +5,7 @@ import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from decimal import Decimal
+from flask import make_response
 
 reservas_bp = Blueprint("reservas", __name__)
 
@@ -588,3 +589,73 @@ def mis_reservas_todo():
         nombre=session.get("nombre")
     )
 
+@reservas_bp.route("/cliente/comprobante/<int:id_reserva>")
+def comprobante_reserva(id_reserva):
+    if not session.get("usuario_id"):
+        return redirect(url_for("usuarios.iniciosesion"))
+
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        cur.execute("""
+            SELECT 
+                r.id_reserva, r.fecha_entrada, r.fecha_salida,
+                DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos,
+                c.tipo_documento, c.num_documento, c.correo,
+                h.numero AS hab_numero, t.nombre AS hab_tipo,
+                f.total, f.fecha_emision, f.id_factura,
+                tp.descripcion AS metodo_pago
+            FROM reservas r
+            JOIN clientes c ON r.id_cliente = c.id_cliente
+            JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            JOIN facturacion f ON r.id_reserva = f.id_reserva
+            JOIN tipo_pago tp ON f.id_tipo_pago = tp.id_tipo_pago
+            WHERE r.id_reserva = %s AND r.id_usuario = %s
+        """, (id_reserva, session["usuario_id"]))
+        reserva = cur.fetchone()
+
+    if not reserva:
+        flash("No se encontró el comprobante o no tienes permiso para verlo.", "error")
+        return redirect(url_for("reservas.mis_reservas"))
+
+    return render_template("comprobante_reserva.html", reserva=reserva)
+
+@reservas_bp.route("/cliente/descargar_comprobante/<int:id_reserva>")
+def descargar_comprobante(id_reserva):
+    if not session.get("usuario_id"):
+        return redirect(url_for("usuarios.iniciosesion"))
+
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        cur.execute("""
+            SELECT 
+                r.id_reserva, r.fecha_entrada, r.fecha_salida,
+                DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos,
+                c.tipo_documento, c.num_documento, c.correo,
+                h.numero AS hab_numero, t.nombre AS hab_tipo,
+                f.total, f.fecha_emision, f.id_factura,
+                tp.descripcion AS metodo_pago
+            FROM reservas r
+            JOIN clientes c ON r.id_cliente = c.id_cliente
+            JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            JOIN facturacion f ON r.id_reserva = f.id_reserva
+            JOIN tipo_pago tp ON f.id_tipo_pago = tp.id_tipo_pago
+            WHERE r.id_reserva = %s AND r.id_usuario = %s
+        """, (id_reserva, session["usuario_id"]))
+        reserva = cur.fetchone()
+
+    if not reserva:
+        flash("No se encontró el comprobante o no tienes permiso para verlo.", "error")
+        return redirect(url_for("reservas.mis_reservas"))
+
+    # Renderizamos el HTML directamente
+    html_content = render_template("comprobante_reserva.html", reserva=reserva)
+
+    # Creamos respuesta para descarga
+    response = make_response(html_content)
+    response.headers["Content-Disposition"] = f"attachment; filename=comprobante_{id_reserva}.html"
+    response.headers["Content-Type"] = "text/html; charset=utf-8"
+    return response
