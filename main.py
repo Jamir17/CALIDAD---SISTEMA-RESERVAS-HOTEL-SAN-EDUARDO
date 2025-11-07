@@ -13,6 +13,7 @@ from controladores.controlador_gestion_roles import gestion_roles_bp
 from controladores.controlador_gestion_usuarios_roles import gestion_usuarios_roles_bp
 from controladores.controlador_reservas_cliente import reservas_cliente_bp
 from controladores.controlador_serviciosadicionales import servicios
+from controladores.controlador_chatbot import webchat_bp
 
 app = Flask(__name__)
 app.secret_key = "clave-super-segura"
@@ -36,6 +37,7 @@ app.register_blueprint(gestion_roles_bp)
 app.register_blueprint(gestion_usuarios_roles_bp)
 app.register_blueprint(reservas_cliente_bp)
 app.register_blueprint(servicios)
+app.register_blueprint(webchat_bp, url_prefix="/webchat")
 
 # ====== RUTA PRINCIPAL ======
 @app.route("/")
