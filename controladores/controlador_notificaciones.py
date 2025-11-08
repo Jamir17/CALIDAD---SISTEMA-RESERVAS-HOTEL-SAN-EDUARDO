@@ -184,7 +184,7 @@ def _enviar_correo(destinatario: str, asunto: str, html: str) -> bool:
         print("SMTP error ->", e)
         return False
     
-    
+
 def enviar_confirmacion_reserva_multi(id_reserva: int, correos: list[str]) -> None:
     """
     Envía la confirmación de la reserva (habitaciones o servicios)
@@ -265,6 +265,98 @@ def enviar_confirmacion_reserva_multi(id_reserva: int, correos: list[str]) -> No
             """, (
                 datos["id_usuario"],
                 "confirmacion",
+                correo,
+                asunto,
+                "Enviado" if exito else "Error"
+            ))
+        con.commit()
+
+
+
+
+def enviar_cancelacion_reserva_multi(id_reserva: int, correos: list[str]) -> None:
+    """
+    Envía la notificación de cancelación (habitaciones o servicios adicionales)
+    y registra el envío en historial_notificaciones.
+    """
+    if not correos:
+        return
+
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        # 🧩 Traer datos de la reserva
+        cur.execute("""
+            SELECT 
+                r.id_reserva,
+                r.fecha_entrada,
+                r.fecha_salida,
+                r.estado,
+                u.id_usuario,
+                u.nombres AS usuario_nombres,
+                u.correo AS correo_usuario,
+                c.nombres AS cliente_nombres,
+                c.apellidos AS cliente_apellidos,
+                c.correo AS correo_cliente,
+                COALESCE(h.numero, '-') AS hab_numero,
+                COALESCE(t.nombre, 'Sin habitación') AS hab_tipo,
+                COALESCE(t.precio_base, 0) AS precio_base,
+                COALESCE(f.total, 0) AS total,
+                r.fecha_cancelacion
+            FROM reservas r
+            JOIN usuarios u ON u.id_usuario = r.id_usuario
+            JOIN clientes c ON c.id_cliente = r.id_cliente
+            LEFT JOIN habitaciones h ON h.id_habitacion = r.id_habitacion
+            LEFT JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            LEFT JOIN facturacion f ON f.id_reserva = r.id_reserva
+            WHERE r.id_reserva = %s
+            ORDER BY f.fecha_emision DESC
+            LIMIT 1
+        """, (id_reserva,))
+        datos = cur.fetchone()
+
+        if not datos:
+            print(f"⚠️ No se encontró información para la reserva {id_reserva}")
+            return
+
+        # 🧾 Traer servicios vinculados
+        cur.execute("""
+            SELECT s.nombre, rs.cantidad AS qty, rs.subtotal
+            FROM reserva_servicio rs
+            JOIN servicios s ON s.id_servicio = rs.id_servicio
+            WHERE rs.id_reserva = %s
+        """, (id_reserva,))
+        servicios = cur.fetchall()
+
+    # ==========================================
+    # 📩 Seleccionar plantilla según tipo
+    # ==========================================
+    es_solo_servicios = (
+        not datos.get("hab_numero")
+        or datos.get("hab_numero") == "-"
+        or datos.get("hab_tipo") == "Sin habitación"
+    )
+
+    if es_solo_servicios:
+        html = render_template("email_cancelar_sa.html", r=datos, servicios=servicios)
+        asunto = f"Cancelación de servicios #{datos['id_reserva']} • Hotel San Eduardo"
+    else:
+        html = render_template("email_cancelar.html", r=datos, servicios=servicios)
+        asunto = f"Cancelación de reserva #{datos['id_reserva']} • Hotel San Eduardo"
+
+    # ==========================================
+    # 📬 Enviar y registrar historial
+    # ==========================================
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        for correo in {c.strip().lower() for c in correos if c}:
+            exito = _enviar_correo(correo, asunto, html)
+            cur.execute("""
+                INSERT INTO historial_notificaciones
+                (id_usuario, tipo, correo_destino, asunto, estado, fecha_envio)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+            """, (
+                datos["id_usuario"],
+                "cancelacion",
                 correo,
                 asunto,
                 "Enviado" if exito else "Error"

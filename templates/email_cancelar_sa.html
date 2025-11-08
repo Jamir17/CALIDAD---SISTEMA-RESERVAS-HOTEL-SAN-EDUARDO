@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Cancelación de servicios</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+</head>
+<body style="margin:0;padding:24px;background:#f5f7fb;font-family:Inter,Arial,Helvetica,sans-serif">
+  <div style="max-width:680px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(16,24,40,.08)">
+    <div style="background:#d32f2f;color:#fff;padding:18px 22px">
+      <h2 style="margin:0;font-size:20px">Cancelación de servicios • Hotel San Eduardo</h2>
+      <div style="font-size:13px;opacity:.9">Código: #{{ r.id_reserva }}</div>
+    </div>
+
+    <div style="padding:22px">
+      <p style="margin:0 0 8px">Hola <strong>{{ r.cliente_nombres }}</strong>,</p>
+      <p style="margin:0 0 16px">
+        Lamentamos informarte que tu <strong>reserva de servicios adicionales</strong> ha sido cancelada.
+        A continuación se detallan los servicios cancelados:
+      </p>
+
+      {% if servicios and servicios|length %}
+      <div style="margin:18px 0 6px;font-weight:700;color:#0f172a">Servicios cancelados</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <thead>
+          <tr>
+            <th align="left" style="padding:8px 6px;color:#64748b;border-bottom:1px solid #e5e7eb">Descripción</th>
+            <th align="center" style="padding:8px 6px;color:#64748b;border-bottom:1px solid #e5e7eb">Cant.</th>
+            <th align="right" style="padding:8px 6px;color:#64748b;border-bottom:1px solid #e5e7eb">Subtotal (S/)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in servicios %}
+          <tr>
+            <td style="padding:8px 6px;border-bottom:1px solid #f1f5f9">{{ s.nombre }}</td>
+            <td align="center" style="padding:8px 6px;border-bottom:1px solid #f1f5f9">{{ s.qty }}</td>
+            <td align="right" style="padding:8px 6px;border-bottom:1px solid #f1f5f9">{{ '%.2f'|format(s.subtotal) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+
+      <div style="margin:18px 0 6px;font-weight:700;color:#0f172a">Monto total cancelado</div>
+      <div style="padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fefefe">
+        <strong style="font-size:18px;color:#d32f2f">S/ {{ '%.2f'|format(r.total) }}</strong>
+      </div>
+
+      <p style="margin:18px 0 0;color:#64748b;font-size:13px">
+        Si deseas reagendar o volver a solicitar nuestros servicios, contáctanos para coordinar una nueva reserva.
+      </p>
+    </div>
+
+    <div style="padding:12px 22px;background:#0b2c6c;color:#cbd5e1;font-size:12px">
+      © {{ (now() if now else '') }} Hotel San Eduardo — Chiclayo. Todos los derechos reservados.
+    </div>
+  </div>
+</body>
+</html>

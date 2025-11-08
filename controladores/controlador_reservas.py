@@ -582,9 +582,20 @@ def cancelar_reserva(id_reserva):
     motivo = request.form.get("motivo") or "Cancelado por el cliente"
 
     con = obtener_conexion()
+    correo_cliente = None
     try:
         with con.cursor() as cur:
-            # 🔹 1️⃣ Cancelar reserva principal
+            # 🔹 1️⃣ Obtener correo antes de cerrar cursor
+            cur.execute("""
+                SELECT c.correo 
+                FROM reservas r
+                JOIN clientes c ON r.id_cliente = c.id_cliente
+                WHERE r.id_reserva = %s
+            """, (id_reserva,))
+            cliente = cur.fetchone()
+            correo_cliente = cliente.get("correo") if cliente else None
+
+            # 🔹 2️⃣ Cancelar reserva principal
             cur.execute("""
                 UPDATE reservas
                 SET estado='Cancelada',
@@ -593,14 +604,14 @@ def cancelar_reserva(id_reserva):
                 WHERE id_reserva=%s
             """, (motivo, id_reserva))
 
-            # 🔹 2️⃣ Cancelar servicios asociados (vinculados)
+            # 🔹 3️⃣ Cancelar servicios vinculados
             cur.execute("""
                 UPDATE reserva_servicio
                 SET estado='Cancelado'
                 WHERE id_reserva=%s
             """, (id_reserva,))
 
-            # 🔹 3️⃣ Anular facturación relacionada
+            # 🔹 4️⃣ Anular facturación
             cur.execute("""
                 UPDATE facturacion
                 SET estado='Anulado'
@@ -611,6 +622,19 @@ def cancelar_reserva(id_reserva):
 
         flash("Reserva y servicios vinculados cancelados correctamente.", "success")
 
+        # ==============================================
+        # 📧 Enviar correo de cancelación
+        # ==============================================
+        if correo_cliente:
+            try:
+                from controladores.controlador_notificaciones import enviar_cancelacion_reserva_multi
+                enviar_cancelacion_reserva_multi(id_reserva, [correo_cliente])
+                print("✅ Correo de cancelación de reserva enviado correctamente.")
+            except Exception as e:
+                print("⚠️ Error al enviar correo de cancelación:", e)
+        else:
+            print("⚠️ No se encontró correo del cliente, no se envió el correo.")
+
     except Exception as e:
         con.rollback()
         print("❌ Error al cancelar reserva:", e)
@@ -620,6 +644,7 @@ def cancelar_reserva(id_reserva):
         con.close()
 
     return redirect(url_for("reservas.mis_reservas"))
+
 
 
 

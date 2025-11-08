@@ -445,3 +445,70 @@ def descargar_comprobante_sa(id_reserva):
     response.headers["Content-Disposition"] = f"attachment; filename=comprobante_servicio_{id_reserva}.html"
     response.headers["Content-Type"] = "text/html; charset=utf-8"
     return response
+
+
+@servicios.route("/cancelar/<int:id_reserva>", methods=["POST"])
+def cancelar_servicio(id_reserva):
+    motivo = request.form.get("motivo") or "Cancelado por el cliente"
+
+    con = obtener_conexion()
+    correo_cliente = None
+    try:
+        with con.cursor() as cur:
+            # 🔹 1️⃣ Obtener correo antes de cerrar cursor
+            cur.execute("""
+                SELECT c.correo 
+                FROM reservas r
+                JOIN clientes c ON r.id_cliente = c.id_cliente
+                WHERE r.id_reserva = %s
+            """, (id_reserva,))
+            cliente = cur.fetchone()
+            correo_cliente = cliente.get("correo") if cliente else None
+
+            # 🔹 2️⃣ Cancelar registros
+            cur.execute("""
+                UPDATE reserva_servicio
+                SET estado='Cancelado'
+                WHERE id_reserva=%s
+            """, (id_reserva,))
+
+            cur.execute("""
+                UPDATE facturacion
+                SET estado='Anulado'
+                WHERE id_reserva=%s
+            """, (id_reserva,))
+
+            cur.execute("""
+                UPDATE reservas
+                SET estado='Cancelada',
+                    motivo_cancelacion=%s,
+                    fecha_cancelacion=NOW()
+                WHERE id_reserva=%s
+            """, (motivo, id_reserva))
+
+            con.commit()
+
+        flash("Reserva de servicio cancelada correctamente.", "success")
+
+        # ==============================================
+        # 📧 Enviar correo de cancelación
+        # ==============================================
+        if correo_cliente:
+            try:
+                from controladores.controlador_notificaciones import enviar_cancelacion_reserva_multi
+                enviar_cancelacion_reserva_multi(id_reserva, [correo_cliente])
+                print("✅ Correo de cancelación de servicio enviado correctamente.")
+            except Exception as e:
+                print("⚠️ Error al enviar correo de cancelación de servicios:", e)
+        else:
+            print("⚠️ No se encontró correo del cliente, no se envió el correo.")
+
+    except Exception as e:
+        con.rollback()
+        print("❌ Error al cancelar servicio:", e)
+        flash("Ocurrió un error al cancelar el servicio.", "error")
+
+    finally:
+        con.close()
+
+    return redirect(url_for("servicios.listar_servicios"))
