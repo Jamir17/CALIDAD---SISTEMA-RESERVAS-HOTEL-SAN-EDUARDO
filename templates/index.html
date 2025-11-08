@@ -130,7 +130,7 @@
           <article class="room-card">
             <div class="room-image">
               <img src="{{ url_for('static', filename='img/habitacion_1.jpg') }}" alt="Habitación Estándar">
-              <div class="room-price">120/noche</div>
+              <div class="room-price">S/ 120 por noche</div>
             </div>
             <div class="room-content">
               <h3>Habitación Estándar</h3>
@@ -148,7 +148,7 @@
           <article class="room-card">
             <div class="room-image">
               <img src="{{ url_for('static', filename='img/habitacion_2.jpg') }}" alt="Suite Junior">
-              <div class="room-price">280/noche</div>
+              <div class="room-price">S/ 280 por noche</div>
             </div>
             <div class="room-content">
               <h3>Habitación Doble - 2 camas</h3>
@@ -167,7 +167,7 @@
           <article class="room-card">
             <div class="room-image">
               <img src="{{ url_for('static', filename='img/habitacion_3.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">€450/noche</div>
+              <div class="room-price">S/ 450 por noche</div>
             </div>
             <div class="room-content">
               <h3>Habitación Triple</h3>
@@ -184,7 +184,7 @@
            <article class="room-card">
             <div class="room-image">
               <img src="{{ url_for('static', filename='img/habitacion_4.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">550/noche</div>
+              <div class="room-price">S/ 550 por noche</div>
             </div>
             <div class="room-content">
               <h3>Habitación Doble Estándar</h3>
@@ -201,7 +201,7 @@
               <article class="room-card">
             <div class="room-image">
               <img src="{{ url_for('static', filename='img/habitacion_5.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">450/noche</div>
+              <div class="room-price">S/ 450 por noche</div>
             </div>
             <div class="room-content">
               <h3>Suite Presidencial</h3>
@@ -221,7 +221,7 @@
               <article class="room-card">
             <div class="room-image">
               <img src="{{ url_for('static', filename='img/habitacion_6.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">80/noche</div>
+              <div class="room-price">S/ 80 por noche</div>
             </div>
             <div class="room-content">
               <h3>Habitación Indivudual</h3>
@@ -254,7 +254,7 @@
             <img src="{{ url_for('static', filename='img/habitacion_7.jpg') }}" alt="Galería 1">
           </div>
           <div class="gallery-item">
-            <img src="{{ url_for('static', filename='img/habitacion_8.jpg') }}" alt="Galería 2">
+            <img src="{{ url_for('static', filename='img/cama.jpg') }}" alt="Galería 2">
           </div>
           <div class="gallery-item">
             <img src="{{ url_for('static', filename='img/habitacion_9.jpg') }}" alt="Galería 3">
@@ -327,7 +327,7 @@
       <div class="chat-box" id="chatBox">
         <div class="chat-header">
           <h3>Asistente Virtual</h3>
-          <p>Chatbot de Soporte</p>
+          <p>A tu servicio</p>
           <button class="chat-close-btn" id="chatCloseBtn" aria-label="Cerrar chat">&times;</button>
         </div>
         <div class="chat-body">
@@ -571,22 +571,26 @@
     function toggleChat() {
       $bubble.classList.toggle('open');
       $box.classList.toggle('open');
+      if ($box.classList.contains('open') && !$box.dataset.welcomed) {
+        welcome();
+      }
     }
 
     function addMsg(text, who){
       const stick = nearBottom($msgs); // ¿estaba abajo antes de añadir?
       const div = document.createElement('div');
-      div.className = 'msg ' + (who === 'user' ? 'msg-user' : 'msg-bot');
-      div.textContent = text;
+      div.className = 'msg ' + (who === 'user' ? 'msg-user' : 'msg-bot');      
+      div.innerHTML = text; // Usamos innerHTML para renderizar los enlaces <a>
       $msgs.appendChild(div);
 
       // si estaba abajo, mantenlo abajo después de pintar
       if (stick) requestAnimationFrame(() => scrollBottom($msgs));
+      $msgs.scrollTop = $msgs.scrollHeight;
     }
 
     async function sendToBot(text){
       try{
-        const r = await fetch("{{ url_for('webchat.webchat_message') }}", {
+        const r = await fetch("{{ url_for('webchat.webchat_message') }}", { // Asegúrate que el endpoint es correcto
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({text})
@@ -597,6 +601,18 @@
         addMsg('⚠️ Error de conexión', 'bot');
         console.error(e);
       }
+    }
+
+    async function welcome() {
+        try {
+            const r = await fetch("{{ url_for('webchat.webchat_welcome') }}"); // Ruta de bienvenida
+            const j = await r.json();
+            addMsg(j.reply, 'bot');
+            $box.dataset.welcomed = 'true';
+        } catch(e) {
+            addMsg('👋 Hola, soy tu asistente. ¿En qué puedo ayudarte?', 'bot');
+            console.error(e);
+        }
     }
 
     if($form){
@@ -613,17 +629,6 @@
     // Abrir/Cerrar chat
     if($bubble) $bubble.addEventListener('click', toggleChat);
     if($closeBtn) $closeBtn.addEventListener('click', toggleChat);
-
-    // Al abrir el chat (tras la animación) baja al último y da bienvenida
-    if($bubble){
-      $bubble.addEventListener('click', ()=>{
-        setTimeout(() => scrollBottom($msgs), 320); // coincide con tu transición .3s
-        if($box && $box.classList.contains('open') && !$box.classList.contains('has-welcome')){
-          $box.classList.add('has-welcome');
-          addMsg('👋 Hola, soy tu asistente de reservas. Escribe "reservar" para empezar.', 'bot');
-        }
-      }, { once: true });
-    }
 
     // Botón "Reservar Ahora" dispara el chat con "reservar"
     const reservarBtn = document.getElementById('btnReservarAhora');
@@ -642,6 +647,7 @@
 
     // Si cambia el tamaño de la ventana, reubica el scroll
     window.addEventListener('resize', () => setTimeout(() => scrollBottom($msgs), 120));
+    window.addEventListener('resize', () => { $msgs.scrollTop = $msgs.scrollHeight; });
   })();
   </script>
 {% endblock %}
