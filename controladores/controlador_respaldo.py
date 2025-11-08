@@ -110,7 +110,7 @@ def _popen_to_bytes(cmd):
     return (p.returncode == 0, out, err.decode("utf-8", errors="ignore"))
 
 
-def crear_respaldo_manual() -> bool:
+def crear_respaldo_manual(subir_a_nube=True) -> bool:
     """
     Genera un .sql con este orden:
     1) Cabecera de SETs
@@ -118,6 +118,7 @@ def crear_respaldo_manual() -> bool:
     3) Bloque 'seguro' para datos (desactiva checks)
     4) DATOS (INSERTs de todas las tablas, sin creates)
     5) Restaura SETs
+    Si subir_a_nube=True, también lo sube automáticamente a Dropbox.
     """
     mysql_path, mysqldump_path = _find_mysql_binaries()
     if not mysql_path or not mysqldump_path:
@@ -135,22 +136,22 @@ def crear_respaldo_manual() -> bool:
     # -----------------------------
     # 1) Cabecera: SETs iniciales
     # -----------------------------
-    header = []
-    header.append("/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;")
-    header.append("/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;")
-    header.append("/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;")
-    header.append("/*!50503 SET NAMES utf8mb4 */;")
-    header.append("/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;")
-    header.append("/*!40103 SET TIME_ZONE='+00:00' */;")
-    header.append("/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;")
-    header.append("/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;")
-    header.append("/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;")
-    header.append("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;")
+    header = [
+        "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;",
+        "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;",
+        "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;",
+        "/*!50503 SET NAMES utf8mb4 */;",
+        "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;",
+        "/*!40103 SET TIME_ZONE='+00:00' */;",
+        "/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;",
+        "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;",
+        "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;",
+        "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;"
+    ]
     header_bytes = ("\n".join(header) + "\n\n").encode("utf-8")
 
     # ---------------------------------------------------
-    # 2) Dump de ESQUEMA (sin datos): --no-data
-    #    Incluimos DROP TABLE si quieres restauros limpios.
+    # 2) Dump de ESQUEMA (sin datos)
     # ---------------------------------------------------
     schema_cmd = [
         mysqldump_path,
@@ -160,12 +161,12 @@ def crear_respaldo_manual() -> bool:
         "--quick",
         "--routines",
         "--events",
-        "--triggers",               # incluye triggers en esquema
+        "--triggers",
         "--no-tablespaces",
         "--set-gtid-purged=OFF",
         "--skip-comments",
         "--add-drop-table",
-        "--no-data",                # <--- SOLO ESQUEMA
+        "--no-data",
     ]
     ok_schema, schema_bytes, schema_err = _popen_to_bytes(schema_cmd)
     if not ok_schema:
@@ -173,37 +174,36 @@ def crear_respaldo_manual() -> bool:
         return False
 
     # ------------------------------------------------------
-    # 3) Bloque seguro para datos: desactiva restricciones
+    # 3) Bloque seguro para datos
     # ------------------------------------------------------
-    data_preamble = []
-    data_preamble.append("\n-- =========================")
-    data_preamble.append("--  DATA SECTION (INSERTs)")
-    data_preamble.append("-- =========================\n")
-    data_preamble.append("/*!40014 SET FOREIGN_KEY_CHECKS=0 */;")
-    data_preamble.append("/*!40014 SET UNIQUE_CHECKS=0 */;")
-    data_preamble.append("/*!40101 SET SQL_NOTES=0 */;")
-    data_preamble.append("USE `{}`;".format(DB_NAME))
+    data_preamble = [
+        "\n-- =========================",
+        "--  DATA SECTION (INSERTs)",
+        "-- =========================\n",
+        "/*!40014 SET FOREIGN_KEY_CHECKS=0 */;",
+        "/*!40014 SET UNIQUE_CHECKS=0 */;",
+        "/*!40101 SET SQL_NOTES=0 */;",
+        f"USE `{DB_NAME}`;"
+    ]
     data_preamble_bytes = ("\n".join(data_preamble) + "\n\n").encode("utf-8")
 
     # --------------------------------------------
-    # 4) Dump de DATOS (sin create): --no-create-info
-    #    Ordenamos por PK para consistencia.
-    #    No incluimos triggers aquí.
+    # 4) Dump de DATOS (sin create)
     # --------------------------------------------
     data_cmd = [
         mysqldump_path,
         "-u", DB_USER, f"-p{DB_PASS}",
-        DB_NAME,                      # SIN --databases: así no repite el CREATE DATABASE
+        DB_NAME,
         "--single-transaction",
         "--quick",
         "--order-by-primary",
         "--no-tablespaces",
         "--set-gtid-purged=OFF",
         "--skip-comments",
-        "--lock-tables=FALSE",        # evita locks explícitos
+        "--lock-tables=FALSE",
         "--skip-add-locks",
-        "--no-create-info",           # <--- SOLO DATOS
-        "--skip-triggers",            # no queremos triggers en sección de datos
+        "--no-create-info",
+        "--skip-triggers",
     ]
     ok_data, data_bytes, data_err = _popen_to_bytes(data_cmd)
     if not ok_data:
@@ -213,18 +213,19 @@ def crear_respaldo_manual() -> bool:
     # -------------------------
     # 5) Footer: restaurar SETs
     # -------------------------
-    footer = []
-    footer.append("\n-- =========================")
-    footer.append("--  END DATA SECTION")
-    footer.append("-- =========================\n")
-    footer.append("/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;")
-    footer.append("/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;")
-    footer.append("/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;")
-    footer.append("/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;")
-    footer.append("/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;")
-    footer.append("/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;")
-    footer.append("/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;")
-    footer.append("/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;")
+    footer = [
+        "\n-- =========================",
+        "--  END DATA SECTION",
+        "-- =========================\n",
+        "/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;",
+        "/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;",
+        "/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;",
+        "/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;",
+        "/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;",
+        "/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;",
+        "/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;",
+        "/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;"
+    ]
     footer_bytes = ("\n".join(footer) + "\n").encode("utf-8")
 
     # --------------------------------
@@ -232,13 +233,24 @@ def crear_respaldo_manual() -> bool:
     # --------------------------------
     try:
         with open(ruta_backup, "wb") as f:
-            f.write(header_bytes)        # SETs iniciales
-            f.write(schema_bytes)        # ESQUEMA completo
-            f.write(data_preamble_bytes) # preámbulo de datos
-            f.write(data_bytes)          # INSERTs de todas las tablas
-            f.write(footer_bytes)        # restaura SETs
-        print(f"✅ Respaldo (esquema → datos) generado: {nombre_archivo}")
+            f.write(header_bytes)
+            f.write(schema_bytes)
+            f.write(data_preamble_bytes)
+            f.write(data_bytes)
+            f.write(footer_bytes)
+
+        print(f"✅ Respaldo generado correctamente: {nombre_archivo}")
+
+        # Subir respaldo automáticamente a Dropbox (solo si está habilitado)
+        if subir_a_nube:
+            subido = subir_a_dropbox(ruta_backup, nombre_archivo)
+            if subido:
+                print("✅ Copia del respaldo almacenada en Dropbox correctamente.")
+            else:
+                print("⚠️ No se pudo subir el respaldo a Dropbox (revisar token o conexión).")
+
         return True
+
     except Exception as e:
         print("⚠️ Error escribiendo el respaldo:", e)
         try:
@@ -353,30 +365,64 @@ def restaurar_respaldo(nombre):
 
 
 # ==============================================
-# 🔄 TAREA AUTOMÁTICA DIARIA (evita doble arranque)
+# 🔄 TAREA AUTOMÁTICA (local diario + nube cada 2 días)
 # ==============================================
 _scheduler = BackgroundScheduler(timezone=TZ)
 
+def respaldo_automatico_programado():
+    """
+    Se ejecuta todos los días a las 02:00 AM.
+    - Siempre genera respaldo local.
+    - Cada 2 días también lo sube a Dropbox.
+    """
+    hoy = datetime.now(tz=TZ).date()
+    subir_nube = (hoy.toordinal() % 2 == 0)
+
+    if subir_nube:
+        print("☁️ Hoy toca respaldo local + Dropbox")
+        crear_respaldo_manual(subir_a_nube=True)
+    else:
+        print("💾 Hoy toca solo respaldo local")
+        crear_respaldo_manual(subir_a_nube=False)
+
+
 def programar_respaldo_automatico():
-    """Programa un respaldo diario a las 02:00 America/Lima (una sola vez)."""
     # Evita doble scheduler con el reloader de Flask
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        # Ya es el proceso hijo (reloader) -> no inicializar de nuevo
         return
 
     if not _scheduler.running:
         _scheduler.add_job(
-            crear_respaldo_manual,
+            respaldo_automatico_programado,
             trigger="cron",
-            id="respaldo_diario_02am",
-            hour=2, minute=0,
+            id="respaldo_automatico_02am",
+            hour=2,
+            minute=0,
             replace_existing=True,
-            misfire_grace_time=3600,  # 1h de tolerancia
-            coalesce=True
+            misfire_grace_time=3600,
+            coalesce=True,
         )
         _scheduler.start()
-        print("🕑 Tarea de respaldo automático programada (diaria 02:00).")
+        print("🕑 Respaldo automático programado: local diario 02:00, nube cada 2 días 02:00.")
 
-
-# Llama una vez al importar el blueprint (seguro con guardado anterior)
 programar_respaldo_automatico()
+
+import dropbox
+
+# ==============================================
+# ☁️ CONFIGURACIÓN DROPBOX
+# ==============================================
+DROPBOX_TOKEN = os.getenv("DROPBOX_TOKEN", "sl.u.AGGXKpGtQYGLRpWOnGLtq7SGtlyvzYVHfQ_pK9pn3r_wGv6D5kTuEZKJgxntLuxVoX_6M05UM8yAwXchU0x1FBTP-Kf2q-iBEBUqDnS8wB9tj0_yNWy_t_EQsPSWIYE7DI4AqAPvTNN8HmLrOQCB5FZPqwOwZejDlpA3wENTtQY6iSbzDOz3zfmj2fyegJtQiQJBCTu8DDNTiapRdpa3bvwRMuyYHlgggOQ2QFGEngEN1SzMfNRT03Jn5nhEMJ4YUslccvDPDXnJW4ULTerbzdNNy8CACkPkfF7VtfXT3lH0Kbx73KUet7_CzHQ0wZwkwd5luK1mvL1Ws1iz-lLdsOZdFzsuAbx1zFAxe6TALbH63ZUxtnep8tlJ9v0CEVpK1v9Qq-7dEAdEqubjm1zywAUCQwSZDSWBD2iT0SsIUqHhUcatE19ZCY8RH3pAbOlFtbCI3N6I73ob6BpFgyuJxIEg7NkQntlrHRi3nDSWw22BBSoL5sN4XvWFIXgjv7OQZ1ovFFQ-BLw7a-OXEjjFNG572OKFXu4_oRxrOnw099WApJdYxFvx-t0rIa9Fl-zuE3lqxXB85BOrhpLwN-DK-19hVMDBorT7G35PQa4WDF-AC1HhqFZlnlKvzBSBdHnfdMeMDBuWf9nAr7K55LDwHEnBGYcfXM2Rn0sPxzKzCMmWniiZW-ECInQFJjQESBArFcmKQJ-MkIGzN4JPS0FLDP5fHe9ZSH1KRcscaeP9DJ-ktmnkcpL2jhI_oaKYxEf_MbEBgZGb13PQ6Ofg8TfKoukFwb3NQQtefc29tb6BnVlJNwRPLBl0mxQUwL8ZSVVOv3bR9s_0ZHpg4jg4VKTWp9hrEA2UVK7zGXLmlbmRVArPkRllvjUVcRZbkWOTOhji4HCsLNSNxH8OM-7wJX4B8mdVRr_VPYAm6Sr6mj7x7LVbnNvRUOlMKzk0vYorTOgjIere32iT-3K18NZV5tPmf13W1Z3ITiGr57PO1Qbh4LwbltFV4HZJOu3KYd8PXumCh96END9c9VPVE8mVH2y7y5EEsLHpigkTOxVzGmLk3R61PII8LTa0NKJUi8ZaneGcFGmQNdkDMdo8iXl0I2ImbSfn3kzNMsY2rbkzM4TTm-0HkBp0KhHTaXCT3LGYFr8jpn8V02gTJSzkIIiLw-XAF1_xKZZ5Bd52kathOGwdOXiJusaHDTGZh5_orJoppnfb860KRVIWXFo9wfvgGxNbUS1uU4iPe5DlQceNH5cZQU5bAOfZcaZkD72QhXtKKikxh4io7kkUIrng_GQZkRS3oK7sDlxYQTLYLkLOTIaq0RBzOVachsuI2VzfXk8DilPsGpYaI17jIRudk2riLpuHSqpD1Hg6yX_jZiJEaeYlbC_Ex2i20ZISADvg68u40Y0QCXWK5L2dF0c6SwIvpRZSHt9M3_eqqvc61c3brYteFjYyAw")
+
+def subir_a_dropbox(ruta_local, nombre_archivo):
+    """Sube un archivo de respaldo a Dropbox en /backups/"""
+    try:
+        dbx = dropbox.Dropbox(DROPBOX_TOKEN)
+        destino = f"/backups/{nombre_archivo}"
+        with open(ruta_local, "rb") as f:
+            dbx.files_upload(f.read(), destino, mode=dropbox.files.WriteMode("overwrite"))
+        print(f"☁️ Respaldo subido a Dropbox: {destino}")
+        return True
+    except Exception as e:
+        print(f"❌ Error al subir a Dropbox: {e}")
+        return False

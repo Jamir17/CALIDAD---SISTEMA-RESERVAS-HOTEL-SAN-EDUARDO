@@ -217,14 +217,27 @@ body {
         <h3 class="section-label">Información de la Tarjeta</h3>
 
         <div class="form-group">
-          <label for="cardholderName">Nombre del Titular</label>
-          <input type="text" id="cardholderName" name="cardholderName" placeholder="Exactamente como aparece en la tarjeta" required>
-          <span class="error-message" id="nameError"></span>
+            <label for="cardholderName">Nombre del Titular</label>
+            <input 
+                type="text" 
+                id="cardholderName" 
+                name="cardholderName" 
+                placeholder="Exactamente como aparece en la tarjeta"
+                required
+            >
+            <span class="error-message" id="nameError"></span>
         </div>
 
         <div class="form-group">
           <label for="cardNumber">Número de Tarjeta</label>
-          <input type="text" id="cardNumber" name="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required>
+          <input 
+              type="text" 
+              id="cardNumber" 
+              name="cardNumber" 
+              placeholder="0000000000000000" 
+              maxlength="16" 
+              required
+          >
           <span class="error-message" id="cardError"></span>
         </div>
 
@@ -241,7 +254,14 @@ body {
 
           <div class="form-group">
             <label for="cvv">CVV</label>
-            <input type="text" id="cvv" name="cvv" placeholder="•••" maxlength="4" required>
+            <input 
+                type="text" 
+                id="cvv" 
+                name="cvv" 
+                placeholder="•••" 
+                maxlength="4" 
+                required
+            >
             <span class="error-message" id="cvvError"></span>
           </div>
         </div>
@@ -326,5 +346,18 @@ function validateCvv(){
   if(v.length<3||v.length>4){errCvv.textContent="CVV inválido";return false}
   errCvv.textContent="";return true
 }
+
+document.getElementById("cardholderName").addEventListener("input", function (e) {
+    // Reemplaza todo lo que no sea letra o espacio
+    this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
+});
+
+document.getElementById("cardNumber").addEventListener("input", function () {
+  this.value = this.value.replace(/[^0-9]/g, ""); // Solo números
+});
+
+document.getElementById("cvv").addEventListener("input", function () {
+  this.value = this.value.replace(/[^0-9]/g, ""); // Permite solo números
+});
 </script>
 {% endblock %}

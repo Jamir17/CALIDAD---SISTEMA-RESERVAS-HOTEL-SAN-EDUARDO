@@ -595,7 +595,10 @@ body {
                             maxlength="19"
                             required
                         >
-                        <svg class="card-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                        <svg class="card-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
                     </div>
                     <span class="error-message" id="cardError"></span>
                 </div>
@@ -856,5 +859,15 @@ form.addEventListener("submit", (e) => {
   }
 })
 
+document.getElementById("cardholderName").addEventListener("input", function (e) {
+    // Reemplaza todo lo que no sea letra o espacio
+    this.value = this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "");
+});
+
+document.getElementById("cardNumber").addEventListener("input", function () {
+    let value = this.value.replace(/\D/g, "");  // Elimina todo lo que no sea número
+    value = value.replace(/(.{4})/g, "$1 ").trim(); // Inserta espacio cada 4 dígitos
+    this.value = value;
+});
 </script>
 {% endblock %}
