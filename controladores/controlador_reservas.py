@@ -550,19 +550,44 @@ def cancelar_reserva(id_reserva):
     motivo = request.form.get("motivo") or "Cancelado por el cliente"
 
     con = obtener_conexion()
-    with con.cursor() as cur:
-        cur.execute("""
-            UPDATE reservas
-            SET estado='Cancelada', motivo_cancelacion=%s, fecha_cancelacion=NOW()
-            WHERE id_reserva=%s
-        """, (motivo, id_reserva))
-        con.commit()
+    try:
+        with con.cursor() as cur:
+            # 🔹 1️⃣ Cancelar reserva principal
+            cur.execute("""
+                UPDATE reservas
+                SET estado='Cancelada',
+                    motivo_cancelacion=%s,
+                    fecha_cancelacion=NOW()
+                WHERE id_reserva=%s
+            """, (motivo, id_reserva))
 
-    flash("Reserva cancelada con éxito.", "success")
+            # 🔹 2️⃣ Cancelar servicios asociados (vinculados)
+            cur.execute("""
+                UPDATE reserva_servicio
+                SET estado='Cancelado'
+                WHERE id_reserva=%s
+            """, (id_reserva,))
+
+            # 🔹 3️⃣ Anular facturación relacionada
+            cur.execute("""
+                UPDATE facturacion
+                SET estado='Anulado'
+                WHERE id_reserva=%s
+            """, (id_reserva,))
+
+            con.commit()
+
+        flash("Reserva y servicios vinculados cancelados correctamente.", "success")
+
+    except Exception as e:
+        con.rollback()
+        print("❌ Error al cancelar reserva:", e)
+        flash("Ocurrió un error al cancelar la reserva.", "error")
+
+    finally:
+        con.close()
+
     return redirect(url_for("reservas.mis_reservas"))
-
-
-
 
 
 
