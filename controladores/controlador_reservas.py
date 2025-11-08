@@ -427,10 +427,9 @@ def mis_reservas():
         return redirect(url_for("usuarios.iniciosesion"))
 
     uid = session["usuario_id"]
-
     con = obtener_conexion()
     with con.cursor() as cur:
-        # 🔷 HABITACIONES: solo las reservas con id_habitacion (LEFT JOIN + filtro NOT NULL)
+        # 🔹 Reservas de habitaciones
         cur.execute("""
             SELECT r.id_reserva,
                    r.fecha_entrada, r.fecha_salida,
@@ -446,34 +445,59 @@ def mis_reservas():
         """, (uid,))
         reservas_habitaciones = cur.fetchall()
 
-        # 🔷 SERVICIOS: las que tienen líneas en reserva_servicio
+        # 🔹 Reservas de servicios (vinculadas o independientes)
         cur.execute("""
-            SELECT r.id_reserva AS id_reserva_servicio,
-                   DATE(f.fecha_emision) AS fecha,
-                   f.total, f.estado,
-                   GROUP_CONCAT(CONCAT(s.nombre, ' x', rs.cantidad)
-                                ORDER BY s.nombre SEPARATOR ', ') AS servicios
-            FROM reservas r
-            JOIN clientes c          ON c.id_cliente = r.id_cliente
-            JOIN reserva_servicio rs ON rs.id_reserva = r.id_reserva
-            JOIN servicios s         ON s.id_servicio = rs.id_servicio
-            JOIN facturacion f       ON f.id_reserva = r.id_reserva
+            SELECT 
+                rs.id_reserva_servicio,
+                COALESCE(r.id_reserva, 0) AS id_reserva,
+                DATE(COALESCE(MAX(f.fecha_emision), MAX(rs.fecha_uso), CURDATE())) AS fecha,
+                COALESCE(MAX(f.total), MAX(rs.subtotal), 0) AS total,
+                COALESCE(MAX(f.estado), MAX(rs.estado), 'Pendiente') AS estado,
+                CASE 
+                    WHEN rs.id_reserva IS NULL THEN 'Independiente'
+                    ELSE 'Vinculado'
+                END AS origen,
+                GROUP_CONCAT(CONCAT(s.nombre, ' x', rs.cantidad)
+                             ORDER BY s.nombre SEPARATOR ', ') AS servicios,
+                MAX(h.numero) AS habitacion_vinculada,
+                MAX(t.nombre) AS tipo_habitacion
+            FROM reserva_servicio rs
+            LEFT JOIN reservas r         ON rs.id_reserva = r.id_reserva
+            LEFT JOIN clientes c         ON c.id_cliente = COALESCE(rs.id_cliente, r.id_cliente)
+            LEFT JOIN servicios s        ON s.id_servicio = rs.id_servicio
+            LEFT JOIN habitaciones h     ON r.id_habitacion = h.id_habitacion
+            LEFT JOIN tipo_habitacion t  ON h.id_tipo = t.id_tipo
+            LEFT JOIN facturacion f      ON f.id_reserva = r.id_reserva
             WHERE c.id_usuario = %s
-            GROUP BY r.id_reserva, f.fecha_emision, f.total, f.estado
-            ORDER BY f.fecha_emision DESC
+            GROUP BY rs.id_reserva_servicio
+            ORDER BY fecha DESC
         """, (uid,))
+
         reservas_servicios = cur.fetchall()
 
     con.close()
 
-    # 👉 Asegúrate que tu template use estos nombres
+    # 🔸 Protección adicional
+    for r in reservas_servicios:
+        r["total"] = float(r.get("total") or 0)
+        r["estado"] = r.get("estado", "Pendiente")
+        r["origen"] = r.get("origen", "Independiente")
+
+    # 🧩 DEPURACIÓN
+    print("=== 🔍 RESERVAS HABITACIONES ===")
+    for r in reservas_habitaciones:
+        print(r)
+
+    print("=== 🔍 RESERVAS SERVICIOS ===")
+    for r in reservas_servicios:
+        print(r)
+
     return render_template(
         "mis_reservas.html",
         reservas_habitaciones=reservas_habitaciones,
         reservas_servicios=reservas_servicios,
         nombre=session.get("nombre")
     )
-
 
 # ================================================
 # Detalle reserva

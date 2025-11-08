@@ -28,7 +28,9 @@
           <span class="estado {{ r.estado|lower }}">{{ r.estado }}</span>
         </div>
         <div class="card-footer">
-          <a href="{{ url_for('reservas.detalle_reserva', id_reserva=r.id_reserva) }}" class="btn-primario">Ver Detalles</a>
+          <a href="{{ url_for('reservas.detalle_reserva', id_reserva=r.id_reserva) }}" class="btn-primario">
+            Ver Detalles
+          </a>
         </div>
       </div>
       {% endfor %}
@@ -48,11 +50,25 @@
         <div class="card-body">
           <p><strong>Servicios:</strong> {{ r.servicios }}</p>
           <p><strong>Fecha:</strong> {{ r.fecha }}</p>
-          <p><strong>Total:</strong> S/. {{ "%.2f"|format(r.total) }}</p>
+          <p><strong>Total:</strong> S/. {{ "%.2f"|format(r.total or 0) }}</p>
+          <p><strong>Origen:</strong>
+            {% if r.origen == 'Vinculado' %}
+              <span style="color:#0d6efd; font-weight:600;">{{ r.origen }}</span>
+              {% if r.habitacion_vinculada %}
+                <br><small style="color:#0056b3;">
+                  🔗 Asociado a Habitación {{ r.habitacion_vinculada }} ({{ r.tipo_habitacion }})
+                </small>
+              {% endif %}
+            {% else %}
+              <span style="color:#6c757d; font-weight:600;">{{ r.origen }}</span>
+            {% endif %}
+          </p>
           <span class="estado {{ r.estado|lower }}">{{ r.estado }}</span>
         </div>
         <div class="card-footer">
-          <a href="{{ url_for('servicios.reserva_exitosa_sa', id_reserva=r.id_reserva_servicio) }}" class="btn-primario">Ver Detalles</a>
+          <a href="{{ url_for('servicios.reserva_exitosa_sa', id_reserva=r.id_reserva_servicio) }}" class="btn-primario">
+            Ver Detalles
+          </a>
         </div>
       </div>
       {% endfor %}
@@ -74,7 +90,6 @@
 .encabezado h1 { font-size: 32px; color: #0f2a63; font-weight: 800; }
 .encabezado p { color: #6b6b6b; font-size: 15px; }
 
-/* Botones de filtro */
 .botones-filtro {
   display: flex;
   justify-content: center;
@@ -98,7 +113,6 @@
 }
 .btn-filtro:hover { background: #bfc6d1; }
 
-/* Cards */
 .reservas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -151,7 +165,6 @@
 
 {% block extra_js %}
 <script>
-// Alternar entre pestañas
 document.addEventListener("DOMContentLoaded", () => {
   const btnHab = document.getElementById("btnHabitaciones");
   const btnServ = document.getElementById("btnServicios");

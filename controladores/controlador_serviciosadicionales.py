@@ -209,7 +209,7 @@ def confirmar_pago():
     con = obtener_conexion()
     try:
         with con.cursor() as cur:
-            # Obtener ID del cliente asociado al usuario
+            # 🔹 Obtener ID del cliente asociado al usuario
             cur.execute("SELECT id_cliente, correo FROM clientes WHERE id_usuario = %s", (id_usuario,))
             cliente = cur.fetchone()
             if not cliente:
@@ -219,23 +219,48 @@ def confirmar_pago():
             id_cliente = cliente["id_cliente"]
             correo_cliente = cliente["correo"]
 
-            # Registrar una reserva simple en la tabla reservas
+            # ==============================================
+            # 🔍 1️⃣ Buscar si el cliente tiene una reserva activa en ese rango de fechas
+            # ==============================================
             cur.execute("""
-                INSERT INTO reservas (id_cliente, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
-                VALUES (%s, %s, %s, %s, 1, 'Activa')
-            """, (id_cliente, id_usuario, fecha, fecha))
-            id_reserva = cur.lastrowid
+                SELECT id_reserva
+                FROM reservas
+                WHERE id_cliente = %s
+                  AND %s BETWEEN fecha_entrada AND fecha_salida
+                  AND estado IN ('Activa', 'Pendiente')
+                LIMIT 1
+            """, (id_cliente, fecha))
+            reserva_existente = cur.fetchone()
 
-            # Insertar los servicios asociados
+            if reserva_existente:
+                # ✅ Si hay una reserva activa, la usamos
+                id_reserva = reserva_existente["id_reserva"]
+                print(f"🔗 Servicio vinculado a la reserva existente ID {id_reserva}")
+            else:
+                # 🚫 Si no hay reserva activa, crear una nueva (como antes)
+                cur.execute("""
+                    INSERT INTO reservas (id_cliente, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
+                    VALUES (%s, %s, %s, %s, 1, 'Activa')
+                """, (id_cliente, id_usuario, fecha, fecha))
+                id_reserva = cur.lastrowid
+                print(f"🆕 Se creó nueva reserva ID {id_reserva} para el servicio adicional")
+
+            # ==============================================
+            # 💾 2️⃣ Insertar los servicios asociados
+            # ==============================================
             for s in servicios_list:
                 cantidad = s.get("qty", 1)
                 subtotal = float(s["precio"]) * cantidad
+                origen = "Vinculado" if reserva_existente else "Independiente"
                 cur.execute("""
-                    INSERT INTO reserva_servicio (id_reserva, id_servicio, cantidad, subtotal)
-                    VALUES (%s, %s, %s, %s)
-                """, (id_reserva, s["id"], cantidad, subtotal))
+                    INSERT INTO reserva_servicio (id_reserva, id_cliente, id_servicio, fecha_uso, hora_uso, cantidad, subtotal, origen)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (id_reserva, id_cliente, s["id"], fecha, s.get("hora"), cantidad, subtotal, origen))
 
-            # Insertar facturación
+
+            # ==============================================
+            # 🧾 3️⃣ Registrar facturación (solo una vez por conjunto de servicios)
+            # ==============================================
             cur.execute("""
                 INSERT INTO facturacion (id_reserva, id_tipo_pago, id_usuario, fecha_emision, total, estado)
                 VALUES (%s, %s, %s, NOW(), %s, 'Pagado')
@@ -243,26 +268,24 @@ def confirmar_pago():
 
             con.commit()
 
-        # Limpiar la sesión temporal
+        # 🔄 Limpiar sesión temporal
         session.pop("reserva_servicio_temp", None)
 
     finally:
         con.close()
 
-    # Enviar correo de confirmación
+    # ==============================================
+    # 📧 4️⃣ Enviar correo de confirmación
+    # ==============================================
     try:
         from controladores.controlador_notificaciones import enviar_confirmacion_reserva_multi
-
         destinatarios = [correo_cliente]
         enviar_confirmacion_reserva_multi(id_reserva, destinatarios)
-
     except Exception as e:
         print("⚠️ Error al enviar correo:", e)
 
-    flash("Pago confirmado y correo enviado con éxito.", "success")
+    flash("Pago confirmado y vinculado correctamente.", "success")
     return redirect(url_for("servicios.reserva_exitosa_sa", id_reserva=id_reserva))
-
-
 
 
 @servicios.route("/reserva_exitosa_sa/<int:id_reserva>")
@@ -272,21 +295,43 @@ def reserva_exitosa_sa(id_reserva):
 
     con = obtener_conexion()
     with con.cursor() as cur:
-        # 👇 Usamos alias para que el template reciba las claves esperadas
+        # 🔹 Datos generales del cliente y reserva
         cur.execute("""
             SELECT 
-                r.id_reserva            AS id_reserva_servicio,
-                c.nombres               AS cliente_nombres,
-                c.apellidos             AS cliente_apellidos,
-                DATE(f.fecha_emision)   AS fecha_reserva,
-                f.total                 AS total
+                r.id_reserva,
+                c.nombres AS cliente_nombres,
+                c.apellidos AS cliente_apellidos,
+                DATE(MAX(f.fecha_emision)) AS fecha_reserva,
+                MAX(r.id_habitacion) AS id_habitacion
             FROM reservas r
-            JOIN clientes c   ON r.id_cliente = c.id_cliente
-            JOIN facturacion f ON f.id_reserva = r.id_reserva
+            JOIN clientes c ON r.id_cliente = c.id_cliente
+            LEFT JOIN facturacion f ON f.id_reserva = r.id_reserva
             WHERE r.id_reserva = %s
+            GROUP BY r.id_reserva
         """, (id_reserva,))
         reserva = cur.fetchone()
 
+        if not reserva:
+            flash("No se encontró la reserva.", "error")
+            return redirect(url_for("servicios.listar_servicios"))
+
+        # 🔹 Calcular el costo total de los servicios de esta reserva
+        cur.execute("""
+            SELECT SUM(rs.subtotal) AS total_servicio
+            FROM reserva_servicio rs
+            WHERE rs.id_reserva = %s
+        """, (id_reserva,))
+        total_servicio = cur.fetchone()["total_servicio"] or 0
+
+        # 🔹 Calcular el total acumulado de todos los pagos asociados a esta reserva
+        cur.execute("""
+            SELECT COALESCE(SUM(f.total), 0) AS total_acumulado
+            FROM facturacion f
+            WHERE f.id_reserva = %s
+        """, (id_reserva,))
+        total_acumulado = cur.fetchone()["total_acumulado"]
+
+        # 🔹 Obtener los servicios de la reserva actual
         cur.execute("""
             SELECT s.nombre, rs.cantidad, rs.subtotal
             FROM reserva_servicio rs
@@ -295,11 +340,30 @@ def reserva_exitosa_sa(id_reserva):
         """, (id_reserva,))
         servicios = cur.fetchall()
 
+        # 🔹 Si hay una habitación vinculada, mostrarla
+        habitacion_vinculada = None
+        if reserva["id_habitacion"]:
+            cur.execute("""
+                SELECT h.numero, t.nombre AS tipo_hab
+                FROM habitaciones h
+                JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+                WHERE h.id_habitacion = %s
+            """, (reserva["id_habitacion"],))
+            habitacion_vinculada = cur.fetchone()
+
     con.close()
 
-    # Si fecha_reserva llega como str, no uses strftime en el template
-    # (el template que te dejo abajo ya lo maneja de forma segura)
-    return render_template("reserva_exitosa_sa.html", reserva=reserva, servicios=servicios)
+    # 🔸 Agregar los totales al diccionario
+    reserva["total_servicio"] = total_servicio
+    reserva["total_acumulado"] = total_acumulado
+
+    return render_template(
+        "reserva_exitosa_sa.html",
+        reserva=reserva,
+        servicios=servicios,
+        habitacion_vinculada=habitacion_vinculada
+    )
+
 
 
 
@@ -322,19 +386,39 @@ def descargar_comprobante_sa(id_reserva):
         # 🧾 Datos generales de la reserva
         cur.execute("""
             SELECT 
-                r.id_reserva            AS id_reserva_servicio,
-                c.nombres               AS cliente_nombres,
-                c.apellidos             AS cliente_apellidos,
-                DATE(f.fecha_emision)   AS fecha_reserva,
-                f.total                 AS total
+                r.id_reserva,
+                c.nombres AS cliente_nombres,
+                c.apellidos AS cliente_apellidos,
+                DATE(MAX(f.fecha_emision)) AS fecha_reserva
             FROM reservas r
-            JOIN clientes c   ON r.id_cliente = c.id_cliente
-            JOIN facturacion f ON f.id_reserva = r.id_reserva
+            JOIN clientes c ON r.id_cliente = c.id_cliente
+            LEFT JOIN facturacion f ON f.id_reserva = r.id_reserva
             WHERE r.id_reserva = %s
+            GROUP BY r.id_reserva
         """, (id_reserva,))
         reserva = cur.fetchone()
 
-        # 🧩 Servicios asociados
+        if not reserva:
+            flash("No se encontró el comprobante o no tienes permiso para verlo.", "error")
+            return redirect(url_for("servicios.listar_servicios"))
+
+        # 🔹 Total del servicio actual
+        cur.execute("""
+            SELECT SUM(rs.subtotal) AS total_servicio
+            FROM reserva_servicio rs
+            WHERE rs.id_reserva = %s
+        """, (id_reserva,))
+        total_servicio = cur.fetchone()["total_servicio"] or 0
+
+        # 🔹 Total acumulado de todos los pagos de esa reserva
+        cur.execute("""
+            SELECT COALESCE(SUM(f.total), 0) AS total_acumulado
+            FROM facturacion f
+            WHERE f.id_reserva = %s
+        """, (id_reserva,))
+        total_acumulado = cur.fetchone()["total_acumulado"]
+
+        # 🔹 Listar servicios asociados
         cur.execute("""
             SELECT s.nombre, rs.cantidad, rs.subtotal
             FROM reserva_servicio rs
@@ -345,15 +429,18 @@ def descargar_comprobante_sa(id_reserva):
 
     con.close()
 
-    # Si no se encuentra la reserva
-    if not reserva:
-        flash("No se encontró el comprobante o no tienes permiso para verlo.", "error")
-        return redirect(url_for("servicios.listar_servicios"))
+    # Añadimos los valores al dict
+    reserva["total_servicio"] = total_servicio
+    reserva["total_acumulado"] = total_acumulado
 
     # Renderizar el comprobante HTML
-    html_content = render_template("comprobante_servicio.html", reserva=reserva, servicios=servicios)
+    html_content = render_template(
+        "comprobante_servicio.html",
+        reserva=reserva,
+        servicios=servicios
+    )
 
-    # Retornar el HTML como descarga directa
+    # Descargar como archivo HTML
     response = make_response(html_content)
     response.headers["Content-Disposition"] = f"attachment; filename=comprobante_servicio_{id_reserva}.html"
     response.headers["Content-Type"] = "text/html; charset=utf-8"

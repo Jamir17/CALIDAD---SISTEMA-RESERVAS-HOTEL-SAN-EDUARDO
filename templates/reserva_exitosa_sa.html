@@ -40,6 +40,19 @@
     font-size: 16px;
     margin-bottom: 25px;
 }
+.alert-vinculo {
+    background: #e9f4ff;
+    color: #004085;
+    border: 1px solid #b8daff;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 25px;
+    font-size: 15px;
+    text-align: left;
+}
+.alert-vinculo strong {
+    color: #003366;
+}
 .resumen-reserva {
     text-align: left;
     background: #f8faff;
@@ -90,10 +103,18 @@
         <h1>¡Pago exitoso y reserva confirmada!</h1>
         <p class="mensaje">Gracias por elegir nuestros servicios. Se ha enviado un correo con los detalles de tu reserva.</p>
 
+        {% if habitacion_vinculada %}
+        <div class="alert-vinculo">
+            <strong>🔗 Servicio vinculado:</strong> Este servicio está asociado a tu reserva de habitación 
+            <strong>N° {{ habitacion_vinculada.numero }}</strong> 
+            (tipo <em>{{ habitacion_vinculada.tipo_hab }}</em>).
+        </div>
+        {% endif %}
+
         {% if reserva %}
         <div class="resumen-reserva">
             <h3>Resumen de tu reserva</h3>
-            <p><strong>N° de Reserva:</strong> #{{ reserva.id_reserva_servicio }}</p>
+            <p><strong>N° de Reserva:</strong> #{{ reserva.id_reserva }}</p>
             <p><strong>Cliente:</strong> {{ reserva.cliente_nombres }} {{ reserva.cliente_apellidos }}</p>
             <p><strong>Fecha de reserva:</strong>
             {% if reserva.fecha_reserva.__class__.__name__ == 'date' or reserva.fecha_reserva.__class__.__name__ == 'datetime' %}
@@ -113,14 +134,16 @@
             {% endfor %}
             </ul>
 
-            <p class="total"><strong>Total Pagado:</strong> S/ {{ "%.2f"|format(reserva.total) }}</p>
+            <p><strong>Costo del servicio:</strong> S/ {{ "%.2f"|format(reserva.total_servicio or 0) }}</p>
+            <p class="total"><strong>Total pagado hasta ahora:</strong> S/ {{ "%.2f"|format(reserva.total_acumulado or 0) }}</p>
+
         </div>
         {% endif %}
 
         <div class="acciones-exito">
             <a href="{{ url_for('servicios.listar_servicios') }}" class="btn btn-outline">Ver más servicios</a>
             <a href="{{ url_for('perfil.ver_perfil') }}" class="btn btn-primary">Ir a Mi Perfil</a>
-            <a href="{{ url_for('servicios.descargar_comprobante_sa', id_reserva=reserva.id_reserva_servicio) }}" 
+            <a href="{{ url_for('servicios.descargar_comprobante_sa', id_reserva=reserva.id_reserva) }}"
             class="btn btn-success">
             Descargar comprobante
             </a>
