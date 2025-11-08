@@ -184,35 +184,52 @@ def _enviar_correo(destinatario: str, asunto: str, html: str) -> bool:
         print("SMTP error ->", e)
         return False
     
+    
 def enviar_confirmacion_reserva_multi(id_reserva: int, correos: list[str]) -> None:
     """
-    Envía la confirmación de la reserva a N correos y registra cada envío
-    en historial_notificaciones.
+    Envía la confirmación de la reserva (habitaciones o servicios)
+    y registra cada envío en historial_notificaciones.
     """
     if not correos:
         return
 
     con = obtener_conexion()
     with con.cursor() as cur:
-        # Trae TODOS los datos que queremos en el correo
+        # 🧩 Traer datos principales de la reserva
         cur.execute("""
-            SELECT r.id_reserva, r.fecha_entrada, r.fecha_salida, r.num_huespedes,
-                   DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
-                   u.id_usuario, u.nombres AS usuario_nombres, u.correo AS correo_usuario,
-                   c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos, c.correo AS correo_cliente,
-                   h.numero AS hab_numero, t.nombre AS hab_tipo, t.precio_base,
-                   COALESCE(f.total,0) AS total
+            SELECT 
+                r.id_reserva,
+                r.fecha_entrada,
+                r.fecha_salida,
+                r.num_huespedes,
+                DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                u.id_usuario,
+                u.nombres AS usuario_nombres,
+                u.correo AS correo_usuario,
+                c.nombres AS cliente_nombres,
+                c.apellidos AS cliente_apellidos,
+                c.correo AS correo_cliente,
+                COALESCE(h.numero, '-') AS hab_numero,
+                COALESCE(t.nombre, 'Sin habitación') AS hab_tipo,
+                COALESCE(t.precio_base, 0) AS precio_base,
+                COALESCE(f.total, 0) AS total
             FROM reservas r
-            JOIN usuarios u   ON u.id_usuario  = r.id_usuario
-            JOIN clientes c   ON c.id_cliente  = r.id_cliente
-            JOIN habitaciones h ON h.id_habitacion = r.id_habitacion
-            JOIN tipo_habitacion t ON t.id_tipo = h.id_tipo
+            JOIN usuarios u        ON u.id_usuario  = r.id_usuario
+            JOIN clientes c        ON c.id_cliente  = r.id_cliente
+            LEFT JOIN habitaciones h ON h.id_habitacion = r.id_habitacion
+            LEFT JOIN tipo_habitacion t ON t.id_tipo = h.id_tipo
             LEFT JOIN facturacion f ON f.id_reserva = r.id_reserva
             WHERE r.id_reserva = %s
+            ORDER BY f.fecha_emision DESC
+            LIMIT 1
         """, (id_reserva,))
         datos = cur.fetchone()
 
-        # Servicios seleccionados
+        if not datos:
+            print(f"⚠️ No se encontró información para la reserva {id_reserva}")
+            return
+
+        # 🧾 Traer servicios (si los hay)
         cur.execute("""
             SELECT s.nombre, rs.cantidad AS qty, rs.subtotal
             FROM reserva_servicio rs
@@ -221,11 +238,23 @@ def enviar_confirmacion_reserva_multi(id_reserva: int, correos: list[str]) -> No
         """, (id_reserva,))
         servicios = cur.fetchall()
 
-    # Render del correo
-    html = render_template("email_confirmacion.html", r=datos, servicios=servicios)
-    asunto = f"Confirmación de Reserva #{datos['id_reserva']} • Hotel San Eduardo"
+    # ==========================================
+    # 📨 Elegir plantilla según tipo de reserva
+    # ==========================================
+    es_solo_servicios = (not datos.get("hab_numero")) or (datos.get("hab_numero") == "-") or (datos.get("hab_tipo") == "Sin habitación")
 
-    # Enviar a cada destinatario y registrar
+    if es_solo_servicios:
+        # Correo para servicios adicionales (independientes o vinculados sin habitación fija)
+        html = render_template("email_confirmacion_sa.html", r=datos, servicios=servicios)
+        asunto = f"Confirmación de Reserva de Servicios #{datos['id_reserva']} • Hotel San Eduardo"
+    else:
+        # Correo para reserva de habitación (con o sin servicios)
+        html = render_template("email_confirmacion.html", r=datos, servicios=servicios)
+        asunto = f"Confirmación de Reserva #{datos['id_reserva']} • Hotel San Eduardo"
+
+    # ==========================================
+    # 📬 Enviar a cada correo y registrar historial
+    # ==========================================
     con = obtener_conexion()
     with con.cursor() as cur:
         for correo in {c.strip().lower() for c in correos if c}:
@@ -233,5 +262,11 @@ def enviar_confirmacion_reserva_multi(id_reserva: int, correos: list[str]) -> No
             cur.execute("""
                 INSERT INTO historial_notificaciones (id_usuario, tipo, correo_destino, asunto, estado, fecha_envio)
                 VALUES (%s, %s, %s, %s, %s, NOW())
-            """, (datos["id_usuario"], "confirmacion", correo, asunto, "Enviado" if exito else "Error"))
+            """, (
+                datos["id_usuario"],
+                "confirmacion",
+                correo,
+                asunto,
+                "Enviado" if exito else "Error"
+            ))
         con.commit()
