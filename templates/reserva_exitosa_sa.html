@@ -120,6 +120,10 @@
         <div class="acciones-exito">
             <a href="{{ url_for('servicios.listar_servicios') }}" class="btn btn-outline">Ver más servicios</a>
             <a href="{{ url_for('perfil.ver_perfil') }}" class="btn btn-primary">Ir a Mi Perfil</a>
+            <a href="{{ url_for('servicios.descargar_comprobante_sa', id_reserva=reserva.id_reserva_servicio) }}" 
+            class="btn btn-success">
+            Descargar comprobante
+            </a>
         </div>
     </div>
 </div>

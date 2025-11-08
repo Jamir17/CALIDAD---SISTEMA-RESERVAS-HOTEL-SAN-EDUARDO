@@ -5,6 +5,7 @@ import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from decimal import Decimal
+from flask import make_response
 
 reservas_bp = Blueprint("reservas", __name__)
 
@@ -171,20 +172,20 @@ def pago_reserva():
         tipo_pago = request.form.get("tipo_pago")
         reserva_temp["id_tipo_pago"] = tipo_pago
 
-        # Recalcular totales en tipos seguros
+        # Recalcular totales
         def to_float(v): return float(v) if isinstance(v, Decimal) else (v or 0)
         total_servicios = sum(to_float(s.get("precio", 0)) for s in reserva_temp.get("servicios", []))
         total_estancia = to_float(reserva_temp.get("precio", 0)) * to_float(reserva_temp.get("noches", 0))
         reserva_temp["total"] = round(total_servicios + total_estancia, 2)
 
-        # 🔐 Volver a guardar en sesión, ya normalizado
+        # Guardar en sesión
         session["reserva_temp"] = json_safe(reserva_temp)
 
         # 💳 Tarjeta → redirigir
         if tipo_pago == "2":
             return redirect(url_for("reservas.tarjeta"))
 
-        # 🧾 Transferencia/Yape/Plin → guardar comprobante
+        # 🧾 Transferencia / Yape / Plin → comprobante
         comprobante_field = None
         if tipo_pago == "1":
             comprobante_field = "comprobante_transferencia"
@@ -202,9 +203,9 @@ def pago_reserva():
                 nombre_seguro = secure_filename(file.filename)
                 ruta_guardado = os.path.join(carpeta, nombre_seguro)
                 file.save(ruta_guardado)
-                comprobante_filename = ruta_guardado  # ruta relativa
+                comprobante_filename = ruta_guardado
 
-        # 🧩 Obtener el id_cliente asociado al usuario logueado
+        # 🧩 Obtener id_cliente del usuario logueado
         con = obtener_conexion()
         with con.cursor() as cur:
             cur.execute("SELECT id_cliente FROM clientes WHERE id_usuario = %s", (session["usuario_id"],))
@@ -221,16 +222,21 @@ def pago_reserva():
         if not id_reserva:
             with con.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO reservas (id_cliente, id_habitacion, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO reservas (
+                        id_cliente, id_habitacion, id_usuario,
+                        fecha_entrada, fecha_salida, num_huespedes,
+                        noches, total, estado
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Activa')
                 """, (
-                    id_cliente,  # ✅ ahora el correcto
+                    id_cliente,
                     reserva_temp.get("id_habitacion"),
                     session.get("usuario_id"),
                     reserva_temp.get("entrada"),
                     reserva_temp.get("salida"),
                     1,
-                    "Activa"
+                    reserva_temp.get("noches", 0),
+                    reserva_temp.get("total", 0)
                 ))
                 id_reserva = cur.lastrowid
                 con.commit()
@@ -240,7 +246,10 @@ def pago_reserva():
         # 🧮 Registrar facturación
         with con.cursor() as cur:
             cur.execute("""
-                INSERT INTO facturacion (id_reserva, id_tipo_pago, id_usuario, fecha_emision, total, estado, comprobante_pago)
+                INSERT INTO facturacion (
+                    id_reserva, id_tipo_pago, id_usuario,
+                    fecha_emision, total, estado, comprobante_pago
+                )
                 VALUES (%s, %s, %s, CURDATE(), %s, %s, %s)
             """, (
                 id_reserva,
@@ -252,7 +261,7 @@ def pago_reserva():
             ))
             con.commit()
 
-        # ✅ limpiar y redirigir
+        # ✅ Limpiar y redirigir
         session.pop("reserva_temp", None)
         return redirect(url_for("reservas.reserva_exitosa", id_reserva=id_reserva))
 
@@ -279,6 +288,7 @@ def pago_reserva():
         tipos_pago = cur.fetchall()
 
     return render_template("pago_reserva.html", reserva=reserva_temp, tipos_pago=tipos_pago)
+
 
 
 @reservas_bp.route("/cliente/tarjeta", methods=["GET"])
@@ -316,41 +326,37 @@ def confirmar_reserva():
     id_usuario = session["usuario_id"]
     huesped_data = reserva_temp.get("huesped", {})
 
-    # Datos del huésped (puede ser familiar)
-    nombre_huesped = huesped_data.get("nombre")
-    documento_huesped = huesped_data.get("documento")
-    telefono_huesped = huesped_data.get("telefono")
-    correo_huesped = huesped_data.get("correo")
-
-    # Archivo del comprobante
-    archivo = None # Ya no se usa comprobante, es pago con tarjeta
-    nombre_archivo = None
-    if archivo and allowed_file(archivo.filename):
-        if not os.path.exists(UPLOAD_FOLDER):
-            os.makedirs(UPLOAD_FOLDER)
-        nombre_archivo = secure_filename(archivo.filename)
-        ruta_guardar = os.path.join(UPLOAD_FOLDER, nombre_archivo)
-        archivo.save(ruta_guardar)
-
     con = obtener_conexion()
     try:
         with con.cursor() as cur:
-            # Obtener el id_cliente asociado al usuario logueado
+            # Obtener id_cliente
             cur.execute("SELECT id_cliente FROM clientes WHERE id_usuario = %s", (id_usuario,))
             cliente = cur.fetchone()
             if not cliente:
                 flash("No se encontró cliente asociado.", "error")
                 return redirect(url_for("reservas.habitaciones_cliente"))
 
-            # Insertar en reservas
+            # 🔹 Insertar reserva con noches y total
             cur.execute("""
-                INSERT INTO reservas (id_cliente, id_habitacion, id_usuario, fecha_entrada, fecha_salida, num_huespedes, estado)
-                VALUES (%s, %s, %s, %s, %s, %s, 'Activa')
-            """, (cliente["id_cliente"], reserva_temp["id_habitacion"], id_usuario,
-                  reserva_temp["entrada"], reserva_temp["salida"], 1))
+                INSERT INTO reservas (
+                    id_cliente, id_habitacion, id_usuario,
+                    fecha_entrada, fecha_salida, num_huespedes,
+                    noches, total, estado
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Activa')
+            """, (
+                cliente["id_cliente"],
+                reserva_temp["id_habitacion"],
+                id_usuario,
+                reserva_temp["entrada"],
+                reserva_temp["salida"],
+                1,
+                reserva_temp.get("noches", 0),
+                reserva_temp.get("total", 0)
+            ))
             id_reserva = cur.lastrowid
 
-            # Insertar servicios adicionales (si los hay)
+            # 🔸 Insertar servicios adicionales (si los hay)
             for s in reserva_temp.get("servicios", []):
                 subtotal = float(s["precio"]) * int(s["qty"])
                 cur.execute("""
@@ -358,30 +364,19 @@ def confirmar_reserva():
                     VALUES (%s, %s, %s, %s)
                 """, (id_reserva, s["id"], s["qty"], subtotal))
 
-            # --- Calcular total final con descuento por larga estancia ---
-            noches = int(reserva_temp["noches"])
-            precio_noche = float(reserva_temp["precio"])
-            total_habitacion = precio_noche * noches
-
-            descuento_porcentaje = 0
-            if noches >= 30:
-                descuento_porcentaje = 0.25  # 25%
-            elif noches >= 15:
-                descuento_porcentaje = 0.20  # 20%
-            elif noches >= 8:
-                descuento_porcentaje = 0.10  # 10%
-
-            monto_descuento = total_habitacion * descuento_porcentaje
-            subtotal_habitacion = total_habitacion - monto_descuento
-            total_serv = sum(float(s["precio"]) * int(s["qty"]) for s in reserva_temp.get("servicios", []))
-            total_final = subtotal_habitacion + total_serv
-
-            # Insertar en facturación
+            # 🔸 Insertar facturación
             cur.execute("""
-                INSERT INTO facturacion (id_reserva, id_tipo_pago, id_usuario, fecha_emision, total, estado, comprobante_pago)
+                INSERT INTO facturacion (
+                    id_reserva, id_tipo_pago, id_usuario,
+                    fecha_emision, total, estado, comprobante_pago
+                )
                 VALUES (%s, %s, %s, CURDATE(), %s, 'Pagado', NULL)
-            """, (id_reserva, reserva_temp.get('id_tipo_pago', 2), id_usuario, total_final))
-
+            """, (
+                id_reserva,
+                reserva_temp.get('id_tipo_pago', 2),
+                id_usuario,
+                reserva_temp.get("total", 0)
+            ))
             con.commit()
     finally:
         try:
@@ -389,51 +384,7 @@ def confirmar_reserva():
         except Exception:
             pass
 
-    # Eliminar la reserva temporal
     session.pop("reserva_temp", None)
-
-    # ===== Enviar confirmación a 3 posibles correos =====
-    # 1) correo del dueño de la cuenta (usuarios)
-    # 2) correo del cliente (clientes)
-    # 3) correo del huésped adicional (formulario), si lo ingresaron
-    con2 = obtener_conexion()
-    try:
-        with con2.cursor() as cur:
-            cur.execute("""
-                SELECT u.correo AS correo_usuario, c.correo AS correo_cliente
-                FROM reservas r
-                JOIN usuarios u ON u.id_usuario = r.id_usuario
-                JOIN clientes c ON c.id_cliente = r.id_cliente
-                WHERE r.id_reserva = %s
-            """, (id_reserva,))
-            row = cur.fetchone()
-    finally:
-        try:
-            con2.close()
-        except Exception:
-            pass
-
-    destinatarios = []
-    if row and row.get("correo_usuario"):
-        destinatarios.append(row["correo_usuario"])
-    if row and row.get("correo_cliente"):
-        destinatarios.append(row["correo_cliente"])
-    if correo_huesped:
-        destinatarios.append(correo_huesped)
-
-    # Quitar duplicados y vacíos
-    destinatarios = [c.strip() for c in destinatarios if c and c.strip()]
-    destinatarios = list(dict.fromkeys(destinatarios))
-
-    # Enviar (y registrar en historial_notificaciones)
-    try:
-        from controladores.controlador_notificaciones import enviar_confirmacion_reserva_multi
-        if destinatarios:
-            enviar_confirmacion_reserva_multi(id_reserva, destinatarios)
-    except Exception as _e:
-        # No rompemos el flujo por el correo, solo informativo
-        print("Aviso: no se pudo enviar confirmación por correo ->", _e)
-
     flash("¡Reserva confirmada con éxito! Se envió la confirmación por correo.", "success")
     return redirect(url_for("reservas.reserva_exitosa", id_reserva=id_reserva))
 
@@ -637,3 +588,74 @@ def mis_reservas_todo():
         reservas_servicios=reservas_servicios,
         nombre=session.get("nombre")
     )
+
+@reservas_bp.route("/cliente/comprobante/<int:id_reserva>")
+def comprobante_reserva(id_reserva):
+    if not session.get("usuario_id"):
+        return redirect(url_for("usuarios.iniciosesion"))
+
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        cur.execute("""
+            SELECT 
+                r.id_reserva, r.fecha_entrada, r.fecha_salida,
+                DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos,
+                c.tipo_documento, c.num_documento, c.correo,
+                h.numero AS hab_numero, t.nombre AS hab_tipo,
+                f.total, f.fecha_emision, f.id_factura,
+                tp.descripcion AS metodo_pago
+            FROM reservas r
+            JOIN clientes c ON r.id_cliente = c.id_cliente
+            JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            JOIN facturacion f ON r.id_reserva = f.id_reserva
+            JOIN tipo_pago tp ON f.id_tipo_pago = tp.id_tipo_pago
+            WHERE r.id_reserva = %s AND r.id_usuario = %s
+        """, (id_reserva, session["usuario_id"]))
+        reserva = cur.fetchone()
+
+    if not reserva:
+        flash("No se encontró el comprobante o no tienes permiso para verlo.", "error")
+        return redirect(url_for("reservas.mis_reservas"))
+
+    return render_template("comprobante_reserva.html", reserva=reserva)
+
+@reservas_bp.route("/cliente/descargar_comprobante/<int:id_reserva>")
+def descargar_comprobante(id_reserva):
+    if not session.get("usuario_id"):
+        return redirect(url_for("usuarios.iniciosesion"))
+
+    con = obtener_conexion()
+    with con.cursor() as cur:
+        cur.execute("""
+            SELECT 
+                r.id_reserva, r.fecha_entrada, r.fecha_salida,
+                DATEDIFF(r.fecha_salida, r.fecha_entrada) AS noches,
+                c.nombres AS cliente_nombres, c.apellidos AS cliente_apellidos,
+                c.tipo_documento, c.num_documento, c.correo,
+                h.numero AS hab_numero, t.nombre AS hab_tipo,
+                f.total, f.fecha_emision, f.id_factura,
+                tp.descripcion AS metodo_pago
+            FROM reservas r
+            JOIN clientes c ON r.id_cliente = c.id_cliente
+            JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+            JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
+            JOIN facturacion f ON r.id_reserva = f.id_reserva
+            JOIN tipo_pago tp ON f.id_tipo_pago = tp.id_tipo_pago
+            WHERE r.id_reserva = %s AND r.id_usuario = %s
+        """, (id_reserva, session["usuario_id"]))
+        reserva = cur.fetchone()
+
+    if not reserva:
+        flash("No se encontró el comprobante o no tienes permiso para verlo.", "error")
+        return redirect(url_for("reservas.mis_reservas"))
+
+    # Renderizamos el HTML directamente
+    html_content = render_template("comprobante_reserva.html", reserva=reserva)
+
+    # Creamos respuesta para descarga
+    response = make_response(html_content)
+    response.headers["Content-Disposition"] = f"attachment; filename=comprobante_{id_reserva}.html"
+    response.headers["Content-Type"] = "text/html; charset=utf-8"
+    return response
