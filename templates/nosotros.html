@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Acerca de Nosotros - Hotel San Eduardo{% endblock %}
+
+{% block content %}
+<main>
+  <!-- Hero para la sección "Nosotros" -->
+  <section class="hero-small">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+      <h1>Conoce Nuestra Historia</h1>
+      <p>Pasión por la hospitalidad en el corazón de Chiclayo.</p>
+    </div>
+  </section>
+
+  <!-- Contenido principal de "Acerca de Nosotros" -->
+  <section class="page-section">
+    <div class="container">
+      <div class="about-grid">
+        <!-- Columna de texto -->
+        <div class="about-text">
+          <div class="section-header" style="margin-bottom: 40px;">
+            <h2>Hotel San Eduardo: Tradición y Modernidad</h2>
+          </div>
+          <div class="intro-grid">
+            <div class="info-block">
+              <div class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+              </div>
+              <p><strong>Nuestra Historia:</strong> Fundado en 2010, el hotel nació del sueño de una familia por ofrecer una experiencia de alojamiento única, combinando la calidez norteña con servicios de estándar internacional.</p>
+            </div>
+            <div class="info-block">
+              <div class="info-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
+              <p><strong>Ubicación Privilegiada:</strong> Situado en la prestigiosa urbanización de Santa Victoria, somos un referente para viajeros que buscan confort, seguridad y una atención personalizada.</p>
+            </div>
+          </div>
+          <div class="mission-vision-grid">
+              <div class="mission-card">
+                <div class="mission-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                </div>
+                <h3>Nuestra Misión</h3>
+                <p>Superar las expectativas de nuestros huéspedes a través de un servicio excepcional, instalaciones impecables y un ambiente acogedor que refleje la rica cultura de Chiclayo.</p>
+              </div>
+              <div class="mission-card">
+                <div class="mission-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </div>
+                <h3>Nuestra Visión</h3>
+                <p>Ser el hotel líder en la región, reconocido por nuestra innovación en servicios, nuestro compromiso con la sostenibilidad y por crear experiencias memorables para cada persona que nos visita.</p>
+              </div>
+          </div>
+        </div>
+
+        <!-- Columna de imagen -->
+        <div class="about-image">
+          <img src="{{ url_for('static', filename='img/habitacion_9.jpg') }}" alt="Fachada del Hotel San Eduardo">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sección de Valores -->
+  <section class="page-section bg-light">
+    <div class="container">
+      <div class="section-header">
+        <h2>Nuestros Valores</h2>
+        <p>Los pilares que guían cada una de nuestras acciones.</p>
+      </div>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </div>
+          <h3>Hospitalidad</h3>
+          <p>Hacemos que cada huésped se sienta como en casa, con un trato cálido y personalizado.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <h3>Calidad</h3>
+          <p>Nos comprometemos con la excelencia en cada detalle, desde la limpieza hasta nuestros servicios.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <h3>Integridad</h3>
+          <p>Actuamos con honestidad y transparencia en todas nuestras interacciones.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA para ver habitaciones -->
+  <section class="cta-section">
+      <div class="container">
+        <h2>Descubre el Confort que te Espera</h2>
+        <p>Cada una de nuestras habitaciones está diseñada para ofrecerte una experiencia inolvidable.</p>
+        <div class="cta-actions">
+           <a href="{{ url_for('habitaciones_principales') }}" class="btn btn-white btn-lg">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                <path d="M4 4h16v16H4zM4 10h16M10 4v16"></path>
+              </svg>
+              Ver Habitaciones
+            </a>
+        </div>
+      </div>
+    </section>
+
+</main>
+{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+  .hero-small {
+    position: relative;
+    padding: 80px 0;
+    background: url("{{ url_for('static', filename='img/lobby.jpg') }}") no-repeat center center/cover;
+    color: white;
+    text-align: center;
+  }
+  .page-section {
+    padding: 80px 0;
+  }
+  .bg-light { background-color: #f9fafb; }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+  }
+  .about-image img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  .section-header-left {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  .section-header-left h2 { font-size: 2.5rem; }
+
+  .intro-grid {
+    grid-column: 1 / -1; /* Ocupa todo el ancho */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    align-items: flex-start;
+  }
+
+  .info-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .info-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    color: var(--primary);
+  }
+  .info-block p { margin: 0; line-height: 1.6; }
+
+  .values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+  }
+  .value-card {
+    text-align: center;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  }
+  .value-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 20px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .value-icon svg {
+    width: 28px;
+    height: 28px;
+    color: var(--primary);
+  }
+  .value-card h3 { margin-bottom: 10px; }
+
+  .mission-vision-grid {
+    grid-column: 1 / -1; /* Ocupa todo el ancho del grid */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 40px;
+  }
+  .mission-card {
+    padding: 30px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .mission-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 15px;
+    color: var(--primary);
+  }
+  .mission-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+  .mission-card h3 { font-size: 1.5rem; margin-bottom: 10px; }
+
+  @media (max-width: 768px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+    .intro-grid {
+      grid-template-columns: 1fr;
+    }
+    .mission-vision-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+{% endblock %}

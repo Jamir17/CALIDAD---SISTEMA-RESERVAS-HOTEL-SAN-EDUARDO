@@ -50,6 +50,11 @@ def habitaciones_principales():
     """Muestra la página estática con todas las habitaciones."""
     return render_template("habitacionprincipal.html")
 
+@app.route("/nosotros")
+def nosotros():
+    """Muestra la página 'Acerca de Nosotros'."""
+    return render_template("nosotros.html")
+
 # ====== ARRANQUE ======
 if __name__ == "__main__":
     app.run(debug=True)

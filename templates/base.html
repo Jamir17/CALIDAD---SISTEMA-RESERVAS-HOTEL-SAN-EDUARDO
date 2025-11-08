@@ -53,7 +53,7 @@
               Servicios
             </a>
             </a>
-            <a href="#nosotros" class="nav-link">
+            <a href="{{ url_for('nosotros') }}" class="nav-link">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
@@ -124,8 +124,8 @@
             <h3>Enlaces Rápidos</h3>
             <ul class="footer-links">
               <li><a href="{{ url_for('habitaciones.habitaciones_cliente') }}">Habitaciones</a></li>
-              <li><a href="#">Reservas</a></li>
-              <li><a href="#nosotros">Acerca de Nosotros</a></li>
+              <li><a href="{{ url_for('reservas.mis_reservas') if session.get('usuario_id') else url_for('usuarios.iniciosesion') }}">Reservas</a></li>
+              <li><a href="{{ url_for('nosotros') }}">Acerca de Nosotros</a></li>
             </ul>
           </div>
 
