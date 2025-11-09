@@ -27,16 +27,17 @@ def _reply(text, done=False, state=None):
     return jsonify({"reply": text, "done": done, "state": state})
 
 def get_menu_text():
-    """Genera el texto del menú principal con enlaces HTML."""
+    """Genera el texto del menú principal con el formato vertical correcto."""
     return (
-        "¡Hola! Soy tu asistente virtual. ¿Cómo puedo ayudarte?\n\n"
-        "Escribe una de estas opciones:\n"
-        "1. **Reservar**: Para iniciar una nueva reserva.\n"
-        "2. **Mi reserva**: Para consultar el estado de tu reserva.\n"
-        "3. **Ubicación**: Para saber dónde estamos.\n"
-        "4. **Servicios**: Para ver nuestros servicios y horarios.\n"
-        "5. **Incidencia**: Para reportar un problema.\n"
-        "6. **Contáctanos**: Para contactar con una persona."
+        "¡Hola! Soy tu asistente virtual 😊\n"
+        "¿Cómo puedo ayudarte?\n\n"
+        "1️⃣ Reservar\n"
+        "2️⃣ Mi reserva\n"
+        "3️⃣ Ubicación\n"
+        "4️⃣ Servicios\n"
+        "5️⃣ Incidencia\n"
+        "6️⃣ Contáctanos\n\n"
+        "*Escribe el número o el nombre de la opción.*"
     )
 
 def crear_reserva(fecha_in_str, fecha_out_str, huespedes, tipo_hab, nombre_huesped, doc_huesped):
@@ -148,12 +149,16 @@ def obtener_info_servicios():
 
     return base_info + "\n".join(servicios_activos)
 
-def registrar_incidencia(descripcion, habitacion=None):
+def registrar_incidencia(descripcion, habitacion=None, id_usuario=None):
     """Registra una nueva incidencia en la base de datos."""
     con = obtener_conexion()
     try:
         with con.cursor() as cur:
-            cur.execute("INSERT INTO incidencias (descripcion, id_habitacion) VALUES (%s, %s)", (descripcion, habitacion))
+            # La tabla incidencias permite id_usuario, así que lo añadimos si está disponible
+            cur.execute("""
+                INSERT INTO incidencias (descripcion, id_habitacion, id_usuario, fecha_reporte) 
+                VALUES (%s, %s, %s, %s)
+            """, (descripcion, habitacion, id_usuario, datetime.now()))
             con.commit()
     finally:
         con.close()
@@ -201,7 +206,7 @@ def webchat_message():
                    f"• Tipo: {d['tipo'].title()}\n"
                    f"• Nombre: {d['nombre']}\n"
                    f"• Doc: {d['doc']}\n\n"
-                   f"Responde SI para confirmar o NO para cancelar.")
+                   f"Responde **si** para confirmar o **no** para cancelar.")
         return _reply(resumen, state="CONFIRM")
 
     def ask_codigo_reserva():
@@ -286,19 +291,21 @@ def webchat_message():
         return ask_confirm()
 
     if st == "CONFIRM":
-        if text.strip().upper() in ("SI", "SÍ"):
+        respuesta = text.strip().lower()
+        if respuesta in ("si", "sí"):
             codigo, err = crear_reserva(
                 data["fecha_in"], data["fecha_out"], data["huespedes"],
                 data["tipo"], data["nombre"], data["doc"]
             )
-            # Reiniciar estado
             _CONV.pop(_sid(), None)
             if err:
                 return _reply(f"⚠️ {err}", done=True)
             return _reply(f"✅ ¡Listo! Tu código de reserva es {codigo}.", done=True)
-        else:
+        elif respuesta == "no":
             _CONV.pop(_sid(), None)
             return _reply("Operación cancelada. Escribe *reservar* cuando quieras.", done=True)
+        else:
+            return _reply("Por favor, responde **si** o **no**.", state="CONFIRM")
 
     # --- Flujo de Consulta de Reserva ---
     if st == "CONSULTA_RESERVA":
@@ -315,7 +322,8 @@ def webchat_message():
     if st == "HABITACION_INCIDENCIA":
         num_hab = text.strip()
         id_hab = num_hab if num_hab.isdigit() else None
-        registrar_incidencia(data["incidencia_desc"], id_hab)
+        id_usuario_actual = session.get("usuario_id") # Obtenemos el id del usuario si ha iniciado sesión
+        registrar_incidencia(data["incidencia_desc"], id_hab, id_usuario_actual)
         _CONV.pop(_sid(), None)
         return _reply("Gracias por tu reporte. Hemos registrado la incidencia y nuestro equipo la revisará a la brevedad.", done=True)
 
