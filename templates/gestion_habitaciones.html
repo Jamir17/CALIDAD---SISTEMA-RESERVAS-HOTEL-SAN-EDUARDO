@@ -1,0 +1,119 @@
+{% extends "principal.html" %}
+{% block title %}Gestión de Habitaciones{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_habitaciones.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1 class="title">Gestión de Habitaciones</h1>
+            <p class="subtitle">Administra las habitaciones del hotel</p>
+        </div>
+        <button class="btn-add" data-bs-toggle="modal" data-bs-target="#roomModal">
+            <span class="icon">+</span> Agregar Habitación
+        </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <p class="stat-label">Total Habitaciones</p>
+            <p class="stat-number" id="totalRooms">{{ kpis.total }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label">Disponibles</p>
+            <p class="stat-number available" id="availableRooms">{{ kpis.disponibles }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label">Ocupadas</p>
+            <p class="stat-number occupied" id="occupiedRooms">{{ kpis.ocupadas }}</p>
+        </div>
+        <div class="stat-card">
+            <p class="stat-label">Mantenimiento</p>
+            <p class="stat-number maintenance" id="maintenanceRooms">{{ kpis.mantenimiento }}</p>
+        </div>
+    </div>
+
+    <!-- Rooms Grid -->
+    <div class="rooms-grid" id="roomsGrid">
+        {% for hab in habitaciones %}
+        <div class="room-card" data-estado="{{ hab.estado|lower }}">
+            <img src="{{ url_for('static', filename=hab.imagen if hab.imagen else 'img/habitaciones/default.jpg') }}" alt="Habitación {{ hab.numero }}" class="room-image">
+            <div class="room-content">
+                <div class="room-header">
+                    <div class="room-info">
+                        <h3>Habitación {{ hab.numero }}</h3>
+                        <p class="room-type">{{ hab.tipo }}</p>
+                    </div>
+                    <div class="room-actions">
+                        <button class="btn-icon btn-edit" onclick="openEditDialog({{ hab.id_habitacion }})" title="Editar">✏️</button>
+                        <button class="btn-icon btn-delete" onclick="deleteRoom({{ hab.id_habitacion }})" title="Eliminar">🗑️</button>
+                    </div>
+                </div>
+                <p class="room-description">{{ hab.descripcion or 'Sin descripción disponible.' }}</p>
+                <div class="room-details">
+                    <span class="status-badge status-{{ hab.estado|lower|replace(' ', '-') }}">{{ hab.estado }}</span>
+                    <div class="price-section">
+                        <p class="price-label">Precio por noche</p>
+                        <p class="price">S/ {{ "%.2f"|format(hab.precio_base) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-center text-muted p-4">No hay habitaciones para mostrar.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Room Dialog (Bootstrap) -->
+<div class="modal fade" id="roomModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nueva Habitación</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="roomForm" class="modal-form" enctype="multipart/form-data">
+                <input type="hidden" id="roomId" name="id_habitacion">
+                <div class="form-group">
+                    <label>Número de Habitación</label>
+                    <input type="text" id="roomNumber" name="numero" required placeholder="Ej: 101">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Habitación</label>
+                    <select id="roomType" name="id_tipo" required>
+                        <option value="">-- Seleccione un tipo --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="roomStatus" name="estado" required>
+                        <option value="Disponible">Disponible</option>
+                        <option value="Ocupada">Ocupada</option>
+                        <option value="En Limpieza">En Limpieza</option>
+                        <option value="Mantenimiento">Mantenimiento</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Imagen de la Habitación</label>
+                    <input type="file" id="roomImage" name="imagen" class="form-control" accept="image/png, image/jpeg, image/webp">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn-submit">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{{ url_for('static', filename='js/gestion_habitaciones.js') }}"></script>
+{% endblock %}
