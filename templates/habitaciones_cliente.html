@@ -128,7 +128,7 @@
               <strong>{{ s.nombre }}</strong>
               <small>S/. {{ '%.2f'|format(s.precio) }}</small>
             </label>
-            <input type="number" class="qty" name="qty_{{ s.id_servicio }}" value="1" min="1" disabled>
+            <input type="number" class="qty" name="qty_{{ s.id_servicio }}" value="0" min="0" disabled>
           </div>
           {% endfor %}
         </div>
@@ -656,7 +656,7 @@ function abrirServicios() {
   if (!m) return;
   m.classList.add('show');
   document.querySelectorAll('#formServicios input[name="srv"]').forEach(chk => { chk.checked = false; });
-  document.querySelectorAll('#formServicios .qty').forEach(q => { q.value = 1; q.disabled = true; });
+  document.querySelectorAll('#formServicios .qty').forEach(q => { q.value = 0; q.disabled = true; });
 }
 
 document.addEventListener('change', e => {
@@ -672,7 +672,7 @@ if (btnAplicar) {
     const seleccionados = [];
     document.querySelectorAll('#formServicios input[name="srv"]:checked').forEach(chk => {
       const row = chk.closest('.serv-item');
-      const qty = parseInt(row.querySelector('.qty').value || '1');
+      const qty = parseInt(row.querySelector('.qty').value || '0');
       const precio = parseFloat(chk.dataset.precio);
       const id = parseInt(chk.value);
       const nombre = row.querySelector('strong').textContent.trim();
