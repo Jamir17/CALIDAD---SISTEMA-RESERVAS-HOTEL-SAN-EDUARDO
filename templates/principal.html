@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_reservas.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reserva_cliente.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/respaldo.css') }}">
+    {% block extra_css %}{% endblock %}
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
@@ -27,6 +28,7 @@
             <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' else '' }}">Menu principal</a>
             <a href="{{ url_for('reservas_admin.panel_reservas') }}" class="{{ 'active' if 'reservas_admin' in request.endpoint else '' }}">Reservas</a>
             <a href="{{ url_for('checkinout.panel_checkinout') }}" class="{{ 'active' if 'checkinout' in request.endpoint else '' }}">Check-in/out</a>
+            <a href="{{ url_for('gestion_habitaciones.panel_habitaciones') }}" class="{{ 'active' if 'gestion_habitaciones' in request.endpoint else '' }}">Gestión de Habitaciones</a>
 
             <a href="#" onclick="toggleRolesMenu()" class="{{ 'active' if 'gestion' in request.endpoint else '' }}">Gestión de roles ▼</a>
             <ul id="submenuRoles" style="display:none; list-style:none; padding-left:15px;">
@@ -64,6 +66,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% if 'checkinout' in request.path %}
     <script src="{{ url_for('static', filename='js/panel_checkinout.js') }}"></script>
+    
     {% endif %}
 
     <script>
@@ -72,6 +75,7 @@
         menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
     </script>
+    {% block extra_js %}{% endblock %}
 
 </body>
 </html>
