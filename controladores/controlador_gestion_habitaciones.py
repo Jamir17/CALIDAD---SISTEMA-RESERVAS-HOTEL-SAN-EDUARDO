@@ -178,3 +178,43 @@ def api_tipos_habitacion():
     except Exception as e:
         print(f"Error al obtener tipos de habitación: {e}")
         return jsonify([]), 500
+
+@gestion_habitaciones_bp.route('/tipos/crear', methods=['POST'])
+def crear_tipo_habitacion():
+    """Crea un nuevo tipo de habitación y lo devuelve."""
+    try:
+        data = request.json
+        con = obtener_conexion()
+        with con.cursor(pymysql.cursors.DictCursor) as cur:
+            cur.execute("""
+                INSERT INTO tipo_habitacion (nombre, descripcion, capacidad, precio_base, comodidades)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (data['nombre'], data.get('descripcion', ''), data.get('capacidad', 1), data['precio_base'], data.get('comodidades', '')))
+            con.commit()
+            
+            # Devolver el tipo recién creado
+            cur.execute("SELECT id_tipo, nombre FROM tipo_habitacion WHERE id_tipo = LAST_INSERT_ID()")
+            nuevo_tipo = cur.fetchone()
+            
+        return jsonify({'ok': True, 'message': 'Tipo de habitación creado.', 'tipo': nuevo_tipo})
+    except pymysql.err.IntegrityError:
+        return jsonify({'ok': False, 'message': 'Ya existe un tipo de habitación con ese nombre.'}), 409
+    except Exception as e:
+        print(f"Error al crear tipo de habitación: {e}")
+        return jsonify({'ok': False, 'message': 'Error al crear el tipo de habitación.'}), 500
+    finally:
+        if 'con' in locals() and con.open:
+            con.close()
+
+@gestion_habitaciones_bp.route('/tipos/obtener/<int:id_tipo>')
+def obtener_tipo_habitacion(id_tipo):
+    """Obtiene los detalles de un tipo de habitación, incluyendo el precio."""
+    try:
+        con = obtener_conexion()
+        with con.cursor(pymysql.cursors.DictCursor) as cur:
+            cur.execute("SELECT precio_base FROM tipo_habitacion WHERE id_tipo = %s", (id_tipo,))
+            tipo = cur.fetchone()
+        return jsonify(tipo if tipo else {})
+    finally:
+        if 'con' in locals() and con.open:
+            con.close()
