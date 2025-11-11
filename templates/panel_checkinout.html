@@ -38,7 +38,7 @@
             <div class="section-title">Confirmación rápida</div>
             <div class="checkbox-group">
                 <input type="checkbox" id="confirm" checked>
-                <label for="confirm">Acepto términos de hospedaje (simulado)</label>
+                <label for="confirm">Acepto términos de hospedaje</label>
             </div>
         </div>
 
@@ -46,15 +46,15 @@
         <div class="kpi-container">
             <div class="kpi-item">
                 <div class="kpi-label">Disponibles</div>
-                <div class="kpi-value" id="kpiDisponibles">{{ kpis.Disponibles }}</div>
+                <div class="kpi-value" id="kpiDisponibles">{{ kpis.get('Disponible', 0) }}</div>
             </div>
             <div class="kpi-item">
                 <div class="kpi-label">Ocupadas</div>
-                <div class="kpi-value" id="kpiOcupadas">{{ kpis.Ocupadas }}</div>
+                <div class="kpi-value" id="kpiOcupadas">{{ kpis.get('Ocupada', 0) }}</div>
             </div>
             <div class="kpi-item">
                 <div class="kpi-label">En limpieza</div>
-                <div class="kpi-value" id="kpiLimpieza">{{ kpis['En limpieza'] }}</div>
+                <div class="kpi-value" id="kpiLimpieza">{{ kpis.get('En Limpieza', 0) }}</div>
             </div>
         </div>
     </aside>

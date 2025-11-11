@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, session, request, jsonify, flash, redirect, url_for
 from bd import obtener_conexion
 from datetime import datetime
+import pymysql
 
 checkinout_bp = Blueprint("checkinout", __name__)
 
@@ -36,7 +37,7 @@ def panel_checkinout():
     con = None
     try:
         con = obtener_conexion()
-        with con.cursor() as cur:
+        with con.cursor(pymysql.cursors.DictCursor) as cur:
             # 1. Obtener reservas activas para el select
             cur.execute("""
                 SELECT r.id_reserva, c.nombres, c.apellidos, h.numero
@@ -55,7 +56,7 @@ def panel_checkinout():
             # 3. Obtener KPIs
             cur.execute("SELECT estado, COUNT(*) as total FROM habitaciones GROUP BY estado")
             kpis_raw = cur.fetchall()
-            kpis = {'Disponibles': 0, 'Ocupadas': 0, 'En limpieza': 0}
+            kpis = {'Disponible': 0, 'Ocupada': 0, 'En Limpieza': 0}
             for kpi in kpis_raw:
                 if kpi['estado'] in kpis:
                     kpis[kpi['estado']] = kpi['total']
