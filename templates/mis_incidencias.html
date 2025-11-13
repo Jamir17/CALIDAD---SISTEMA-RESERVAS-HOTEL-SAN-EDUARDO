@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Mis Incidencias - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+<style>
+.contenedor-principal {
+  max-width: 1100px;
+  margin: 100px auto;
+  padding: 0 20px 100px;
+}
+.encabezado { text-align: center; margin-bottom: 40px; }
+.encabezado h1 { font-size: 32px; color: #0f2a63; font-weight: 800; }
+.encabezado p { color: #6b6b6b; font-size: 15px; }
+
+.incidencias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+}
+.incidencia-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.card-header {
+  background: #f4f7ff;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-header h3 {
+  color: #0f2a63;
+  font-weight: 700;
+  margin: 0;
+  font-size: 1.1rem;
+}
+.card-body { padding: 16px 18px; flex-grow: 1; }
+.card-body p {
+  color: #333;
+  margin: 6px 0;
+  font-size: 14.5px;
+  white-space: pre-wrap; /* Respeta saltos de línea en la descripción */
+}
+
+.estado {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.estado.pendiente { background: #fff4d2; color: #b88a00; }
+.estado.en-proceso { background: #e5f0ff; color: #0d6efd; }
+.estado.resuelta { background: #dcf9de; color: #198754; }
+
+.sin-incidencias { text-align: center; color: #555; margin-top: 60px; font-style: italic; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="contenedor-principal">
+  <div class="encabezado">
+    <h1>Mis Incidencias</h1>
+    <p>Aquí puedes ver el estado de todos tus reportes.</p>
+  </div>
+
+  <div class="incidencias-grid">
+    {% if incidencias %}
+      {% for inc in incidencias %}
+      <div class="incidencia-card">
+        <div class="card-header">
+          <h3>Incidencia #{{ inc.id_incidencia }}</h3>
+          <span class="estado {{ inc.estado|lower|replace(' ', '-') }}">{{ inc.estado }}</span>
+        </div>
+        <div class="card-body">
+          <p><strong>Fecha de Reporte:</strong> {{ inc.fecha_reporte.strftime('%d/%m/%Y a las %H:%M') }}</p>
+          {% if inc.numero_habitacion %}
+            <p><strong>Habitación:</strong> {{ inc.numero_habitacion }}</p>
+          {% endif %}
+          <p><strong>Descripción:</strong></p>
+          <p style="color: #555;">{{ inc.descripcion }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="sin-incidencias">No has reportado ninguna incidencia hasta ahora.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

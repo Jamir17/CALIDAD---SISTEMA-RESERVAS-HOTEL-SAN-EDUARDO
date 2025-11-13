@@ -30,6 +30,7 @@
             <a href="{{ url_for('reservas_admin.panel_reservas') }}" class="{{ 'active' if 'reservas_admin' in request.endpoint else '' }}">Reservas</a>
             <a href="{{ url_for('checkinout.panel_checkinout') }}" class="{{ 'active' if 'checkinout' in request.endpoint else '' }}">Check-in/out</a>
             <a href="{{ url_for('gestion_habitaciones.panel_habitaciones') }}" class="{{ 'active' if 'gestion_habitaciones' in request.endpoint else '' }}">Gestión de Habitaciones</a>
+            <a href="{{ url_for('incidencias.panel_incidencias') }}" class="{{ 'active' if 'incidencias.panel_incidencias' in request.endpoint else '' }}">Gestión de Incidencias</a>
 
             <a href="#" onclick="toggleRolesMenu()" class="{{ 'active' if 'gestion' in request.endpoint else '' }}">Gestión de roles ▼</a>
             <ul id="submenuRoles" style="display:none; list-style:none; padding-left:15px;">
