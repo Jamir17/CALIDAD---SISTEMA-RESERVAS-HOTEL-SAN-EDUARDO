@@ -1,7 +1,6 @@
 {% extends "principal.html" %}
 {% block title %}RF07 - Histórico de Reservas{% endblock %}
 
-
 {% block content %}
 <div class="container">
 
@@ -43,8 +42,8 @@
                 </button>
 
                 <div class="card-title" style="margin-top: 2rem;">Exportar</div>
-                <button class="btn btn-success" onclick="exportCSV()">
-                    <span></span> Exportar CSV
+                <button class="btn btn-success" onclick="exportExcel()" style="background-color: #1D6F42; border-color: #1D6F42;">
+                    <span></span> Exportar Excel
                 </button>
                 <button class="btn btn-secondary-alt" onclick="printData()">
                     <span></span> Imprimir
@@ -80,7 +79,6 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Código</th>
                                 <th>Habitación</th>
                                 <th>Entrada</th>
                                 <th>Salida</th>
@@ -91,7 +89,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">
+                                <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">
                                     Sin resultados
                                 </td>
                             </tr>
@@ -103,4 +101,176 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Almacena los datos actuales para exportar e imprimir
+    let currentReservas = [];
+    let currentCliente = null;
+
+    async function applyFilters() {
+        const searchTerm = document.getElementById('searchInput').value;
+        const estado = document.getElementById('estadoFiltro').value;
+        const fechaDesde = document.getElementById('dateFrom').value;
+        const fechaHasta = document.getElementById('dateTo').value;
+
+        if (!searchTerm) {
+            alert('Por favor, ingrese un nombre o documento para buscar.');
+            return;
+        }
+
+        const payload = { searchTerm, estado, fechaDesde, fechaHasta };
+
+        try {
+            const response = await fetch("{{ url_for('reservas_cliente.buscar_historial_cliente') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!data.ok) {
+                alert(data.message);
+                clearResults();
+                return;
+            }
+
+            currentCliente = data.cliente;
+            currentReservas = data.reservas;
+            updateUI(data.cliente, data.reservas);
+
+        } catch (error) {
+            console.error('Error al aplicar filtros:', error);
+            alert('Ocurrió un error de conexión.');
+        }
+    }
+
+    function updateUI(cliente, reservas) {
+        // Actualizar tabla
+        const tbody = document.querySelector('#reservasTable tbody');
+        tbody.innerHTML = '';
+
+        if (reservas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">No se encontraron reservas con los filtros aplicados.</td></tr>`;
+        } else {
+            reservas.forEach((r, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>Hab. ${r.habitacion_numero}</td>
+                        <td>${r.fecha_entrada}</td>
+                        <td>${r.fecha_salida}</td>
+                        <td>${r.noches || 1}</td>
+                        <td><span class="badge badge--${(r.estado || '').toLowerCase()}">${r.estado || 'N/A'}</span></td>
+                        <td>${parseFloat(r.monto || 0).toFixed(2)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Actualizar KPIs
+        const totalNoches = reservas.reduce((acc, r) => acc + (r.noches || 0), 0);
+        const totalGasto = reservas.reduce((acc, r) => acc + parseFloat(r.monto || 0), 0);
+
+        document.getElementById('totalReservas').textContent = reservas.length;
+        document.getElementById('totalNoches').textContent = totalNoches;
+        document.getElementById('totalGasto').textContent = totalGasto.toFixed(2);
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('estadoFiltro').value = 'Todos';
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        clearResults();
+    }
+
+    function clearResults() {
+        const tbody = document.querySelector('#reservasTable tbody');
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem;">Sin resultados</td></tr>`;
+        document.getElementById('totalReservas').textContent = '0';
+        document.getElementById('totalNoches').textContent = '0';
+        document.getElementById('totalGasto').textContent = '0.00';
+        currentReservas = [];
+        currentCliente = null;
+    }
+
+    async function exportExcel() {
+        if (currentReservas.length === 0) {
+            alert('No hay datos para exportar.');
+            return;
+        }
+
+        const searchTerm = document.getElementById('searchInput').value;
+        const estado = document.getElementById('estadoFiltro').value;
+        const fechaDesde = document.getElementById('dateFrom').value;
+        const fechaHasta = document.getElementById('dateTo').value;
+
+        const payload = { searchTerm, estado, fechaDesde, fechaHasta };
+
+        try {
+            const response = await fetch("{{ url_for('reservas_cliente.exportar_excel_historial') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                alert(`Error al exportar: ${errorData.message}`);
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            // El nombre del archivo viene del backend, pero podemos poner uno por defecto
+            const clienteNombre = currentCliente ? `${currentCliente.nombres}_${currentCliente.apellidos}`.replace(/\s/g, '_') : 'export';
+            a.download = `Historial_Reservas_${clienteNombre}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            console.error('Error al exportar a Excel:', error);
+            alert('Ocurrió un error de conexión al intentar exportar.');
+        }
+    }
+
+    function printData() {
+        if (currentReservas.length === 0) {
+            alert('No hay datos para imprimir.');
+            return;
+        }
+
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Historial de Reservas</title>');
+        printWindow.document.write('<style>body{font-family:sans-serif;} table{width:100%; border-collapse:collapse;} th,td{border:1px solid #ddd; padding:8px; text-align:left;} th{background-color:#f2f2f2;}</style>');
+        printWindow.document.write('</head><body onload="window.print(); window.close();">');
+        if (currentCliente) {
+            printWindow.document.write(`<h1>Historial de: ${currentCliente.nombres} ${currentCliente.apellidos}</h1>`);
+        }
+        const tableToPrint = document.getElementById('reservasTable').cloneNode(true);
+        // Opcional: remover elementos no deseados para la impresión, como botones de acción si los hubiera
+        printWindow.document.write(tableToPrint.outerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus(); // Necesario para algunos navegadores
+    }
+
+    // Añadir listener para buscar con la tecla Enter
+    document.getElementById('searchInput').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Evita que el formulario se envíe si lo hubiera
+            applyFilters();
+        }
+    });
+
+</script>
 {% endblock %}

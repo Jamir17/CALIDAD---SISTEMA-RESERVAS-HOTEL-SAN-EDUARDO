@@ -16,6 +16,8 @@ from controladores.controlador_reservas_cliente import reservas_cliente_bp
 from controladores.controlador_serviciosadicionales import servicios
 from controladores.controlador_chatbot import webchat_bp
 from controladores.controlador_seguridad import seguridad_bp
+import openpyxl
+from openpyxl.styles import Font, PatternFill
 app = Flask(__name__)
 app.secret_key = "clave-super-segura"
 
