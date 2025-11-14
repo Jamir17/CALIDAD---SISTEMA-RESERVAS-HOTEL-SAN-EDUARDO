@@ -14,8 +14,11 @@ from controladores.controlador_gestion_roles import gestion_roles_bp
 from controladores.controlador_gestion_usuarios_roles import gestion_usuarios_roles_bp
 from controladores.controlador_reservas_cliente import reservas_cliente_bp
 from controladores.controlador_serviciosadicionales import servicios
+from controladores.controlador_incidencias import incidencias_bp
 from controladores.controlador_chatbot import webchat_bp
 from controladores.controlador_seguridad import seguridad_bp
+import openpyxl
+from openpyxl.styles import Font, PatternFill
 app = Flask(__name__)
 app.secret_key = "clave-super-segura"
 
@@ -39,6 +42,7 @@ app.register_blueprint(gestion_roles_bp)
 app.register_blueprint(gestion_usuarios_roles_bp)
 app.register_blueprint(reservas_cliente_bp)
 app.register_blueprint(servicios)
+app.register_blueprint(incidencias_bp)
 app.register_blueprint(webchat_bp, url_prefix="/webchat")
 app.register_blueprint(seguridad_bp)
 

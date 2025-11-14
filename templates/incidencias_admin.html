@@ -1,0 +1,115 @@
+{% extends "principal.html" %}
+{% block title %}Gestión de Incidencias{% endblock %}
+
+{% block extra_css %}
+<style>
+.incidencias-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+}
+.incidencias-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+.incidencias-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1c2536;
+}
+.table th {
+  background-color: #f8faff;
+  font-weight: 600;
+  color: #4b5563;
+}
+.table td {
+  vertical-align: middle;
+}
+.descripcion-cell {
+  max-width: 300px;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  color: #333;
+}
+.estado-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.estado-select {
+  min-width: 140px;
+}
+.estado {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 13px;
+  color: white;
+}
+.estado.pendiente { background-color: #ffc107; color: #212529; }
+.estado.en-proceso { background-color: #0d6efd; }
+.estado.resuelta { background-color: #198754; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="incidencias-container">
+  <div class="incidencias-header">
+    <h1>Gestión de Incidencias</h1>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Cliente</th>
+          <th>Habitación</th>
+          <th>Fecha Reporte</th>
+          <th>Descripción</th>
+          <th>Estado Actual</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inc in incidencias %}
+        <tr>
+          <td>#{{ inc.id_incidencia }}</td>
+          <td>{{ inc.nombres }} {{ inc.apellidos }}</td>
+          <td>{{ inc.numero_habitacion or 'N/A' }}</td>
+          <td>{{ inc.fecha_reporte.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td class="descripcion-cell">{{ inc.descripcion }}</td>
+          <td><span class="estado {{ inc.estado|lower|replace(' ', '-') }}">{{ inc.estado }}</span></td>
+          <td>
+            <form class="estado-form" method="POST" action="{{ url_for('incidencias.actualizar_estado_incidencia') }}">
+              <input type="hidden" name="id_incidencia" value="{{ inc.id_incidencia }}">
+              <select name="nuevo_estado" class="form-select form-select-sm estado-select">
+                <option value="Pendiente" {% if inc.estado == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                <option value="En Proceso" {% if inc.estado == 'En Proceso' %}selected{% endif %}>En Proceso</option>
+                <option value="Resuelta" {% if inc.estado == 'Resuelta' %}selected{% endif %}>Resuelta</option>
+              </select>
+              <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">No hay incidencias reportadas.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

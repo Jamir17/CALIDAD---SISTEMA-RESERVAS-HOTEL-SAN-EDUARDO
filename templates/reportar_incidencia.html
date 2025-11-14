@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Incidencias - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f5ff 0%, #e6f0ff 100%);
+    }
+    .page-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    .form-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        max-width: 700px;
+        width: 100%;
+        overflow: hidden;
+        margin-top: 70px; /* Espacio para el header fijo */
+    }
+    .form-header {
+        padding: 30px;
+        text-align: center;
+    }
+    .form-header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: #1e3c72;
+    }
+    .form-header p {
+        font-size: 16px;
+        color: #6b7280;
+    }
+    .form-content {
+        padding: 0 30px 30px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+    input[type="text"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    input:disabled, textarea:disabled {
+        background-color: #f0f2f5;
+        cursor: not-allowed;
+        color: #6b7280;
+    }
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+    .required { color: #e74c3c; }
+    .btn-container {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+        justify-content: center;
+    }
+    .btn {
+        flex: 1;
+        max-width: 200px;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(42, 82, 152, 0.3);
+    }
+    .btn-secondary {
+        background-color: #e5e7eb;
+        color: #4b5563;
+    }
+    .btn-secondary:hover {
+        background-color: #d1d5db;
+    }
+    .char-counter {
+        font-size: 12px;
+        color: #6b7280;
+        text-align: right;
+        margin-top: 4px;
+    }
+    .footer-text {
+        text-align: center;
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 20px;
+    }
+    .no-reserva-card {
+        text-align: center;
+        padding: 40px;
+    }
+    .no-reserva-card p {
+        font-size: 1.1rem;
+        color: #4b5563;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="form-container">
+        <div class="form-header">
+            <h1>Reportar Incidencia</h1>
+            <p>Completa el formulario para reportar cualquier problema en tu habitación</p>
+        </div>
+
+        <div class="form-content">
+            {% if reserva_activa %}
+                <form id="incidenceForm" method="POST">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="idReserva">ID Reserva <span class="required">*</span></label>
+                            <input type="text" id="idReserva" value="{{ reserva_activa.id_reserva }}" placeholder="Ej: 12345" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="idHabitacion">ID Habitación <span class="required">*</span></label>
+                            <input type="text" id="idHabitacion" value="{{ reserva_activa.numero_habitacion }}" placeholder="Ej: 301" disabled>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="idUsuario">Tu ID de Usuario <span class="required">*</span></label>
+                            <input type="text" id="idUsuario" value="{{ session.get('usuario_id', 'N/A') }}" placeholder="Ej: 789" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="prioridad">Nivel de Prioridad</label>
+                            <select id="prioridad" name="prioridad">
+                                <option value="Baja">Baja</option>
+                                <option value="Media" selected>Media</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Urgente">Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion">Descripción de la Incidencia <span class="required">*</span></label>
+                        <textarea id="descripcion" name="descripcion" placeholder="Describe con detalle el problema que experimentas..." required maxlength="500"></textarea>
+                        <div class="char-counter" id="charCounter">0 / 500 caracteres</div>
+                    </div>
+
+                    <div class="btn-container">
+                        <button type="submit" class="btn btn-primary">Enviar Reporte</button>
+                        <button type="reset" class="btn btn-secondary">Limpiar</button>
+                    </div>
+
+                    <p class="footer-text">Los campos marcados con * son requeridos</p>
+                </form>
+            {% else %}
+                <div class="no-reserva-card">
+                    <p>No tienes una reserva activa en este momento. Solo los huéspedes con una estancia en curso pueden reportar incidencias.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">Volver al Inicio</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const form = document.getElementById('incidenceForm');
+    if (form) {
+        const descripcionTextarea = document.getElementById('descripcion');
+        const charCounter = document.getElementById('charCounter');
+
+        // Actualizar contador de caracteres
+        descripcionTextarea.addEventListener('input', () => {
+            const currentLength = descripcionTextarea.value.length;
+            charCounter.textContent = `${currentLength} / 500 caracteres`;
+        });
+
+        // Limpiar contador al resetear
+        form.addEventListener('reset', () => {
+            setTimeout(() => {
+                charCounter.textContent = '0 / 500 caracteres';
+            }, 0);
+        });
+
+        // Combinar datos antes de enviar
+        form.addEventListener('submit', function(e) {
+            const prioridad = document.getElementById('prioridad').value;
+            const descripcionDetallada = descripcionTextarea.value;
+            
+            // Combinar los detalles en el campo de descripción para el backend
+            const descripcionCompleta = `Prioridad: ${prioridad}\n\nDescripción: ${descripcionDetallada}`;
+            
+            // Asignar el valor combinado al textarea justo antes de enviar.
+            descripcionTextarea.value = descripcionCompleta;
+        });
+    }
+</script>
+{% endblock %}

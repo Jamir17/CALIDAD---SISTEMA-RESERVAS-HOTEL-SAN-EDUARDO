@@ -515,15 +515,6 @@ def mis_reservas():
         r["estado"] = r.get("estado", "Pendiente")
         r["origen"] = r.get("origen", "Independiente")
 
-    # 🧩 DEPURACIÓN
-    print("=== 🔍 RESERVAS HABITACIONES ===")
-    for r in reservas_habitaciones:
-        print(r)
-
-    print("=== 🔍 RESERVAS SERVICIOS ===")
-    for r in reservas_servicios:
-        print(r)
-
     return render_template(
         "mis_reservas.html",
         reservas_habitaciones=reservas_habitaciones,

@@ -1,0 +1,247 @@
+/* Variables de color (asumiendo que vienen de principal.css o base.html) */
+:root {
+    --primary: #5b3fd8; /* Ejemplo, ajusta si es diferente en tu principal.css */
+    --secondary: #6c757d;
+    --text-dark: #1c2536;
+    --text-light: #6b7280;
+    --border-color: #d1d5db;
+    --background-light: #f8faff;
+    --card-bg: #ffffff;
+    --shadow-light: rgba(0, 0, 0, 0.08);
+}
+
+/* Contenedor principal y grid */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Panel izquierdo más pequeño, derecho más grande */
+    gap: 2rem;
+    padding-top: 20px; /* Espacio desde el topbar */
+}
+
+/* Estilo de las tarjetas (cards) */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--shadow-light);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem; /* Espacio entre tarjetas */
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+/* Elementos de formulario */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+input[type="text"],
+input[type="date"],
+.form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    background-color: var(--background-light);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91, 63, 216, 0.2); /* Usando un color RGB aproximado de --primary */
+}
+
+.date-range {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.date-range input {
+    flex: 1;
+}
+
+/* Botones */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    margin-right: 0.5rem; /* Para botones en fila */
+    margin-top: 1rem; /* Espacio de elementos de formulario */
+    text-decoration: none; /* Asegura que los enlaces con clase btn no tengan subrayado */
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: #fff;
+    border: 1px solid var(--primary);
+}
+.btn-primary:hover {
+    background-color: #4a31c0; /* Un poco más oscuro que --primary */
+    border-color: #4a31c0;
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    color: #fff;
+    border: 1px solid var(--secondary);
+}
+.btn-secondary:hover {
+    background-color: #5a6268; /* Un poco más oscuro que --secondary */
+    border-color: #5a6268;
+}
+
+.btn-success {
+    background-color: #1D6F42; /* Color específico del usuario */
+    color: #fff;
+    border: 1px solid #1D6F42;
+}
+.btn-success:hover {
+    background-color: #155a33; /* Un poco más oscuro */
+    border-color: #155a33;
+}
+
+.btn-secondary-alt {
+    background-color: #f8f9fa;
+    color: var(--text-dark);
+    border: 1px solid #d1d5db;
+}
+.btn-secondary-alt:hover {
+    background-color: #e2e6ea;
+    border-color: #c8cbcf;
+}
+
+/* Grid de estadísticas (KPIs) */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background-color: var(--background-light);
+    border: 1px solid #e0e7ff;
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* Tabla de historial de reservas */
+.table-wrapper {
+    overflow-x: auto; /* Para tablas responsivas */
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+#reservasTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+#reservasTable thead {
+    background-color: #f4f7ff;
+    color: var(--text-dark);
+}
+
+#reservasTable th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#reservasTable tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+#reservasTable tbody tr:last-child {
+    border-bottom: none;
+}
+
+#reservasTable td {
+    padding: 0.8rem 1rem;
+    color: #4b5563;
+}
+
+/* Badges de estado (manteniendo los colores existentes) */
+.badge {
+    display: inline-block;
+    padding: .35em .65em;
+    font-size: .75em;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25rem;
+}
+.badge--activa { background-color: #28a745; }
+.badge--finalizada { background-color: #6c757d; }
+.badge--cancelada { background-color: #dc3545; }
+.badge--pendiente { background-color: #ffc107; color: #000; }
+
+/* Ajustes responsivos */
+@media (max-width: 992px) {
+    .main-grid {
+        grid-template-columns: 1fr; /* Una sola columna en pantallas medianas */
+    }
+}
+
+@media (max-width: 576px) {
+    .stats-grid {
+        grid-template-columns: 1fr; /* Una sola columna en pantallas pequeñas */
+    }
+    .date-range {
+        flex-direction: column; /* Fechas una debajo de otra */
+    }
+    .btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}
