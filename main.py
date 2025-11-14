@@ -1,5 +1,7 @@
 from flask import Flask, render_template, session, request, redirect, url_for
 from datetime import timedelta
+import openpyxl
+from openpyxl.styles import Font, PatternFill
 from controladores.controlador_usuarios import usuarios_bp
 from controladores.controlador_reservas import reservas_bp
 from controladores.controlador_administrador import admin_bp
@@ -17,8 +19,7 @@ from controladores.controlador_serviciosadicionales import servicios
 from controladores.controlador_incidencias import incidencias_bp
 from controladores.controlador_chatbot import webchat_bp
 from controladores.controlador_seguridad import seguridad_bp
-import openpyxl
-from openpyxl.styles import Font, PatternFill
+
 app = Flask(__name__)
 app.secret_key = "clave-super-segura"
 

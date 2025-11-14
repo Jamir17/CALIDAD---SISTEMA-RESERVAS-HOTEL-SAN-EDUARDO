@@ -28,15 +28,24 @@
     </form>
   </aside>
 
-  <!-- Centro: lista con scroll -->
+  <!-- Centro: listado -->
   <section class="listado">
     {% if habitaciones %}
       {% for h in habitaciones %}
       <article class="card fade-in">
-        <div class="card-media">
-          <img src="{{ url_for('static', filename=h.portada) }}"
-               alt="Habitación {{ h.numero }}"
-               onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
+        <!-- Carrusel embebido -->
+        <div class="carousel-mini" data-room="{{ h.id_habitacion }}">
+          <div class="carousel-track">
+            {% for img in h.galeria %}
+              <img src="{{ url_for('static', filename=img) }}"
+                   alt="Foto {{ loop.index }} de {{ h.tipo }}"
+                   class="carousel-img"
+                   onclick="abrirLightbox({{ h.id_habitacion }}, {{ loop.index0 }})"
+                   onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
+            {% endfor %}
+          </div>
+          <button class="carousel-btn prev" onclick="moverCarrusel({{ h.id_habitacion }}, -1)">&#10094;</button>
+          <button class="carousel-btn next" onclick="moverCarrusel({{ h.id_habitacion }}, 1)">&#10095;</button>
         </div>
 
         <div class="card-body">
@@ -61,39 +70,13 @@
           {% endif %}
 
           <div class="actions">
-            <button class="btn-outline" data-open="modal-{{ h.id_habitacion }}">Ver Detalles</button>
             <button class="btn-primary"
-                    onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }}, false)">
+                    onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }})">
               Seleccionar
             </button>
           </div>
         </div>
       </article>
-
-      <!-- Modal Detalles -->
-      <div id="modal-{{ h.id_habitacion }}" class="modal">
-        <div class="modal-content">
-          <span class="close" data-close>&times;</span>
-          <h2>{{ h.tipo }} Nº {{ h.numero }}</h2>
-          <p class="modal-sub">{{ h.descripcion }}</p>
-
-          <div class="carousel">
-            {% for img in h.galeria %}
-              <img src="{{ url_for('static', filename=img) }}"
-                   alt="Foto {{ loop.index }}"
-                   class="carousel-item"
-                   onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/habitaciones/img1.jpg') }}';">
-            {% endfor %}
-          </div>
-
-          <div class="modal-actions">
-            <button class="btn-primary"
-                    onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }}, true)">
-              Seleccionar esta habitación
-            </button>
-          </div>
-        </div>
-      </div>
       {% endfor %}
     {% else %}
       <p class="empty">No hay habitaciones disponibles con los criterios seleccionados.</p>
@@ -111,6 +94,14 @@
 
   <!-- Contenedor de notificaciones -->
   <div id="notificacion-container"></div>
+</div>
+
+<!-- Lightbox global -->
+<div id="lightbox" class="lightbox">
+  <span class="close-lightbox" onclick="cerrarLightbox()">&times;</span>
+  <button class="nav-light prev" onclick="navegarLightbox(-1)">&#10094;</button>
+  <img id="lightbox-img" src="" alt="Vista ampliada" />
+  <button class="nav-light next" onclick="navegarLightbox(1)">&#10095;</button>
 </div>
 
 <!-- Modal Servicios Adicionales -->
@@ -152,11 +143,9 @@
 
 
 
-
-
 {% block extra_css %}
 <style>
-/* ====== Layout general (col-izq, centro con scroll, col-der sticky) ====== */
+/* ====== Layout general ====== */
 .layout-rooms {
   display: grid;
   grid-template-columns: 280px 1fr 320px;
@@ -226,13 +215,6 @@
 }
 .card:hover { box-shadow:0 6px 16px rgba(16,24,40,.1); }
 
-.card-media img {
-  width: 320px;
-  height: 200px;
-  object-fit: cover;
-  border-radius:10px;
-}
-
 .card-body { flex: 1; display:flex; flex-direction:column; }
 .card-head {
   display:flex;
@@ -249,6 +231,7 @@
 .desc { color:#4b5563; margin:6px 0 10px; }
 .meta { color:#111827; margin-bottom:8px; }
 
+/* ===== Chips de comodidades ===== */
 .chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
 .chip {
   padding:5px 10px;
@@ -260,6 +243,7 @@
   font-weight:600;
 }
 
+/* ===== Botones ===== */
 .actions { display:flex; gap:12px; margin-top:auto; }
 .btn-outline, .btn-primary {
   padding:10px 14px;
@@ -278,7 +262,96 @@
 .btn-primary { background:#0d6efd; color:#fff; }
 .btn-primary:hover { background:#0b5ed7; }
 
-/* ===== Resumen (panel derecho) ===== */
+/* ===== Carrusel embebido ===== */
+.carousel-mini {
+  position: relative;
+  width: 320px;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.carousel-track {
+  display: flex;
+  transition: transform 0.6s ease-in-out;
+}
+.carousel-img {
+  width: 320px;
+  height: 200px;
+  object-fit: contain;
+  background-color: #fff;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.45);
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.carousel-btn:hover { background: rgba(0,0,0,0.65); }
+.carousel-btn.prev { left: 8px; }
+.carousel-btn.next { right: 8px; }
+
+/* ===== Lightbox (ampliación) ===== */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  animation: fadein .3s ease;
+}
+.lightbox.show { display: flex; }
+.lightbox img {
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(255,255,255,0.3);
+  transition: transform 0.3s ease;
+}
+.lightbox img:hover { transform: scale(1.02); }
+.close-lightbox {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 40px;
+  color: white;
+  cursor: pointer;
+  z-index: 10001;
+  transition: 0.2s;
+}
+.close-lightbox:hover { color: #f87171; }
+.nav-light {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: none;
+  font-size: 40px;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+.nav-light:hover { background: rgba(255,255,255,0.35); }
+.nav-light.prev { left: 40px; }
+.nav-light.next { right: 40px; }
+
+/* ===== Resumen lateral ===== */
 .resumen h2 { color:#0f2a63; margin-bottom:10px; }
 #resumenContenido p { margin:6px 0; }
 .btn-accion {
@@ -301,7 +374,7 @@
   cursor: not-allowed;
 }
 
-/* ===== Modal genérico ===== */
+/* ===== Modal de servicios ===== */
 .modal {
   display:none;
   position: fixed;
@@ -329,21 +402,6 @@
   font-size:26px;
   cursor:pointer;
 }
-.modal-sub { color:#4b5563; margin:4px 0 10px; }
-.carousel { display:flex; gap:10px; overflow-x:auto; }
-.carousel-item {
-  width:260px;
-  height:180px;
-  object-fit:cover;
-  border-radius:10px;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: border-color .2s;
-}
-.carousel-item:hover { border-color: #a7caff; }
-.carousel-item.selected { border-color: #0d6efd; }
-
-/* ===== Modal servicios ===== */
 .servicios-list {
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -369,13 +427,8 @@
   justify-content:flex-end;
   margin-top:10px;
 }
-.empty { color:#6b7280; }
 
-/* ===== Animación general ===== */
-.fade-in { animation:fade .25s ease; }
-@keyframes fade { from { opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
-
-/* ===== Notificaciones (Toast) ===== */
+/* ===== Toast ===== */
 #notificacion-container {
   position: fixed;
   bottom: 20px;
@@ -398,13 +451,11 @@
   transform: translateX(100%);
   animation: toast-in 0.5s forwards;
 }
-.notificacion-toast.out {
-  animation: toast-out 0.5s forwards;
-}
+.notificacion-toast.out { animation: toast-out 0.5s forwards; }
 @keyframes toast-in { to { opacity: 1; transform: translateX(0); } }
 @keyframes toast-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
 
-/* ===== Modal de advertencia (sin sesión iniciada) ===== */
+/* ===== Modal alerta (sin sesión) ===== */
 .modal-alert {
   display: none;
   position: fixed;
@@ -426,173 +477,175 @@
   min-width: 320px;
   border: 2px solid #fca5a5;
 }
+
+/* ===== Animaciones ===== */
+.fade-in { animation:fade .25s ease; }
+@keyframes fade { from { opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
-
-/* ===== Scroll interno en el panel de resumen ===== */
+/* ===== Scroll interno en el panel derecho ===== */
 .panel.resumen {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 140px); /* Ajusta según tu layout */
+  max-height: calc(100vh - 140px);
   overflow: hidden;
 }
-
 #resumenContenido {
   flex: 1;
   overflow-y: auto;
   padding-right: 6px;
 }
+#resumenContenido::-webkit-scrollbar { width: 8px; }
+#resumenContenido::-webkit-scrollbar-thumb { background: #0d6efd; border-radius: 6px; }
 
-/* Scroll visual agradable */
-#resumenContenido::-webkit-scrollbar {
-  width: 8px;
-}
-#resumenContenido::-webkit-scrollbar-thumb {
-  background: #0d6efd;
-  border-radius: 6px;
-}
-
+.empty { color:#6b7280; }
 </style>
-
 {% endblock %}
 
 
 {% block extra_js %}
 <script>
-// ===== Datos globales desde Flask =====
+// ===============================
+// 🔹 VARIABLES GLOBALES
+// ===============================
 const TODOS_LOS_SERVICIOS = JSON.parse('{{ servicios_json|default("[]")|safe }}');
-let reservas = []; // ahora permite varias habitaciones
+let reservas = [];
+const posiciones = {}; // controla índice del carrusel mini
+let lightboxImgs = [];
+let lightboxIndex = 0;
 
 
-// ===== Validación y restauración de filtros =====
+// ===============================
+// 📅 VALIDACIÓN DE FILTROS
+// ===============================
 window.onload = () => {
   const fechaEntradaInput = document.querySelector('[name="fecha_entrada"]');
   const fechaSalidaInput = document.querySelector('[name="fecha_salida"]');
   const tipoSelect = document.querySelector('[name="tipo"]');
   const huespedesInput = document.querySelector('[name="huespedes"]');
 
-  // Fecha mínima de entrada
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split('T')[0];
   fechaEntradaInput.min = todayStr;
 
-  // === Restaurar filtros, pero priorizando los valores del servidor ===
   const filtrosPrevios = JSON.parse(localStorage.getItem("filtrosReserva") || "{}");
-
-  // Si Flask ya inyectó valores (vienen del backend tras Buscar), actualiza localStorage
   if (fechaEntradaInput.value) filtrosPrevios.fecha_entrada = fechaEntradaInput.value;
   if (fechaSalidaInput.value) filtrosPrevios.fecha_salida = fechaSalidaInput.value;
   if (tipoSelect.value) filtrosPrevios.tipo = tipoSelect.value;
   if (huespedesInput.value) filtrosPrevios.huespedes = huespedesInput.value;
-
-  // Guarda el último estado correcto
   localStorage.setItem("filtrosReserva", JSON.stringify(filtrosPrevios));
 
-  // Asegura que los inputs muestren esos valores
   fechaEntradaInput.value = filtrosPrevios.fecha_entrada || "";
   fechaSalidaInput.value = filtrosPrevios.fecha_salida || "";
   tipoSelect.value = filtrosPrevios.tipo || "";
   huespedesInput.value = filtrosPrevios.huespedes || "";
 
-  // Ajustar mínimo de salida
-  if (fechaEntradaInput.value) {
-    const nextDay = new Date(fechaEntradaInput.value);
-    nextDay.setDate(nextDay.getDate() + 1);
-    fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
-  }
-
-  // ===== Validar fecha de entrada =====
+  // Validar fechas
   fechaEntradaInput.addEventListener('change', () => {
     const entrada = new Date(fechaEntradaInput.value);
-    entrada.setHours(0, 0, 0, 0);
-
-    if (entrada.getTime() < today.getTime() - 86400000) {
+    if (entrada < today) {
       alert('La fecha de entrada no puede ser pasada.');
       fechaEntradaInput.value = todayStr;
       return;
     }
-
-    // Actualizar mínimo de salida
     const nextDay = new Date(entrada);
     nextDay.setDate(nextDay.getDate() + 1);
     fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
   });
 
-  // ===== Validar fecha de salida =====
   fechaSalidaInput.addEventListener('change', () => {
     const salida = new Date(fechaSalidaInput.value);
     const entrada = new Date(fechaEntradaInput.value);
-    salida.setHours(0, 0, 0, 0);
-    entrada.setHours(0, 0, 0, 0);
-
-    if (salida < today) {
-      alert('La fecha de salida no puede ser una fecha pasada.');
-      fechaSalidaInput.value = '';
-      return;
-    }
-
     if (salida <= entrada) {
-      alert('La fecha de salida debe ser posterior a la de entrada.');
+      alert('La fecha de salida debe ser posterior a la entrada.');
       fechaSalidaInput.value = '';
     }
   });
+
+  iniciarCarruseles();
 };
 
 
-// ===== Guardar filtros si no hay sesión =====
-function guardarFiltrosTemporal() {
-  const filtros = {
-    fecha_entrada: document.querySelector('[name="fecha_entrada"]').value,
-    fecha_salida: document.querySelector('[name="fecha_salida"]').value,
-    tipo: document.querySelector('[name="tipo"]').value,
-    huespedes: document.querySelector('[name="huespedes"]').value
-  };
-  localStorage.setItem("filtrosReserva", JSON.stringify(filtros));
+// ===============================
+// 🖼️ CARRUSEL EMBEBIDO
+// ===============================
+function iniciarCarruseles() {
+  document.querySelectorAll('.carousel-mini').forEach(carrusel => {
+    const id = carrusel.dataset.room;
+    posiciones[id] = 0;
+
+    // autoplay
+    let interval = setInterval(() => moverCarrusel(id, 1), 3000);
+    carrusel.addEventListener('mouseenter', () => clearInterval(interval));
+    carrusel.addEventListener('mouseleave', () => interval = setInterval(() => moverCarrusel(id, 1), 3000));
+  });
+}
+
+function moverCarrusel(id, dir) {
+  const track = document.querySelector(`.carousel-mini[data-room="${id}"] .carousel-track`);
+  const imgs = track.querySelectorAll('.carousel-img');
+  const total = imgs.length;
+  posiciones[id] = (posiciones[id] ?? 0) + dir;
+  if (posiciones[id] < 0) posiciones[id] = total - 1;
+  if (posiciones[id] >= total) posiciones[id] = 0;
+  track.style.transform = `translateX(-${posiciones[id] * 320}px)`;
 }
 
 
-// ===== Seleccionar habitación =====
-function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = false) {
+// ===============================
+// 🔍 LIGHTBOX (imagen ampliada)
+// ===============================
+function abrirLightbox(id, index) {
+  const track = document.querySelector(`.carousel-mini[data-room="${id}"] .carousel-track`);
+  lightboxImgs = Array.from(track.querySelectorAll('.carousel-img')).map(i => i.src);
+  lightboxIndex = index;
+  document.getElementById('lightbox-img').src = lightboxImgs[lightboxIndex];
+  document.getElementById('lightbox').classList.add('show');
+}
+
+function cerrarLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+}
+
+function navegarLightbox(dir) {
+  if (!lightboxImgs.length) return;
+  lightboxIndex += dir;
+  if (lightboxIndex < 0) lightboxIndex = lightboxImgs.length - 1;
+  if (lightboxIndex >= lightboxImgs.length) lightboxIndex = 0;
+  document.getElementById('lightbox-img').src = lightboxImgs[lightboxIndex];
+}
+
+// navegación por teclado
+document.addEventListener('keydown', e => {
+  const lightbox = document.getElementById('lightbox');
+  if (!lightbox.classList.contains('show')) return;
+  if (e.key === 'Escape') cerrarLightbox();
+  if (e.key === 'ArrowLeft') navegarLightbox(-1);
+  if (e.key === 'ArrowRight') navegarLightbox(1);
+});
+
+
+// ===============================
+// 🏨 SELECCIONAR HABITACIÓN
+// ===============================
+function seleccionarHabitacion(tipo, numero, precio, idHabitacion) {
   const entrada = document.querySelector('[name="fecha_entrada"]').value;
   const salida  = document.querySelector('[name="fecha_salida"]').value;
-
-  if (!entrada || !salida) {
-    alert('Selecciona las fechas de entrada y salida.');
-    return;
-  }
+  if (!entrada || !salida) { alert('Selecciona las fechas de entrada y salida.'); return; }
 
   const d1 = new Date(entrada);
   const d2 = new Date(salida);
-  if (d2 <= d1) {
-    alert('La fecha de salida debe ser posterior a la entrada.');
-    return;
-  }
+  if (d2 <= d1) { alert('La fecha de salida debe ser posterior a la entrada.'); return; }
 
   const noches = (d2 - d1) / (1000 * 60 * 60 * 24);
-  let imagenSeleccionada = null;
-  const modal = document.getElementById(`modal-${idHabitacion}`);
+  const cardImg = document
+    .querySelector(`.carousel-mini[data-room="${idHabitacion}"] .carousel-img`)
+    .src;
 
-  if (desdeModal && modal) {
-    const imgSelected = modal.querySelector('.carousel-item.selected');
-    if (imgSelected) imagenSeleccionada = imgSelected.src;
-    modal.classList.remove('show');
-  }
-
-  if (!imagenSeleccionada) {
-    const cardImg = document
-      .querySelector(`.card button[data-open="modal-${idHabitacion}"]`)
-      .closest('.card')
-      .querySelector('.card-media img');
-    imagenSeleccionada = cardImg.src;
-  }
-
-  const nueva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: imagenSeleccionada, servicios: [] };
-
-  // Evitar duplicados
+  const nueva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: cardImg, servicios: [] };
   if (!reservas.some(r => r.id_habitacion === idHabitacion)) reservas.push(nueva);
 
-  // Servicios gratis si estancia > 3 noches
   if (noches > 3) {
     const desayuno = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'desayuno buffet');
     const lavanderia = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'lavandería');
@@ -605,11 +658,12 @@ function seleccionarHabitacion(tipo, numero, precio, idHabitacion, desdeModal = 
 }
 
 
-// ===== Renderizar resumen =====
+// ===============================
+// 📋 RENDER DEL RESUMEN
+// ===============================
 function renderResumen() {
   const cont = document.getElementById('resumenContenido');
   const btnContinuar = document.getElementById('btnContinuar');
-
   if (!reservas.length) {
     cont.innerHTML = '<p>No has seleccionado ninguna habitación.</p>';
     btnContinuar.disabled = true;
@@ -618,7 +672,6 @@ function renderResumen() {
 
   let html = '';
   let totalGlobal = 0;
-
   reservas.forEach(r => {
     const totalHab = r.precio * r.noches;
     let descuento = 0;
@@ -650,13 +703,13 @@ function renderResumen() {
 }
 
 
-// ===== Modal de servicios =====
+// ===============================
+// 🧾 SERVICIOS ADICIONALES
+// ===============================
 function abrirServicios() {
-  const m = document.getElementById('modal-servicios');
-  if (!m) return;
-  m.classList.add('show');
-  document.querySelectorAll('#formServicios input[name="srv"]').forEach(chk => { chk.checked = false; });
-  document.querySelectorAll('#formServicios .qty').forEach(q => { q.value = 0; q.disabled = true; });
+  const modal = document.getElementById('modal-servicios');
+  if (!modal) return;
+  modal.classList.add('show');
 }
 
 document.addEventListener('change', e => {
@@ -685,7 +738,9 @@ if (btnAplicar) {
 }
 
 
-// ===== Continuar al pago =====
+// ===============================
+// 💳 CONTINUAR AL PAGO
+// ===============================
 function continuarPago() {
   if (!reservas.length) {
     alert('Selecciona una habitación primero.');
@@ -699,12 +754,10 @@ function continuarPago() {
   })
   .then(async res => {
     if (res.redirected && res.url.includes("iniciar-sesion")) {
-      guardarFiltrosTemporal();
       document.getElementById("modal-login").style.display = "flex";
       setTimeout(() => { window.location.href = res.url; }, 1800);
       return;
     }
-
     const data = await res.json();
     if (data.ok) {
       localStorage.removeItem("filtrosReserva");
@@ -714,14 +767,15 @@ function continuarPago() {
     }
   })
   .catch(() => {
-    guardarFiltrosTemporal();
     document.getElementById("modal-login").style.display = "flex";
     setTimeout(() => { document.getElementById("modal-login").style.display = "none"; }, 2000);
   });
 }
 
 
-// ===== Notificación tipo toast =====
+// ===============================
+// 🔔 NOTIFICACIONES TOAST
+// ===============================
 function mostrarNotificacion(msg) {
   const cont = document.getElementById('notificacion-container');
   const div = document.createElement('div');
@@ -731,33 +785,21 @@ function mostrarNotificacion(msg) {
   setTimeout(() => { div.classList.add('out'); div.addEventListener('animationend', () => div.remove()); }, 4000);
 }
 
-
-// ===== Carrusel de imágenes =====
+// ===============================
+// ❌ CERRAR MODALES (botón "X" o clic fuera)
+// ===============================
 document.addEventListener('click', e => {
-  if (e.target.classList.contains('carousel-item')) {
+  // Cierre al hacer clic en la "X"
+  if (e.target.matches('.close')) {
     const modal = e.target.closest('.modal');
-    modal.querySelectorAll('.carousel-item').forEach(i => i.classList.remove('selected'));
-    e.target.classList.add('selected');
+    if (modal) modal.classList.remove('show');
+  }
+
+  // Cierre al hacer clic fuera del contenido
+  if (e.target.classList.contains('modal')) {
+    e.target.classList.remove('show');
   }
 });
 
-
-// ===== Abrir / cerrar modales =====
-document.addEventListener('click', e => {
-  const open = e.target.closest('[data-open]');
-  if (open) {
-    const m = document.getElementById(open.dataset.open);
-    if (m) {
-      m.classList.add('show');
-      const first = m.querySelector('.carousel-item');
-      if (first && !m.querySelector('.carousel-item.selected')) first.classList.add('selected');
-    }
-  }
-  if (e.target.matches('[data-close]') || e.target.classList.contains('modal')) {
-    const m = e.target.closest('.modal') || document.querySelector('.modal.show');
-    if (m) m.classList.remove('show');
-  }
-});
 </script>
-
 {% endblock %}
