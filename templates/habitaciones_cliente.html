@@ -25,6 +25,8 @@
       <input type="number" name="huespedes" min="1" value="{{ huespedes or 1 }}">
 
       <button type="submit" class="btn-buscar">Buscar</button>
+      <button type="button" class="btn-limpiar" onclick="eliminarFiltros()">Eliminar filtros</button>
+
     </form>
   </aside>
 
@@ -91,7 +93,7 @@
     <div id="resumenContenido">
       <p>No has seleccionado ninguna habitación.</p>
     </div>
-    <button class="btn-accion pago" id="btnContinuar" onclick="continuarPago()" disabled>💳 Continuar Reserva</button>
+    <button class="btn-accion pago" id="btnContinuar" onclick="continuarPago()" disabled>Continuar reserva</button>
   </aside>
 
   <!-- Contenedor de notificaciones -->
@@ -147,6 +149,19 @@
 
 {% block extra_css %}
 <style>
+  .btn-limpiar {
+  margin-top: 8px;
+  width: 100%;
+  background: #e5e7eb;
+  color: #374151;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+.btn-limpiar:hover { background: #d1d5db; }
 /* ====== Layout general ====== */
 .layout-rooms {
   display: grid;
@@ -528,80 +543,161 @@
 
 {% block extra_js %}
 <script>
-// ===============================
+// ======================================
 // 🔹 VARIABLES GLOBALES
-// ===============================
+// ======================================
 const TODOS_LOS_SERVICIOS = JSON.parse('{{ servicios_json|default("[]")|safe }}');
 let reservas = [];
-const posiciones = {}; // controla índice del carrusel mini
+const posiciones = {};
 let lightboxImgs = [];
 let lightboxIndex = 0;
 
 
-// ===============================
-// 📅 VALIDACIÓN DE FILTROS
-// ===============================
+// ======================================
+// 📅 VALIDACIÓN + LIMPIEZA DE FECHAS
+// ======================================
 window.onload = () => {
   const fechaEntradaInput = document.querySelector('[name="fecha_entrada"]');
   const fechaSalidaInput = document.querySelector('[name="fecha_salida"]');
   const tipoSelect = document.querySelector('[name="tipo"]');
   const huespedesInput = document.querySelector('[name="huespedes"]');
 
+  // 🔹 Fecha actual sin hora
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = today.toISOString().split("T")[0];
+
+  // 🔹 Bloquear días anteriores a hoy
   fechaEntradaInput.min = todayStr;
+  fechaSalidaInput.min = todayStr;
 
-  const filtrosPrevios = JSON.parse(localStorage.getItem("filtrosReserva") || "{}");
-  if (fechaEntradaInput.value) filtrosPrevios.fecha_entrada = fechaEntradaInput.value;
-  if (fechaSalidaInput.value) filtrosPrevios.fecha_salida = fechaSalidaInput.value;
-  if (tipoSelect.value) filtrosPrevios.tipo = tipoSelect.value;
-  if (huespedesInput.value) filtrosPrevios.huespedes = huespedesInput.value;
-  localStorage.setItem("filtrosReserva", JSON.stringify(filtrosPrevios));
+  const form = document.querySelector(".filtros form");
+if (form) {
+  form.addEventListener("submit", () => {
+    guardarFiltros();
+  });
+}
 
-  fechaEntradaInput.value = filtrosPrevios.fecha_entrada || "";
-  fechaSalidaInput.value = filtrosPrevios.fecha_salida || "";
-  tipoSelect.value = filtrosPrevios.tipo || "";
-  huespedesInput.value = filtrosPrevios.huespedes || "";
+// ======================================
+// 🔥 Recuperar filtros previos, corrigiendo comparación de fechas
+// ======================================
+const filtrosPrevios = JSON.parse(localStorage.getItem("filtrosReserva") || "{}");
 
-  // Validar fechas
-  fechaEntradaInput.addEventListener('change', () => {
+// Normalizar a formato YYYY-MM-DD sin zonas
+function normalizarFecha(fechaStr) {
+  if (!fechaStr) return "";
+  const [y, m, d] = fechaStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+if (filtrosPrevios.fecha_entrada) {
+  const fe = normalizarFecha(filtrosPrevios.fecha_entrada);
+  if (fe.getTime() >= today.getTime()) {
+    fechaEntradaInput.value = filtrosPrevios.fecha_entrada;
+  } else {
+    fechaEntradaInput.value = "";
+  }
+}
+
+if (filtrosPrevios.fecha_salida) {
+  const fs = normalizarFecha(filtrosPrevios.fecha_salida);
+  if (fs.getTime() >= today.getTime()) {
+    fechaSalidaInput.value = filtrosPrevios.fecha_salida;
+  } else {
+    fechaSalidaInput.value = "";
+  }
+}
+
+if (filtrosPrevios.tipo) tipoSelect.value = filtrosPrevios.tipo;
+if (filtrosPrevios.huespedes) huespedesInput.value = filtrosPrevios.huespedes;
+
+
+  // ======================================
+  // 🔧 VALIDAR FECHA DE ENTRADA
+  // ======================================
+  fechaEntradaInput.addEventListener("change", () => {
     const entrada = new Date(fechaEntradaInput.value);
+
+    // Evitar fecha antes de hoy
     if (entrada < today) {
-      alert('La fecha de entrada no puede ser pasada.');
       fechaEntradaInput.value = todayStr;
       return;
     }
-    const nextDay = new Date(entrada);
-    nextDay.setDate(nextDay.getDate() + 1);
-    fechaSalidaInput.min = nextDay.toISOString().split('T')[0];
+
+    // Ajustar el mínimo de fecha salida
+    fechaSalidaInput.min = fechaEntradaInput.value;
+
+    // Si la salida es inválida → limpiarla
+    if (fechaSalidaInput.value) {
+      const salida = new Date(fechaSalidaInput.value);
+      if (salida < entrada) fechaSalidaInput.value = "";
+    }
+
+    guardarFiltros();
   });
 
-  fechaSalidaInput.addEventListener('change', () => {
-    const salida = new Date(fechaSalidaInput.value);
+  // ======================================
+  // 🔧 VALIDAR FECHA DE SALIDA
+  // ======================================
+  fechaSalidaInput.addEventListener("change", () => {
     const entrada = new Date(fechaEntradaInput.value);
-    if (salida <= entrada) {
-      alert('La fecha de salida debe ser posterior a la entrada.');
-      fechaSalidaInput.value = '';
+    const salida = new Date(fechaSalidaInput.value);
+
+    if (salida < today) {
+      fechaSalidaInput.value = todayStr;
+      return;
     }
+
+    if (salida < entrada) {
+      alert("La fecha de salida debe ser igual o posterior a la fecha de entrada.");
+      fechaSalidaInput.value = "";
+      return;
+    }
+
+    guardarFiltros();
   });
+
+  // 🔹 Guardar filtros iniciales si ya hay valores
+  guardarFiltros();
 
   iniciarCarruseles();
 };
 
 
-// ===============================
-// 🖼️ CARRUSEL EMBEBIDO
-// ===============================
+// ======================================
+// 💾 GUARDAR FILTROS EN LOCALSTORAGE
+// ======================================
+function guardarFiltros() {
+  const fechaEntradaInput = document.querySelector('[name="fecha_entrada"]');
+  const fechaSalidaInput = document.querySelector('[name="fecha_salida"]');
+  const tipoSelect = document.querySelector('[name="tipo"]');
+  const huespedesInput = document.querySelector('[name="huespedes"]');
+
+  const filtros = {
+    fecha_entrada: fechaEntradaInput.value || "",
+    fecha_salida: fechaSalidaInput.value || "",
+    tipo: tipoSelect.value || "",
+    huespedes: huespedesInput.value || ""
+  };
+
+  localStorage.setItem("filtrosReserva", JSON.stringify(filtros));
+}
+
+
+// ======================================
+// 🖼️ CARRUSEL PEQUEÑO
+// ======================================
 function iniciarCarruseles() {
   document.querySelectorAll('.carousel-mini').forEach(carrusel => {
     const id = carrusel.dataset.room;
     posiciones[id] = 0;
 
-    // autoplay
     let interval = setInterval(() => moverCarrusel(id, 1), 3000);
+
     carrusel.addEventListener('mouseenter', () => clearInterval(interval));
-    carrusel.addEventListener('mouseleave', () => interval = setInterval(() => moverCarrusel(id, 1), 3000));
+    carrusel.addEventListener('mouseleave', () => {
+      interval = setInterval(() => moverCarrusel(id, 1), 3000);
+    });
   });
 }
 
@@ -609,102 +705,112 @@ function moverCarrusel(id, dir) {
   const track = document.querySelector(`.carousel-mini[data-room="${id}"] .carousel-track`);
   const imgs = track.querySelectorAll('.carousel-img');
   const total = imgs.length;
+
   posiciones[id] = (posiciones[id] ?? 0) + dir;
+
   if (posiciones[id] < 0) posiciones[id] = total - 1;
   if (posiciones[id] >= total) posiciones[id] = 0;
+
   track.style.transform = `translateX(-${posiciones[id] * 320}px)`;
 }
 
 
-// ===============================
-// 🔍 LIGHTBOX (imagen ampliada)
-// ===============================
+// ======================================
+// 🔍 LIGHTBOX
+// ======================================
 function abrirLightbox(id, index) {
   const track = document.querySelector(`.carousel-mini[data-room="${id}"] .carousel-track`);
   lightboxImgs = Array.from(track.querySelectorAll('.carousel-img')).map(i => i.src);
   lightboxIndex = index;
-  document.getElementById('lightbox-img').src = lightboxImgs[lightboxIndex];
-  document.getElementById('lightbox').classList.add('show');
+
+  document.getElementById("lightbox-img").src = lightboxImgs[lightboxIndex];
+  document.getElementById("lightbox").classList.add("show");
 }
 
 function cerrarLightbox() {
-  document.getElementById('lightbox').classList.remove('show');
+  document.getElementById("lightbox").classList.remove("show");
 }
 
 function navegarLightbox(dir) {
   if (!lightboxImgs.length) return;
+
   lightboxIndex += dir;
   if (lightboxIndex < 0) lightboxIndex = lightboxImgs.length - 1;
   if (lightboxIndex >= lightboxImgs.length) lightboxIndex = 0;
-  document.getElementById('lightbox-img').src = lightboxImgs[lightboxIndex];
+
+  document.getElementById("lightbox-img").src = lightboxImgs[lightboxIndex];
 }
 
-// navegación por teclado
-document.addEventListener('keydown', e => {
-  const lightbox = document.getElementById('lightbox');
-  if (!lightbox.classList.contains('show')) return;
-  if (e.key === 'Escape') cerrarLightbox();
-  if (e.key === 'ArrowLeft') navegarLightbox(-1);
-  if (e.key === 'ArrowRight') navegarLightbox(1);
+document.addEventListener("keydown", e => {
+  const lightbox = document.getElementById("lightbox");
+  if (!lightbox.classList.contains("show")) return;
+
+  if (e.key === "Escape") cerrarLightbox();
+  if (e.key === "ArrowLeft") navegarLightbox(-1);
+  if (e.key === "ArrowRight") navegarLightbox(1);
 });
 
 
-// ===============================
+// ======================================
 // 🏨 SELECCIONAR HABITACIÓN
-// ===============================
+// ======================================
 function seleccionarHabitacion(tipo, numero, precio, idHabitacion) {
   const entrada = document.querySelector('[name="fecha_entrada"]').value;
   const salida  = document.querySelector('[name="fecha_salida"]').value;
-  if (!entrada || !salida) { alert('Selecciona las fechas de entrada y salida.'); return; }
+
+  if (!entrada || !salida) {
+    alert("Selecciona fechas de entrada y salida.");
+    return;
+  }
 
   const d1 = new Date(entrada);
   const d2 = new Date(salida);
-  if (d2 <= d1) { alert('La fecha de salida debe ser posterior a la entrada.'); return; }
 
-  const noches = (d2 - d1) / (1000 * 60 * 60 * 24);
-  const cardImg = document
-    .querySelector(`.carousel-mini[data-room="${idHabitacion}"] .carousel-img`)
-    .src;
+  if (d2 < d1) {
+    alert("La fecha de salida debe ser posterior a la entrada.");
+    return;
+  }
 
-  const nueva = { tipo, numero, precio, noches, entrada, salida, id_habitacion: idHabitacion, imagen_seleccionada: cardImg, servicios: [] };
-  if (!reservas.some(r => r.id_habitacion === idHabitacion)) reservas.push(nueva);
+  const noches = (d2 - d1) / (1000*60*60*24);
+  const cardImg = document.querySelector(`.carousel-mini[data-room="${idHabitacion}"] .carousel-img`).src;
 
-  if (noches > 3) {
-    const desayuno = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'desayuno buffet');
-    const lavanderia = TODOS_LOS_SERVICIOS.find(s => s.nombre.toLowerCase() === 'lavandería');
-    if (desayuno) nueva.servicios.push({ id: desayuno.id_servicio, nombre: desayuno.nombre, precio: 0, qty: 1 });
-    if (lavanderia) nueva.servicios.push({ id: lavanderia.id_servicio, nombre: lavanderia.nombre, precio: 0, qty: 1 });
-    mostrarNotificacion('🎉 Por tu estancia larga, tienes Desayuno y Lavandería gratis.');
+  const nueva = {
+    tipo, numero, precio, noches,
+    entrada, salida,
+    id_habitacion: idHabitacion,
+    imagen_seleccionada: cardImg,
+    servicios: []
+  };
+
+  if (!reservas.some(r => r.id_habitacion === idHabitacion)) {
+    reservas.push(nueva);
   }
 
   renderResumen();
 }
 
 
-// ===============================
-// 📋 RENDER DEL RESUMEN
-// ===============================
+// ======================================
+// 📋 RENDER DE RESUMEN
+// ======================================
 function renderResumen() {
-  const cont = document.getElementById('resumenContenido');
-  const btnContinuar = document.getElementById('btnContinuar');
+  const cont = document.getElementById("resumenContenido");
+  const btnContinuar = document.getElementById("btnContinuar");
+
   if (!reservas.length) {
-    cont.innerHTML = '<p>No has seleccionado ninguna habitación.</p>';
+    cont.innerHTML = "<p>No has seleccionado ninguna habitación.</p>";
     btnContinuar.disabled = true;
     return;
   }
 
-  let html = '';
+  let html = "";
   let totalGlobal = 0;
+
   reservas.forEach(r => {
     const totalHab = r.precio * r.noches;
-    let descuento = 0;
-    if (r.noches >= 30) descuento = 0.25;
-    else if (r.noches >= 15) descuento = 0.20;
-    else if (r.noches >= 8) descuento = 0.10;
-
-    const descMonto = totalHab * descuento;
     const servTotal = r.servicios.reduce((a, s) => a + (s.precio * s.qty), 0);
-    const totalFinal = totalHab - descMonto + servTotal;
+
+    const totalFinal = totalHab + servTotal;
     totalGlobal += totalFinal;
 
     html += `
@@ -713,66 +819,80 @@ function renderResumen() {
         <p><strong>${r.tipo} Nº ${r.numero}</strong></p>
         <p>${r.entrada} → ${r.salida} (${r.noches} noches)</p>
         <p>Precio: S/. ${r.precio.toFixed(2)}</p>
-        ${descMonto > 0 ? `<p style="color:#28a745;">Descuento: -S/. ${descMonto.toFixed(2)}</p>` : ""}
         <p>Servicios: S/. ${servTotal.toFixed(2)}</p>
         <hr>
-      </div>`;
+      </div>
+    `;
   });
 
-  html += `<p><strong>Total General:</strong> <span style="color:#0f9d58;font-weight:800;font-size:1.2em;">S/. ${totalGlobal.toFixed(2)}</span></p>
-           <button class="btn-accion serv" onclick="abrirServicios()">🧾 Agregar Servicios Adicionales</button>`;
+  html += `
+    <p><strong>Total General:</strong>
+      <span style="color:#0f9d58;font-weight:800;font-size:1.2em;">
+        S/. ${totalGlobal.toFixed(2)}
+      </span>
+    </p>
+    <button class="btn-accion serv" onclick="abrirServicios()">Agregar servicios adicionales</button>
+  `;
+
   cont.innerHTML = html;
   btnContinuar.disabled = false;
 }
 
 
-// ===============================
+// ======================================
 // 🧾 SERVICIOS ADICIONALES
-// ===============================
+// ======================================
 function abrirServicios() {
-  const modal = document.getElementById('modal-servicios');
-  if (!modal) return;
-  modal.classList.add('show');
+  document.getElementById("modal-servicios").classList.add("show");
 }
 
-document.addEventListener('change', e => {
+document.addEventListener("change", e => {
   if (e.target.matches('#formServicios input[name="srv"]')) {
-    const qty = e.target.closest('.serv-item').querySelector('.qty');
-    qty.disabled = !e.target.checked;
+    e.target.closest(".serv-item")
+            .querySelector(".qty")
+            .disabled = !e.target.checked;
   }
 });
 
-const btnAplicar = document.getElementById('aplicarServicios');
+const btnAplicar = document.getElementById("aplicarServicios");
+
 if (btnAplicar) {
-  btnAplicar.addEventListener('click', () => {
+  btnAplicar.addEventListener("click", () => {
     const seleccionados = [];
-    document.querySelectorAll('#formServicios input[name="srv"]:checked').forEach(chk => {
-      const row = chk.closest('.serv-item');
-      const qty = parseInt(row.querySelector('.qty').value || '0');
-      const precio = parseFloat(chk.dataset.precio);
-      const id = parseInt(chk.value);
-      const nombre = row.querySelector('strong').textContent.trim();
-      seleccionados.push({ id, nombre, precio, qty });
-    });
+
+    document.querySelectorAll('#formServicios input[name="srv"]:checked')
+      .forEach(chk => {
+        const row = chk.closest(".serv-item");
+        const qty = parseInt(row.querySelector(".qty").value || "0");
+        const precio = parseFloat(chk.dataset.precio);
+        const nombre = row.querySelector("strong").textContent.trim();
+
+        seleccionados.push({
+          id: parseInt(chk.value),
+          nombre, precio, qty
+        });
+      });
+
     reservas.forEach(r => r.servicios = seleccionados);
-    document.getElementById('modal-servicios').classList.remove('show');
+
+    document.getElementById("modal-servicios").classList.remove("show");
     renderResumen();
   });
 }
 
 
-// ===============================
-// 💳 CONTINUAR AL PAGO
-// ===============================
+// ======================================
+// 💳 CONTINUAR A PAGO
+// ======================================
 function continuarPago() {
   if (!reservas.length) {
-    alert('Selecciona una habitación primero.');
+    alert("Selecciona una habitación primero.");
     return;
   }
 
-  fetch('/reservas/cliente/pago_reserva', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  fetch("/reservas/cliente/pago_reserva", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify(reservas)
   })
   .then(async res => {
@@ -781,73 +901,90 @@ function continuarPago() {
       setTimeout(() => { window.location.href = res.url; }, 1800);
       return;
     }
+
     const data = await res.json();
     if (data.ok) {
       localStorage.removeItem("filtrosReserva");
-      window.location.href = '/reservas/cliente/pago_reserva';
+      window.location.href = "/reservas/cliente/pago_reserva";
     } else {
-      alert('Error al preparar la reserva.');
+      alert("Error al preparar la reserva.");
     }
-  })
-  .catch(() => {
-    document.getElementById("modal-login").style.display = "flex";
-    setTimeout(() => { document.getElementById("modal-login").style.display = "none"; }, 2000);
   });
 }
 
 
-// ===============================
-// 🔔 NOTIFICACIONES TOAST
-// ===============================
+// ======================================
+// 🔔 TOAST NOTIFICATIONS
+// ======================================
 function mostrarNotificacion(msg) {
   const cont = document.getElementById('notificacion-container');
   const div = document.createElement('div');
   div.className = 'notificacion-toast';
   div.textContent = msg;
   cont.appendChild(div);
-  setTimeout(() => { div.classList.add('out'); div.addEventListener('animationend', () => div.remove()); }, 4000);
+
+  setTimeout(() => {
+    div.classList.add('out');
+    div.addEventListener('animationend', () => div.remove());
+  }, 4000);
 }
 
-// ===============================
-// ❌ CERRAR MODALES (botón "X" o clic fuera)
-// ===============================
-document.addEventListener('click', e => {
-  // Cierre al hacer clic en la "X"
-  if (e.target.matches('.close')) {
-    const modal = e.target.closest('.modal');
-    if (modal) modal.classList.remove('show');
+
+// ======================================
+// ❌ CERRAR MODALES
+// ======================================
+document.addEventListener("click", e => {
+  if (e.target.matches(".close")) {
+    e.target.closest(".modal").classList.remove("show");
   }
 
-  // Cierre al hacer clic fuera del contenido
-  if (e.target.classList.contains('modal')) {
-    e.target.classList.remove('show');
+  if (e.target.classList.contains("modal")) {
+    e.target.classList.remove("show");
   }
 });
 
-// ===============================
-// 🎠 Carrusel embebido funcional
-// ===============================
-document.querySelectorAll('.carousel-mini').forEach(carousel => {
-  const track = carousel.querySelector('.carousel-track');
-  const items = carousel.querySelectorAll('.carousel-item');
-  const prevBtn = carousel.querySelector('.carousel-btn.prev');
-  const nextBtn = carousel.querySelector('.carousel-btn.next');
+
+// ======================================
+// 🎠 CARRUSEL (BOTONES)
+// ======================================
+document.querySelectorAll(".carousel-mini").forEach(carousel => {
+  const track = carousel.querySelector(".carousel-track");
+  const items = carousel.querySelectorAll(".carousel-item");
+  const prevBtn = carousel.querySelector(".carousel-btn.prev");
+  const nextBtn = carousel.querySelector(".carousel-btn.next");
   let index = 0;
 
   function updateCarousel() {
     track.style.transform = `translateX(-${index * 100}%)`;
   }
 
-  prevBtn.addEventListener('click', () => {
+  prevBtn.addEventListener("click", () => {
     index = (index - 1 + items.length) % items.length;
     updateCarousel();
   });
 
-  nextBtn.addEventListener('click', () => {
+  nextBtn.addEventListener("click", () => {
     index = (index + 1) % items.length;
     updateCarousel();
   });
 });
 
+// ======================================
+// 🧹 ELIMINAR FILTROS
+// ======================================
+function eliminarFiltros() {
+  localStorage.removeItem("filtrosReserva");
+
+  // Limpiar los campos del formulario
+  document.querySelector('[name="fecha_entrada"]').value = "";
+  document.querySelector('[name="fecha_salida"]').value = "";
+  document.querySelector('[name="tipo"]').value = "";
+  document.querySelector('[name="huespedes"]').value = 1;
+
+  // Recargar la página para mostrar todo sin filtros
+  window.location.href = window.location.pathname;
+}
+
 </script>
 {% endblock %}
+
