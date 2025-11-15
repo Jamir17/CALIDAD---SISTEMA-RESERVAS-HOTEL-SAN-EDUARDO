@@ -15,11 +15,13 @@ def habitaciones_cliente():
         flash("Debes iniciar sesión.", "error")
         return redirect(url_for("usuarios.iniciosesion"))
 
+    # --- Filtros del formulario ---
     fecha_entrada = request.args.get("fecha_entrada") or ""
     fecha_salida = request.args.get("fecha_salida") or ""
     tipo = request.args.get("tipo") or ""
     huespedes = request.args.get("huespedes") or ""
 
+    # --- Normalizar fechas ---
     def normalizar(fecha_str):
         try:
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d")
@@ -32,50 +34,54 @@ def habitaciones_cliente():
 
     con = obtener_conexion()
     with con.cursor() as cur:
+        # =====================================================
+        # 📊 Consulta principal: muestra todas las habitaciones
+        # pero marca las que están reservadas en el rango dado
+        # =====================================================
         query = """
             SELECT 
-                h.id_habitacion, h.numero, h.estado,
-                t.nombre AS tipo, t.descripcion, t.precio_base, t.capacidad,
+                h.id_habitacion,
+                h.numero,
+                h.estado,
+                t.nombre AS tipo,
+                t.descripcion,
+                t.precio_base,
+                t.capacidad,
                 COALESCE(t.comodidades, '') AS comodidades,
-                h.imagen AS portada
+                h.imagen AS portada,
+                CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM reservas r
+                        WHERE r.id_habitacion = h.id_habitacion
+                          AND r.estado IN ('Activa', 'Pendiente')
+                          AND %s < r.fecha_salida
+                          AND %s > r.fecha_entrada
+                    )
+                    THEN 1 ELSE 0
+                END AS reservada
             FROM habitaciones h
             JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
             WHERE 1=1
         """
-        params = []
+        params = [fecha_salida or "2100-01-01", fecha_entrada or "1900-01-01"]
 
-        # Filtro por tipo
+        # --- Filtro por tipo ---
         if tipo:
             query += " AND t.nombre = %s"
             params.append(tipo)
 
-        # Filtro por capacidad
+        # --- Filtro por capacidad ---
         if huespedes:
             query += " AND t.capacidad >= %s"
             params.append(int(huespedes))
-
-        # Filtro por disponibilidad (si hay fechas)
-        if fecha_entrada and fecha_salida:
-            query += """
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM reservas r
-                    WHERE r.id_habitacion = h.id_habitacion
-                      AND r.estado IN ('Activa', 'Pendiente')
-                      -- SOLAPAMIENTO: [fecha_entrada, fecha_salida)
-                      AND r.fecha_entrada < %s
-                      AND r.fecha_salida > %s
-                )
-            """
-            # IMPORTANTE: primero va la fecha de salida buscada, luego la de entrada
-            params.extend([fecha_salida, fecha_entrada])
 
         query += " ORDER BY t.precio_base ASC"
 
         cur.execute(query, tuple(params))
         habitaciones = cur.fetchall()
 
-        # combos
+        # 🔸 Recuperar combos
         cur.execute("SELECT DISTINCT nombre FROM tipo_habitacion ORDER BY nombre")
         tipos_unicos = cur.fetchall()
 
@@ -94,7 +100,6 @@ def habitaciones_cliente():
         huespedes=huespedes,
         nombre=session.get("nombre")
     )
-
 
 
 # Detalle de habitación
