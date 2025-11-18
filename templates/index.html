@@ -263,48 +263,111 @@
       </div>
     </section>
 
-    <!-- Testimonios -->
+    <!-- Testimonios con desplazamiento -->
     <section class="testimonials-section">
       <div class="container">
         <div class="section-header">
           <h2>Lo que dicen nuestros huéspedes</h2>
         </div>
-        <div class="testimonials-grid">
-          <article class="testimonial-card">
-            <p>"Ubicación perfecta y el personal muy amable además “Lugar cómodo y tranquilo
-              Tiene Netflix e internet en la TV
-              Tiene agua caliente”"</p>
-            <div class="testimonial-user">
-              <div class="user-avatar">ML</div>
-              <div>
-                <strong>Fernando</strong>
-                <small>Estadía en Suite</small>
-              </div>
-            </div>
-          </article>
-          <article class="testimonial-card">
-            <p>“El personal muy capacitado y muy amable, de verdad volvería a este hotel, su limpieza muy buena, y sobre todo la comodidad😁”"</p>
-            <div class="testimonial-user">
-              <div class="user-avatar">CR</div>
-              <div>
-                <strong>Aylin</strong>
-                <small>Viaje de negocios</small>
-              </div>
-            </div>
-          </article>
-          <article class="testimonial-card">
-            <p>“Fue una buena experiencia, el hotel se ubica en una zona céntrica donde mantiene buena comodidad con el Huesped "</p>
-            <div class="testimonial-user">
-              <div class="user-avatar">GP</div>
-              <div>
-                <strong>Anghi</strong>
-                <small>Vacaciones</small>
-              </div>
-            </div>
-          </article>
+        <div class="testimonial-scroller" data-speed="slow">
+          <div class="scroller-inner">
+            {% if valoraciones %}
+              {% for val in valoraciones %}
+              <article class="testimonial-card">
+                <p>"{{ val.comentario }}"</p>
+                <div class="testimonial-user">
+                  <div class="user-avatar">{{ val.nombres[0] if val.nombres else 'U' }}</div>
+                  <div>
+                    <strong>{{ val.nombres }} {{ val.apellidos }}</strong>
+                    <small>
+                      {% for i in range(val.puntuacion) %}★{% endfor %}{% for i in range(5 - val.puntuacion) %}<span class="star-empty">☆</span>{% endfor %}
+                    </small>
+                  </div>
+                </div>
+              </article>
+              {% endfor %}
+            {% else %}
+              <p>Aún no hay valoraciones para mostrar.</p>
+            {% endif %}
+          </div>
         </div>
       </div>
     </section>
+    <style>
+      /* Estilos para el carrusel de testimonios con desplazamiento automático */
+      .testimonial-scroller {
+        max-width: 1200px;
+        margin: auto;
+        overflow: hidden;
+        -webkit-mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
+        mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
+      }
+
+      .scroller-inner {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 20px;
+        width: max-content;
+      }
+      
+      .testimonial-card {
+        width: 350px; /* Ancho fijo para cada tarjeta */
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        padding: 25px 30px;
+        flex-shrink: 0; /* Evita que las tarjetas se encojan */
+      }
+
+      .testimonial-scroller[data-animated="true"] {
+        overflow: hidden;
+      }
+
+      .testimonial-scroller[data-animated="true"] .scroller-inner {
+        animation: scroll 20s linear infinite;
+      }
+
+      .testimonial-scroller:hover .scroller-inner {
+        animation-play-state: paused;
+      }
+
+      @keyframes scroll {
+        to {
+          transform: translate(calc(-50% - 10px)); /* 10px es la mitad del gap */
+        }
+      }
+
+      .star-empty {
+        color: #e0e0e0;
+      }
+    </style>
+      
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const scrollers = document.querySelectorAll(".testimonial-scroller");
+
+        // Si el usuario no prefiere movimiento, no añadimos la animación.
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          addAnimation();
+        }
+
+        function addAnimation() {
+          scrollers.forEach((scroller) => {
+            scroller.setAttribute("data-animated", true);
+
+            const scrollerInner = scroller.querySelector(".scroller-inner");
+            const scrollerContent = Array.from(scrollerInner.children);
+
+            // Duplicamos el contenido para el efecto de bucle infinito
+            scrollerContent.forEach((item) => {
+              const duplicatedItem = item.cloneNode(true);
+              duplicatedItem.setAttribute("aria-hidden", true);
+              scrollerInner.appendChild(duplicatedItem);
+            });
+          });
+        }
+      });
+    </script>
 
     <!-- CTA -->
     <section id="reservas" class="cta-section">

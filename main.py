@@ -1,5 +1,6 @@
 from flask import Flask, render_template, session, request, redirect, url_for
 from datetime import timedelta
+from bd import obtener_conexion
 import openpyxl
 from openpyxl.styles import Font, PatternFill
 from controladores.controlador_usuarios import usuarios_bp
@@ -18,6 +19,7 @@ from controladores.controlador_reservas_cliente import reservas_cliente_bp
 from controladores.controlador_serviciosadicionales import servicios
 from controladores.controlador_incidencias import incidencias_bp
 from controladores.controlador_chatbot import webchat_bp
+from controladores.controlador_valoraciones import valoraciones_bp
 from controladores.controlador_seguridad import seguridad_bp
 
 app = Flask(__name__)
@@ -45,12 +47,33 @@ app.register_blueprint(reservas_cliente_bp)
 app.register_blueprint(servicios)
 app.register_blueprint(incidencias_bp)
 app.register_blueprint(webchat_bp, url_prefix="/webchat")
+app.register_blueprint(valoraciones_bp, url_prefix="/valoraciones")
 app.register_blueprint(seguridad_bp)
 
 # ====== RUTA PRINCIPAL ======
 @app.route("/")
 def index():
-    return render_template("index.html", nombre=session.get("nombre"))
+    valoraciones = []
+    try:
+        with obtener_conexion() as conexion:
+            with conexion.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        v.puntuacion, 
+                        v.comentario, 
+                        c.nombres, 
+                        c.apellidos
+                    FROM valoraciones v
+                    JOIN clientes c ON v.id_cliente = c.id_cliente
+                    WHERE v.puntuacion >= 3 AND v.comentario IS NOT NULL AND v.comentario != ''
+                    ORDER BY v.fecha_valoracion DESC
+                    LIMIT 3
+                """)
+                valoraciones = cursor.fetchall()
+    except Exception as e:
+        print(f"Error al obtener valoraciones para el index: {e}")
+
+    return render_template("index.html", nombre=session.get("nombre"), valoraciones=valoraciones)
 
 @app.route("/habitaciones-principales")
 def habitaciones_principales():

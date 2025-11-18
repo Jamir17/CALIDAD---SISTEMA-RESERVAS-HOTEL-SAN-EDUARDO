@@ -537,6 +537,21 @@ INSERT INTO `usuarios` (`id_usuario`, `dni`, `nombres`, `apellidos`, `correo`, `
 	(8, '72318705', 'Jamir', 'Merino Mayra', 'jamir_merino@hotmail.com', '$argon2id$v=19$m=65536,t=3,p=4$sCuxQ29bn++odGShDO06Kg$ww5OdRxnAhSX5Y6UMeU3I5lf5+IDHP1KVv4UXhnZR0Y', '+51942030088', 1, 3),
 	(9, '72318703', 'Isis', 'Dulcemaria', '', '', '', 1, 3);
 
+-- Volcando estructura para tabla bd_hotel_san_eduardo.valoraciones
+CREATE TABLE IF NOT EXISTS `valoraciones` (
+  `id_valoracion` int NOT NULL AUTO_INCREMENT,
+  `id_cliente` int NOT NULL,
+  `id_reserva` int DEFAULT NULL,
+  `puntuacion` int NOT NULL,
+  `comentario` text,
+  `fecha_valoracion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_valoracion`),
+  KEY `fk_valoracion_cliente` (`id_cliente`),
+  KEY `fk_valoracion_reserva` (`id_reserva`),
+  CONSTRAINT `fk_valoracion_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
+  CONSTRAINT `fk_valoracion_reserva` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
 /*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
