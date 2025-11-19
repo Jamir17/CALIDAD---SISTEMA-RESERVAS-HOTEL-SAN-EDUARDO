@@ -120,7 +120,12 @@ def api_checkin():
 
     con = obtener_conexion()
     with con.cursor() as cur:
+        # Actualizar estado de la habitación
         cur.execute("UPDATE habitaciones SET estado = 'Ocupada' WHERE id_habitacion = %s", (id_habitacion,))
+        
+        # Registrar en la tabla check_in
+        now = datetime.now()
+        cur.execute("INSERT INTO check_in (id_reserva, fecha, hora) VALUES (%s, %s, %s)", (id_reserva, now.date(), now.time()))
         con.commit()
     
     registrar_actividad('Check-in', id_reserva, id_habitacion, 'Ocupada')
@@ -136,10 +141,19 @@ def api_checkout():
 
     con = obtener_conexion()
     with con.cursor() as cur:
+        # Obtener el total de la facturación para guardarlo en el checkout
+        cur.execute("SELECT total FROM facturacion WHERE id_reserva = %s ORDER BY fecha_emision DESC LIMIT 1", (id_reserva,))
+        factura = cur.fetchone()
+        total_factura = factura['total'] if factura else 0.00
+
         # Cambiar estado de la habitación a 'En Limpieza'
         cur.execute("UPDATE habitaciones SET estado = 'En Limpieza' WHERE id_habitacion = %s", (id_habitacion,))
         # Cambiar estado de la reserva a 'Finalizada'
         cur.execute("UPDATE reservas SET estado = 'Finalizada' WHERE id_reserva = %s", (id_reserva,))
+        
+        # Registrar en la tabla check_out
+        now = datetime.now()
+        cur.execute("INSERT INTO check_out (id_reserva, fecha, hora, total_factura) VALUES (%s, %s, %s, %s)", (id_reserva, now.date(), now.time(), total_factura))
         con.commit()
     
     registrar_actividad('Check-out', id_reserva, id_habitacion, 'En Limpieza')

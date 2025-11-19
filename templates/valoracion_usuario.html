@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Valoraciones - Hotel San Eduardo{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --lila-claro: #f5f4f8;
+        --azul-grad: #4a00e0;
+        --morado-grad: #8e2de2;
+        --gris-claro-bg: #f9fafb;
+        --gris-borde: #e5e7eb;
+        --gris-texto: #4b5563;
+        --gris-oscuro: #374151;
+        --azul-etiqueta: #3b82f6;
+        --estrella-vacia: #d1d5db;
+        --estrella-llena: #facc15;
+    }
+    body {
+        background-color: var(--lila-claro);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .main-container {
+        max-width: 800px;
+        margin: 150px auto 80px;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: var(--gris-oscuro);
+    }
+
+    /* Estilos para la nueva tarjeta de valoración */
+    .nueva-valoracion-card {
+        background-color: #fff;
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 40px;
+    }
+
+    .nueva-valoracion-card .card-header {
+        background: linear-gradient(to right, var(--azul-grad), var(--morado-grad));
+        color: white;
+        padding: 24px 28px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .nueva-valoracion-card .header-icon {
+        font-size: 2rem;
+        color: var(--estrella-llena);
+    }
+
+    .nueva-valoracion-card .header-text h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .nueva-valoracion-card .header-text p {
+        margin: 4px 0 0;
+        opacity: 0.9;
+    }
+
+    .nueva-valoracion-card .card-body {
+        padding: 28px;
+    }
+
+    .reserva-info-box {
+        background-color: var(--gris-claro-bg);
+        border-radius: 12px;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .info-item label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--azul-etiqueta);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-item p {
+        margin: 4px 0 0;
+        font-size: 0.9rem;
+        color: var(--gris-oscuro);
+    }
+
+    .form-section {
+        margin-bottom: 24px;
+    }
+
+    .form-section h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--gris-oscuro);
+        margin-bottom: 12px;
+    }
+
+    .estrellas-input {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        font-size: 2.5rem;
+        direction: rtl;
+    }
+
+    .estrellas-input input[type="radio"] {
+        display: none;
+    }
+
+    .estrellas-input label {
+        color: var(--estrella-vacia);
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .estrellas-input input[type="radio"]:checked ~ label,
+    .estrellas-input label:hover,
+    .estrellas-input label:hover ~ label {
+        color: var(--estrella-llena);
+    }
+
+    .comentario-wrapper {
+        position: relative;
+    }
+
+    .comentario-wrapper textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--gris-borde);
+        background-color: #fff;
+        resize: vertical;
+    }
+
+    .comentario-wrapper textarea::placeholder {
+        color: #9ca3af;
+    }
+
+    .char-counter {
+        position: absolute;
+        bottom: 10px;
+        right: 12px;
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .form-actions .btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-limpiar {
+        background-color: var(--gris-claro-bg);
+        color: var(--gris-oscuro);
+    }
+
+    .btn-enviar {
+        background: linear-gradient(to right, var(--morado-grad), var(--azul-grad));
+        color: white;
+    }
+
+    /* Estilos para las valoraciones existentes */
+    .historial-valoraciones h2 {
+        text-align: center;
+        color: var(--gris-oscuro);
+        margin-bottom: 30px;
+    }
+
+    .valoracion-card {
+        background-color: #fff;
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .valoracion-card .card-header {
+        background: linear-gradient(to right, var(--azul-grad), var(--morado-grad));
+        color: white;
+        padding: 20px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .valoracion-card .card-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .valoracion-card .card-header .fecha {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    .valoracion-card .card-body {
+        padding: 28px;
+    }
+
+    .valoracion-card .estrellas-rating {
+        font-size: 2rem;
+        color: var(--estrella-llena);
+    }
+
+    .valoracion-card .estrellas-rating .estrella-vacia {
+        color: var(--estrella-vacia);
+    }
+
+    .valoracion-card .comentario-display {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--gris-texto);
+        background-color: var(--gris-claro-bg);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid var(--gris-borde);
+    }
+
+    .sin-valoraciones {
+        text-align: center;
+        padding: 50px;
+        font-style: italic;
+        color: var(--gris-texto);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="page-header">
+        <h1>Mis Valoraciones</h1>
+        <p>Aquí puedes ver todas las opiniones que has compartido sobre tus estancias.</p>
+    </div>
+
+    <!-- Tarjeta para nueva valoración -->
+    {% if reserva_a_valorar %}
+    <form class="nueva-valoracion-card" method="POST" action="{{ url_for('valoraciones.guardar_valoracion', id_reserva=reserva_a_valorar.id_reserva) }}">
+        <header class="card-header">
+            <span class="header-icon">★</span>
+            <div class="header-text">
+                <h2>Valoración del Hotel</h2>
+                <p>Comparte tu experiencia con otros viajeros</p>
+            </div>
+        </header>
+
+        <div class="card-body">
+            <div class="reserva-info-box">
+                <div class="info-item">
+                    <label>RESERVA ID</label>
+                    <p>#RES-{{ reserva_a_valorar.id_reserva }}</p>
+                </div>
+                <div class="info-item">
+                    <label>HUÉSPED</label>
+                    <p>{{ reserva_a_valorar.nombres }} {{ reserva_a_valorar.apellidos }}</p>
+                </div>
+                <div class="info-item">
+                    <label>FECHA CHECK-IN</label>
+                    <p>{{ reserva_a_valorar.fecha_entrada.strftime('%d %b, %Y') }}</p>
+                </div>
+                <div class="info-item">
+                    <label>FECHA CHECK-OUT</label>
+                    <p>{{ reserva_a_valorar.fecha_salida.strftime('%d %b, %Y') }}</p>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>Puntuación</h4>
+                <div class="estrellas-input">
+                    <input type="radio" id="star5" name="puntuacion" value="5" /><label for="star5">★</label>
+                    <input type="radio" id="star4" name="puntuacion" value="4" /><label for="star4">★</label>
+                    <input type="radio" id="star3" name="puntuacion" value="3" /><label for="star3">★</label>
+                    <input type="radio" id="star2" name="puntuacion" value="2" /><label for="star2">★</label>
+                    <input type="radio" id="star1" name="puntuacion" value="1" required /><label for="star1">★</label>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h4>Comentario (Opcional)</h4>
+                <div class="comentario-wrapper">
+                    <textarea name="comentario" id="comentario" placeholder="Cuéntanos sobre tu experiencia en el hotel…" maxlength="500"></textarea>
+                    <div id="charCounter" class="char-counter">0/500</div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="reset" class="btn btn-limpiar">Limpiar</button>
+                <button type="submit" class="btn btn-enviar">Enviar Valoración</button>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
+    <!-- Historial de valoraciones o mensaje de "sin valoraciones" -->
+    {% if valoraciones %}
+        <div class="historial-valoraciones">
+        <h2>Tu Historial</h2>
+        {% for valoracion in valoraciones %}
+        <div class="valoracion-card">
+            <header class="card-header">
+                <h3>Reserva #{{ valoracion.id_reserva }}</h3>
+                <span class="fecha">{{ valoracion.fecha_valoracion.strftime('%d %b, %Y') }}</span>
+            </header>
+
+            <div class="card-body">
+                <div class="form-section">
+                    <h4>Puntuación</h4>
+                    <div class="estrellas-rating">
+                        {% for i in range(1, 6) %}
+                            {% if i <= valoracion.puntuacion %}
+                                ★
+                            {% else %}
+                                <span class="estrella-vacia">★</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h4>Comentario</h4>
+                    <div class="comentario-display">
+                        {{ valoracion.comentario or 'No dejaste un comentario para esta valoración.' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+    {% elif not reserva_a_valorar %}
+        <p class="sin-valoraciones">Aún no has realizado ninguna valoración.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const comentarioTextarea = document.getElementById('comentario');
+    const charCounter = document.getElementById('charCounter');
+
+    if (comentarioTextarea && charCounter) {
+        comentarioTextarea.addEventListener('input', () => {
+            const currentLength = comentarioTextarea.value.length;
+            charCounter.textContent = `${currentLength}/500`;
+        });
+    }
+});
+</script>
+{% endblock %}
