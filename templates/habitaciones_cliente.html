@@ -78,7 +78,13 @@
                     onclick="seleccionarHabitacion('{{ h.tipo }}','{{ h.numero }}', {{ h.precio_base }}, {{ h.id_habitacion }})">
               Seleccionar
             </button>
+
+            <button class="btn-outline" title="Ver calendario"
+                    onclick="abrirCalendario({{ h.id_habitacion }})">
+              📅
+            </button>
           </div>
+
         </div>
       </article>
       {% endfor %}
@@ -143,12 +149,79 @@
     <p>⚠️ Debes iniciar sesión para poder realizar reservas.</p>
   </div>
 </div>
+
+<!-- Modal del calendario -->
+<div id="modal-calendario" class="modal">
+  <div class="modal-content calendario-modal">
+    <span class="close" onclick="cerrarCalendario()">&times;</span>
+    <h3>Disponibilidad de la habitación</h3>
+    <div class="calendar-nav">
+      <button onclick="cambiarMes(-1)">◀</button>
+      <span id="tituloMes"></span>
+      <button onclick="cambiarMes(1)">▶</button>
+    </div>
+    <div id="calendarContainer"></div>
+  </div>
+</div>
 {% endblock %}
 
 
 
 {% block extra_css %}
 <style>
+
+.calendario-modal {
+  width: 420px;
+  text-align: center;
+}
+.calendar-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+.calendar-nav button {
+  background: #0d6efd;
+  border: none;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.calendar-nav button:hover {
+  background: #0b5ed7;
+}
+#tituloMes {
+  font-weight: bold;
+  color: #0f2a63;
+}
+#calendarContainer {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 10px;
+}
+.dia-header {
+  font-weight: bold;
+  background: #e5e7eb;
+  border-radius: 6px;
+}
+.dia {
+  padding: 8px;
+  border-radius: 6px;
+  cursor: default;
+}
+.dia.ocupado {
+  background: #ef4444;
+  color: white;
+}
+.dia.libre {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+
   .btn-limpiar {
   margin-top: 8px;
   width: 100%;
@@ -984,6 +1057,111 @@ function eliminarFiltros() {
   // Recargar la página para mostrar todo sin filtros
   window.location.href = window.location.pathname;
 }
+
+// ======================================
+// 📅 CALENDARIO DE DISPONIBILIDAD
+// ======================================
+let mesActual = new Date().getMonth();
+let anioActual = new Date().getFullYear();
+let fechasGlobalOcupadas = [];
+
+function abrirCalendario(idHabitacion) {
+  const modal = document.getElementById("modal-calendario");
+  const cont = document.getElementById("calendarContainer");
+  modal.classList.add("show");
+  cont.innerHTML = "<p>Cargando disponibilidad...</p>";
+
+  fetch(`/reservas/cliente/habitacion/${idHabitacion}/ocupadas`)
+    .then(res => res.json())
+    .then(fechas => {
+      console.log("🔹 Fechas recibidas del backend:", fechas);
+
+      if (!Array.isArray(fechas) || !fechas.length) {
+        cont.innerHTML = "<p>No hay fechas reservadas.</p>";
+        return;
+      }
+
+      // 🔹 Guardamos global
+      fechasGlobalOcupadas = fechas.map(f => f.split("T")[0]); // por si llegan con hora
+
+      // 🔹 Establecer mes inicial basado en las fechas recibidas
+      const primeraFecha = new Date(fechasGlobalOcupadas[0]);
+      mesActual = primeraFecha.getMonth();
+      anioActual = primeraFecha.getFullYear();
+
+      renderizarCalendario();
+    })
+    .catch(err => {
+      console.error("Error al cargar fechas:", err);
+      cont.innerHTML = "<p>Error al cargar fechas.</p>";
+    });
+}
+
+
+function renderizarCalendario() {
+  const cont = document.getElementById("calendarContainer");
+  const tituloMes = document.getElementById("tituloMes");
+  cont.innerHTML = "";
+
+  const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio",
+                 "Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  tituloMes.textContent = `${meses[mesActual]} ${anioActual}`;
+
+  const primerDia = new Date(anioActual, mesActual, 1);
+  const ultimoDia = new Date(anioActual, mesActual + 1, 0);
+  const diasMes = ultimoDia.getDate();
+  const nombresDias = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+  // Encabezado
+  nombresDias.forEach(d => {
+    const div = document.createElement("div");
+    div.textContent = d;
+    div.className = "dia-header";
+    cont.appendChild(div);
+  });
+
+  // Espacios antes del primer día
+  for (let i = 0; i < primerDia.getDay(); i++) {
+    cont.appendChild(document.createElement("div"));
+  }
+
+  // Días del mes
+  for (let d = 1; d <= diasMes; d++) {
+    const fechaStr = `${anioActual}-${String(mesActual + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const div = document.createElement("div");
+    div.textContent = d;
+    div.classList.add("dia");
+
+  if (fechasGlobalOcupadas.some(f => f.startsWith(fechaStr))) {
+    div.classList.add("ocupado");
+  } else {
+    div.classList.add("libre");
+  }
+
+  console.log("Fecha:", fechaStr, "→", fechasGlobalOcupadas.includes(fechaStr) ? "OCUPADA" : "LIBRE");
+
+
+    cont.appendChild(div);
+  }
+}
+
+function cambiarMes(dir) {
+  mesActual += dir;
+  if (mesActual < 0) {
+    mesActual = 11;
+    anioActual--;
+  }
+  if (mesActual > 11) {
+    mesActual = 0;
+    anioActual++;
+  }
+  renderizarCalendario();
+}
+
+function cerrarCalendario() {
+  document.getElementById("modal-calendario").classList.remove("show");
+}
+
 
 </script>
 {% endblock %}

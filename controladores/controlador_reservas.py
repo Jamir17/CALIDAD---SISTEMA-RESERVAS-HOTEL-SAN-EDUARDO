@@ -761,3 +761,42 @@ def descargar_comprobante(id_reserva):
     response.headers["Content-Disposition"] = f"attachment; filename=comprobante_{id_reserva}.html"
     response.headers["Content-Type"] = "text/html; charset=utf-8"
     return response
+
+from datetime import timedelta
+from flask import jsonify
+
+@reservas_bp.route("/cliente/habitacion/<int:id_habitacion>/ocupadas")
+def obtener_fechas_ocupadas(id_habitacion):
+    """Devuelve una lista de fechas ocupadas (YYYY-MM-DD) para una habitación."""
+    con = obtener_conexion()
+    try:
+        with con.cursor() as cur:
+            cur.execute("""
+                SELECT DATE(fecha_entrada), DATE(fecha_salida)
+                FROM reservas
+                WHERE id_habitacion = %s
+                  AND estado IN ('Activa', 'Pendiente')
+            """, (id_habitacion,))
+            registros = cur.fetchall()
+
+        fechas_ocupadas = set()
+
+        for fila in registros:
+            if not fila or not all(fila):
+                continue
+
+            fecha_ini, fecha_fin = fila
+            actual = fecha_ini
+
+            # 🔹 No incluir la fecha de salida (checkout)
+            while actual < fecha_fin:
+                fechas_ocupadas.add(actual.strftime("%Y-%m-%d"))
+                actual += timedelta(days=1)
+
+        return jsonify(sorted(list(fechas_ocupadas)))
+
+    except Exception as e:
+        print("❌ Error al obtener fechas ocupadas:", e)
+        return jsonify([]), 200
+    finally:
+        con.close()
