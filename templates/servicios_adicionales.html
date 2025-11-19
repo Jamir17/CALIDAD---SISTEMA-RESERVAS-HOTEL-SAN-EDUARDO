@@ -451,14 +451,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     servicios.forEach(s => {
+      let slug = s.nombre
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+        .replace(/\s+/g, "_");
+
+      const imgSrc = `/static/img/servicios/${slug}.jpg`;
+
       const card = `
         <div class="card-servicio">
-          <img src="/static/img/servicios/default.jpg" alt="${s.nombre}">
+          <img src="${imgSrc}"
+              alt="${s.nombre}"
+              onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/servicios/default.jpg') }}';">
           <div class="info">
             <h5>${s.nombre}</h5>
             <p class="desc">${s.descripcion}</p>
             <p class="precio">S/ ${parseFloat(s.precio).toFixed(2)}</p>
-            <button class="btn-agregar" data-id="${s.id_servicio}" data-nombre="${s.nombre}" data-precio="${s.precio}">
+            <button class="btn-agregar"
+                    data-id="${s.id_servicio}"
+                    data-nombre="${s.nombre}"
+                    data-precio="${s.precio}">
               Agregar
             </button>
           </div>
@@ -466,6 +478,7 @@ document.addEventListener("DOMContentLoaded", () => {
       contenedor.insertAdjacentHTML("beforeend", card);
     });
   }
+
 
   // =============================
   // 🧠 DELEGACIÓN DE EVENTOS "AGREGAR"
