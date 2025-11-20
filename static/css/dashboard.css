@@ -132,3 +132,43 @@ header p {
 .btn-editar { background: #007bff; color: #fff; }
 .btn-eliminar { background: #dc3545; color: #fff; }
 .btn:hover { opacity: .9; }
+
+
+.form-text {
+  opacity: 0.85;
+  line-height: 1.3;
+}
+
+.form-label {
+  color: #1a1a1a;
+}
+
+.btn-link {
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-link:hover {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+/* Tarjetas métricas del dashboard */
+.metric-card {
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Ajuste visual del título del modal y textos */
+#modalHistorial .table td,
+#modalHistorial .table th {
+  font-size: 0.85rem;
+}
+
+/* Para que los labels no queden muy grandes */
+.form-label {
+  font-size: 0.9rem;
+}

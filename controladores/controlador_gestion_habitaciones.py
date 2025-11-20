@@ -60,36 +60,58 @@ def crear_habitacion():
     try:
         con = obtener_conexion()
         with con.cursor() as cur:
-            # Manejo de la imagen
-            ruta_imagen = None
-            if 'imagen' in request.files:
-                file = request.files['imagen']
-                if file.filename != '':
-                    filename = secure_filename(file.filename)
-                    # Asegúrate de que la ruta base sea correcta
-                    upload_path = os.path.join('static', 'img', 'habitaciones', filename)
-                    file.save(upload_path)
-                    ruta_imagen = os.path.join('img', 'habitaciones', filename).replace('\\', '/')
+            # 1️⃣ Crear la habitación (con una imagen principal opcional)
+            imagenes = request.files.getlist('imagenes')
+            ruta_principal = None
+
+            if imagenes:
+                for idx, file in enumerate(imagenes):
+                    if file.filename != '':
+                        filename = secure_filename(file.filename)
+                        upload_path = os.path.join('static', 'img', 'habitaciones', filename)
+                        file.save(upload_path)
+                        ruta_rel = os.path.join('img', 'habitaciones', filename).replace('\\', '/')
+
+                        if idx == 0:
+                            ruta_principal = ruta_rel  # La primera imagen será la principal
 
             cur.execute("""
                 INSERT INTO habitaciones (numero, id_tipo, estado, imagen)
                 VALUES (%s, %s, %s, %s)
-            """, (request.form.get('numero'), request.form.get('id_tipo'), request.form.get('estado'), ruta_imagen))
+            """, (
+                request.form.get('numero'),
+                request.form.get('id_tipo'),
+                request.form.get('estado'),
+                ruta_principal
+            ))
+            id_habitacion = cur.lastrowid
+
+            # 2️⃣ Insertar las imágenes adicionales en imagenes_habitacion
+            for file in imagenes:
+                if file.filename != '':
+                    filename = secure_filename(file.filename)
+                    ruta_rel = os.path.join('img', 'habitaciones', filename).replace('\\', '/')
+                    cur.execute("""
+                        INSERT INTO imagenes_habitacion (id_habitacion, ruta_imagen)
+                        VALUES (%s, %s)
+                    """, (id_habitacion, ruta_rel))
+
         con.commit()
-        return jsonify({'ok': True, 'message': 'Habitación creada con éxito.'})
+        return jsonify({'ok': True, 'message': 'Habitación y sus imágenes fueron registradas correctamente.'})
+
     except pymysql.err.IntegrityError as e:
-        # Error de integridad, como una clave duplicada (UNIQUE constraint)
-        if e.args[0] == 1062: # Código de error para 'Duplicate entry'
-            return jsonify({'ok': False, 'message': 'Ya existe una habitación con ese número. Por favor, elige otro.'}), 409 # 409 Conflict
-        else:
-            print(f"Error de integridad al crear habitación: {e}")
-            return jsonify({'ok': False, 'message': 'Error de base de datos al crear la habitación.'}), 500
+        if e.args[0] == 1062:
+            return jsonify({'ok': False, 'message': 'Ya existe una habitación con ese número.'}), 409
+        return jsonify({'ok': False, 'message': 'Error de integridad al crear la habitación.'}), 500
+
     except Exception as e:
         print(f"Error al crear habitación: {e}")
         return jsonify({'ok': False, 'message': 'Error al crear la habitación.'}), 500
+
     finally:
         if 'con' in locals() and con.open:
             con.close()
+
 
 @gestion_habitaciones_bp.route('/obtener/<int:id_habitacion>')
 def obtener_habitacion(id_habitacion):
@@ -113,34 +135,42 @@ def editar_habitacion(id_habitacion):
     try:
         con = obtener_conexion()
         with con.cursor(pymysql.cursors.DictCursor) as cur:
-            # Obtener ruta de imagen actual
-            cur.execute("SELECT imagen FROM habitaciones WHERE id_habitacion = %s", (id_habitacion,))
-            ruta_actual = cur.fetchone().get('imagen')
+            # Actualizar datos básicos
+            cur.execute("""
+                UPDATE habitaciones
+                SET numero=%s, id_tipo=%s, estado=%s
+                WHERE id_habitacion=%s
+            """, (
+                request.form.get('numero'),
+                request.form.get('id_tipo'),
+                request.form.get('estado'),
+                id_habitacion
+            ))
 
-            ruta_imagen = ruta_actual
-            if 'imagen' in request.files:
-                file = request.files['imagen']
+            # Manejo de nuevas imágenes
+            nuevas_imgs = request.files.getlist('imagenes')
+            for file in nuevas_imgs:
                 if file.filename != '':
-                    # Opcional: eliminar la imagen anterior si existe
-                    # if ruta_actual and os.path.exists(os.path.join('static', ruta_actual)):
-                    #     os.remove(os.path.join('static', ruta_actual))
                     filename = secure_filename(file.filename)
                     upload_path = os.path.join('static', 'img', 'habitaciones', filename)
                     file.save(upload_path)
-                    ruta_imagen = os.path.join('img', 'habitaciones', filename).replace('\\', '/')
+                    ruta_rel = os.path.join('img', 'habitaciones', filename).replace('\\', '/')
 
-            cur.execute("""
-                UPDATE habitaciones SET numero=%s, id_tipo=%s, estado=%s, imagen=%s
-                WHERE id_habitacion=%s
-            """, (request.form.get('numero'), request.form.get('id_tipo'), request.form.get('estado'), ruta_imagen, id_habitacion))
+                    cur.execute("""
+                        INSERT INTO imagenes_habitacion (id_habitacion, ruta_imagen)
+                        VALUES (%s, %s)
+                    """, (id_habitacion, ruta_rel))
+
         con.commit()
-        return jsonify({'ok': True, 'message': 'Habitación actualizada con éxito.'})
+        return jsonify({'ok': True, 'message': 'Habitación actualizada correctamente con nuevas imágenes.'})
+
     except Exception as e:
         print(f"Error al editar habitación: {e}")
         return jsonify({'ok': False, 'message': 'Error al actualizar la habitación.'}), 500
     finally:
         if 'con' in locals() and con.open:
             con.close()
+
 
 @gestion_habitaciones_bp.route('/eliminar/<int:id_habitacion>', methods=['POST'])
 def eliminar_habitacion(id_habitacion):

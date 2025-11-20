@@ -100,8 +100,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Imagen de la Habitación</label>
-                    <input type="file" id="roomImage" name="imagen" class="form-control" accept="image/png, image/jpeg, image/webp">
+                <label>Imágenes de la Habitación</label>
+                <input type="file" id="roomImages" name="imagenes" class="form-control"
+                        accept="image/png, image/jpeg, image/webp" multiple required>
+                <small class="text-muted">Puedes seleccionar varias imágenes (mínimo 3 recomendadas)</small>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
@@ -116,4 +118,21 @@
 
 {% block extra_js %}
   <script src="{{ url_for('static', filename='js/gestion_habitaciones.js') }}"></script>
+
+  <script>
+    document.getElementById("roomForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+
+  const res = await fetch("/habitaciones/crear", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  alert(data.message);
+  if (data.ok) location.reload();
+});
+
+  </script>
 {% endblock %}

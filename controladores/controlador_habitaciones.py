@@ -121,18 +121,13 @@ def habitaciones_cliente():
 
                 portada = _to_static_rel(row.get("imagen") or DEFAULT_REL)
 
-                # Galería
+                # 🔹 Obtener galería de la habitación actual
                 cur.execute("""
                     SELECT ruta_imagen
                     FROM imagenes_habitacion
-                    WHERE id_habitacion = (
-                        SELECT id_habitacion
-                        FROM imagenes_habitacion
-                        WHERE id_habitacion IN (SELECT id_habitacion FROM habitaciones WHERE id_tipo = %s)
-                        LIMIT 1
-                    )
+                    WHERE id_habitacion = %s
                     ORDER BY id_imagen ASC
-                """, (row["id_tipo"],))
+                """, (row["id_habitacion"],))
                 gal = [_to_static_rel(g["ruta_imagen"]) for g in cur.fetchall()] or [portada]
 
                 cstr = (row.get("comodidades") or "").strip()
@@ -151,6 +146,7 @@ def habitaciones_cliente():
                     "galeria": gal,
                     "comodidades": amenities
                 })
+
 
     except Exception as e:
         print("❌ Error cargando habitaciones:", e)
