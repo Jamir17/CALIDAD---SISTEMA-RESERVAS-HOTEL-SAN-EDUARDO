@@ -823,9 +823,68 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowRight") navegarLightbox(1);
 });
 
+// ======================================
+// 🎁 SERVICIOS GRATIS SEGÚN NÚMERO DE NOCHES
+// ======================================
+function obtenerServiciosGratis(noches) {
+  const servicios = [];
+
+  if (noches >= 3) {
+    servicios.push({ 
+      id: 9001, 
+      nombre: "Desayuno gratis",
+      precio: 0, 
+      qty: 1, 
+      gratis: true 
+    });
+  }
+
+  if (noches >= 5) {
+    servicios.push({ 
+      id: 9002, 
+      nombre: "Lavandería gratis",
+      precio: 0, 
+      qty: 1, 
+      gratis: true 
+    });
+  }
+
+  if (noches >= 7) {
+    servicios.push({ 
+      id: 9003, 
+      nombre: "Piscina gratis",
+      precio: 0, 
+      qty: 1, 
+      gratis: true 
+    });
+  }
+
+  if (noches >= 14) {
+    servicios.push({ 
+      id: 9004, 
+      nombre: "Spa premium",
+      precio: 0, 
+      qty: 1, 
+      gratis: true 
+    });
+    servicios.push({ 
+      id: 9005, 
+      nombre: "Masajes relajantes",
+      precio: 0, 
+      qty: 1, 
+      gratis: true 
+    });
+  }
+
+  return servicios;
+}
+
+
+
+
 
 // ======================================
-// 🏨 SELECCIONAR HABITACIÓN
+// 🏨 SELECCIONAR HABITACIÓN (CORREGIDO)
 // ======================================
 function seleccionarHabitacion(tipo, numero, precio, idHabitacion) {
   const entrada = document.querySelector('[name="fecha_entrada"]').value;
@@ -844,28 +903,67 @@ function seleccionarHabitacion(tipo, numero, precio, idHabitacion) {
     return;
   }
 
-  const noches = (d2 - d1) / (1000*60*60*24);
-  const cardImg = document.querySelector(`.carousel-mini[data-room="${idHabitacion}"] .carousel-img`).src;
+  // calcular imagen principal de la tarjeta
+  const cardImg = document.querySelector(
+    `.carousel-mini[data-room="${idHabitacion}"] .carousel-img`
+  ).src;
 
+  // calcular noches
+  let noches = (d2 - d1) / (1000*60*60*24);
+
+  // descuento especial
+  let precioBase = precio;
+  let descuentoInfo = { aplica: false };
+
+
+  for (let i = 0; i < noches; i++) {
+    const f = new Date(d1);
+    f.setDate(f.getDate() + i);
+
+    const fStr = f.toISOString().split("T")[0];
+    const d = tieneDescuento(fStr);
+
+    if (d.aplica) {
+      descuentoInfo = d;
+      break;
+    }
+  }
+
+  if (descuentoInfo.aplica) {
+      precioBase = parseFloat((precioBase * 0.85).toFixed(2));
+  }
+  const serviciosGratis = obtenerServiciosGratis(noches);
+
+  // crear objeto reserva
   const nueva = {
-    tipo, numero, precio, noches,
-    entrada, salida,
+    tipo,
+    numero,
+    precio: precioBase,
+    noches,
+    entrada,
+    salida,
     id_habitacion: idHabitacion,
     imagen_seleccionada: cardImg,
-    servicios: []
+    servicios: [...serviciosGratis],
+    descuento_aplicado: descuentoInfo.aplica,
+    motivo_descuento: descuentoInfo.motivo,
+    rango_descuento: descuentoInfo.rango
   };
 
-  if (!reservas.some(r => r.id_habitacion === idHabitacion)) {
-    reservas.push(nueva);
-  }
+  // evitar duplicado por habitación
+  const yaExiste = reservas.find(r => r.id_habitacion === idHabitacion);
+  if (!yaExiste) reservas.push(nueva);
 
   renderResumen();
 }
 
-
 // ======================================
 // 📋 RENDER DE RESUMEN
 // ======================================
+function precioOriginal(r) {
+  return r.descuento_aplicado ? (r.precio / 0.85) : r.precio;
+}
+
 function renderResumen() {
   const cont = document.getElementById("resumenContenido");
   const btnContinuar = document.getElementById("btnContinuar");
@@ -891,8 +989,36 @@ function renderResumen() {
         <img src="${r.imagen_seleccionada}" style="width:100%;border-radius:8px;margin-bottom:6px;">
         <p><strong>${r.tipo} Nº ${r.numero}</strong></p>
         <p>${r.entrada} → ${r.salida} (${r.noches} noches)</p>
-        <p>Precio: S/. ${r.precio.toFixed(2)}</p>
-        <p>Servicios: S/. ${servTotal.toFixed(2)}</p>
+        <p>Precio base por noche: S/. ${precioOriginal(r).toFixed(2)}</p>
+
+      ${ r.descuento_aplicado ? `
+        <p style="color:#b91c1c; font-weight:700;">
+          ✔ Descuento del 15% aplicado
+        </p>
+        <p style="font-size:.85em; color:#6b7280; margin-top:-6px;">
+          Motivo: ${r.motivo_descuento}  
+        </p>
+        <p style="font-size:.85em; color:#6b7280; margin-top:-10px;">
+          Rango de vigencia: ${r.rango_descuento}
+        </p>
+      ` : '' }
+
+      <p>Precio final por noche: 
+        <strong style="color:#0f9d58;">
+          S/. ${r.precio.toFixed(2)}
+        </strong>
+      </p>
+        ${ r.servicios.length ? `
+          <p><strong>Servicios incluidos:</strong></p>
+          <ul style="margin-top:-6px;">
+            ${r.servicios.map(s => `
+              <li>${s.nombre} ${s.gratis ? "(gratis)" : ""} - S/. ${s.precio.toFixed(2)}</li>
+            `).join("")}
+          </ul>
+          <p>Total servicios: S/. ${servTotal.toFixed(2)}</p>
+        ` : `
+          <p>Servicios: S/. 0.00</p>
+        `}
         <hr>
       </div>
     `;
@@ -946,7 +1072,15 @@ if (btnAplicar) {
         });
       });
 
-    reservas.forEach(r => r.servicios = seleccionados);
+    reservas.forEach(r => {
+        const serviciosNoGratis = seleccionados.filter(s => !s.gratis);
+        const serviciosGratis = r.servicios.filter(s => s.gratis);
+        r.servicios = [...serviciosGratis, ...serviciosNoGratis];
+    });reservas.forEach(r => {
+        const serviciosNoGratis = seleccionados.filter(s => !s.gratis);
+        const serviciosGratis = r.servicios.filter(s => s.gratis);
+        r.servicios = [...serviciosGratis, ...serviciosNoGratis];
+    });
 
     document.getElementById("modal-servicios").classList.remove("show");
     renderResumen();
@@ -1162,6 +1296,78 @@ function cerrarCalendario() {
   document.getElementById("modal-calendario").classList.remove("show");
 }
 
+
+// =============================
+// 📌 FECHAS ESPECIALES (DETALLADAS)
+// =============================
+function obtenerFestividades(year, month) {
+
+  // Navidad
+  const navidad = { nombre: "Navidad", fecha: new Date(year, 11, 25) };
+
+  // Año Nuevo
+  let fechaAnioNuevo;
+  if (month === 11) {
+    fechaAnioNuevo = new Date(year + 1, 0, 1); // diciembre → año siguiente
+  } else {
+    fechaAnioNuevo = new Date(year, 0, 1); // resto → 1 enero del mismo año
+  }
+  const anioNuevo = { nombre: "Año Nuevo", fecha: fechaAnioNuevo };
+
+  // Día de la Madre (segundo domingo de mayo)
+  const mayo = new Date(year, 4, 1);
+  const diaMadre = 1 + ((7 - mayo.getDay()) % 7) + 7;
+  const diaMadreDate = new Date(year, 4, diaMadre);
+  const diaMadreFest = { nombre: "Día de la Madre", fecha: diaMadreDate };
+
+  // Día del Padre (tercer domingo junio)
+  const junio = new Date(year, 5, 1);
+  const diaPadre = 1 + ((7 - junio.getDay()) % 7) + 14;
+  const diaPadreDate = new Date(year, 5, diaPadre);
+  const diaPadreFest = { nombre: "Día del Padre", fecha: diaPadreDate };
+
+  const fiestasPatrias = { nombre: "Fiestas Patrias", fecha: new Date(year, 6, 28) };
+  const santaRosa = { nombre: "Santa Rosa de Lima", fecha: new Date(year, 7, 30) };
+
+  return [
+    navidad,
+    anioNuevo,
+    diaMadreFest,
+    diaPadreFest,
+    fiestasPatrias,
+    santaRosa
+  ];
+}
+
+
+
+// =============================
+// 📌 Verificar si fecha tiene 15% descuento
+// =============================
+function tieneDescuento(fechaStr) {
+  const fecha = new Date(fechaStr);
+  const year = fecha.getFullYear();
+  const festividades = obtenerFestividades(year);
+
+  for (let fest of festividades) {
+    const inicio = new Date(fest.fecha);
+    const fin = new Date(fest.fecha);
+
+    inicio.setDate(inicio.getDate() - 7);
+    fin.setDate(fin.getDate() + 7);
+
+    if (fecha >= inicio && fecha <= fin) {
+      return {
+        aplica: true,
+        motivo: fest.nombre,
+        fecha_festiva: fest.fecha.toISOString().split("T")[0],
+        rango: `${inicio.toISOString().split("T")[0]} → ${fin.toISOString().split("T")[0]}`
+      };
+    }
+  }
+
+  return { aplica: false };
+}
 
 </script>
 {% endblock %}
