@@ -15,6 +15,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/respaldo.css') }}">
     {% block extra_css %}{% endblock %}
 
+    <style>
+        /* Corrección para que el submenú activo se resalte correctamente */
+        .sidebar ul a.active {
+            background-color: #0056b3; /* Un azul más oscuro para el sub-item activo */
+            color: #fff;
+        }
+    </style>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 
@@ -32,16 +40,17 @@
             <a href="{{ url_for('gestion_habitaciones.panel_habitaciones') }}" class="{{ 'active' if 'gestion_habitaciones' in request.endpoint else '' }}">Gestión de Habitaciones</a>
             <a href="{{ url_for('incidencias.panel_incidencias') }}" class="{{ 'active' if 'incidencias.panel_incidencias' in request.endpoint else '' }}">Gestión de Incidencias</a>
 
-            <a href="#" onclick="toggleRolesMenu()" class="{{ 'active' if 'gestion' in request.endpoint else '' }}">Gestión de roles ▼</a>
-            <ul id="submenuRoles" style="display:none; list-style:none; padding-left:15px;">
+            <a href="{{ url_for('reservas_cliente.historial_reservas_cliente') }}" class="{{ 'active' if 'reservas_cliente' in request.endpoint else '' }}">Historial de reservas por cliente</a>
+
+            {% set seguridad_active = 'gestion_usuarios_roles' in request.endpoint or 'gestion_roles' in request.endpoint or 'respaldo' in request.endpoint %}
+            <a href="#" onclick="toggleSeguridadMenu()" class="{{ 'active' if seguridad_active else '' }}">
+                Seguridad ▼
+            </a>
+            <ul id="submenuSeguridad" style="list-style:none; padding-left:15px; display: {% if seguridad_active %}block{% else %}none{% endif %};">
                 <li><a href="{{ url_for('gestion_usuarios_roles.listar_usuarios_y_roles') }}" class="{{ 'active' if request.endpoint == 'gestion_usuarios_roles.listar_usuarios_y_roles' else '' }}">Asignar roles a usuarios</a></li>
                 <li><a href="{{ url_for('gestion_roles.listar_roles') }}" class="{{ 'active' if request.endpoint == 'gestion_roles.listar_roles' else '' }}">Administrar roles</a></li>
+                <li><a href="{{ url_for('respaldo.panel_respaldo') }}" class="{{ 'active' if 'respaldo' in request.endpoint else '' }}">Respaldos</a></li>
             </ul>
-
-            <a href="{{ url_for('reservas_cliente.historial_reservas_cliente') }}" class="{{ 'active' if 'reservas_cliente' in request.endpoint else '' }}">Historial de reservas por cliente</a>
-            <a href="#">Reportes</a>
-            <a href="#">Seguridad</a>
-            <a href="{{ url_for('respaldo.panel_respaldo') }}" class="{{ 'active' if 'respaldo' in request.endpoint else '' }}">Respaldos</a>
 
         {% elif session['rol'] == 2 %}
             <a href="{{ url_for('reservas_admin.panel_reservas') }}" class="{{ 'active' if 'reservas_admin' in request.endpoint else '' }}">Reservas</a>
@@ -72,8 +81,8 @@
     {% endif %}
 
     <script>
-    function toggleRolesMenu() {
-        const menu = document.getElementById('submenuRoles');
+    function toggleSeguridadMenu() {
+        const menu = document.getElementById('submenuSeguridad');
         menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
     </script>
