@@ -1,246 +1,193 @@
 {% extends "principal.html" %}
-{% block title %}Panel de Reportes{% endblock %}
+{% block title %}Gestión de Habitaciones{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/reportes_adm.css') }}">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_habitaciones.css') }}">
+<style>
+/* Vista previa de imágenes */
+.preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.preview-container img {
+  width: 90px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.preview-container .preview-item {
+  position: relative;
+}
+.preview-container .remove-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  cursor: pointer;
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-
-  <!-- HEADER -->
-  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+<div class="container">
+  <!-- Header -->
+  <div class="header">
     <div>
-      <h1 class="fw-bold text-primary mb-0">Panel de Reportes</h1>
-      <p class="text-muted mb-0">Monitoreo general del Hotel San Eduardo</p>
+      <h1 class="title">Gestión de Habitaciones</h1>
+      <p class="subtitle">Administra las habitaciones del hotel</p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <label for="filtroMes" class="fw-semibold text-muted">Filtrar por mes:</label>
-      <input type="month" id="filtroMes" class="form-control" style="max-width:180px;">
+    <button class="btn-add" data-bs-toggle="modal" data-bs-target="#roomModal">
+      <span class="icon">+</span> Agregar Habitación
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <p class="stat-label">Total Habitaciones</p>
+      <p class="stat-number" id="totalRooms">{{ kpis.total }}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Disponibles</p>
+      <p class="stat-number available" id="availableRooms">{{ kpis.disponibles }}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Ocupadas</p>
+      <p class="stat-number occupied" id="occupiedRooms">{{ kpis.ocupadas }}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-label">Mantenimiento</p>
+      <p class="stat-number maintenance" id="maintenanceRooms">{{ kpis.mantenimiento }}</p>
     </div>
   </div>
 
-  <!-- KPI CARDS -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Reservas</h6>
-        <h3 class="fw-bold">{{ kpis.total_reservas }}</h3>
-      </div>
-    </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Clientes</h6>
-        <h3 class="fw-bold">{{ kpis.total_clientes }}</h3>
-      </div>
-    </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Ingresos Hospedaje (S/)</h6>
-        <h3 class="fw-bold text-success">{{ "%.2f"|format(kpis.ingresos_hospedaje) }}</h3>
-      </div>
-    </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Ingresos Servicios (S/)</h6>
-        <h3 class="fw-bold text-info">{{ "%.2f"|format(kpis.ingresos_servicios) }}</h3>
-      </div>
-    </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Incidencias</h6>
-        <h3 class="fw-bold text-danger">{{ kpis.total_incidencias }}</h3>
-      </div>
-    </div>
-  </div>
-
-  <!-- GRAFICOS -->
-  <div class="row g-4 mb-5">
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6 class="fw-bold text-primary mb-3">Ocupación por Estado</h6>
-        <canvas id="graficoOcupacion" height="220"></canvas>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6 class="fw-bold text-primary mb-3">Ingresos Mensuales</h6>
-        <canvas id="graficoIngresos" height="220"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- FILTROS -->
-  <div class="card shadow-sm p-4 mb-4">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-3">
-        <label class="form-label fw-semibold">Tipo de Reporte</label>
-        <select id="tipoReporte" class="form-select">
-          <option value="reservas">Reservas</option>
-          <option value="facturacion">Facturación</option>
-          <option value="habitaciones">Habitaciones</option>
-          <option value="clientes">Clientes</option>
-          <option value="incidencias">Incidencias</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label fw-semibold">Estado</label>
-        <select id="estadoFiltro" class="form-select">
-          <option value="">Todos</option>
-          <option value="Activa">Activa</option>
-          <option value="Finalizada">Finalizada</option>
-          <option value="Cancelada">Cancelada</option>
-          <option value="Pagado">Pagado</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="Resuelta">Resuelta</option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label fw-semibold">Desde</label>
-        <input type="date" id="fechaInicio" class="form-control">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label fw-semibold">Hasta</label>
-        <input type="date" id="fechaFin" class="form-control">
-      </div>
-      <div class="col-md-2 text-end">
-        <button id="btnFiltrar" class="btn btn-primary w-100">Filtrar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TABLA DE RESULTADOS -->
-  <div class="card shadow-sm p-3">
-    <h6 class="fw-bold text-primary mb-3">Resultados del Reporte</h6>
-    <div class="table-responsive">
-      <table class="table table-striped align-middle" id="tablaReportes">
-        <thead class="table-light"></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ACTIVIDADES -->
-  <div class="mt-5">
-    <h5 class="fw-bold text-primary mb-3">Últimas Actividades</h5>
-    <ul class="list-group">
-      {% for a in ult_actividades %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>{{ a.accion }}</strong> — Habitación {{ a.habitacion or '—' }}
-          <br><small class="text-muted">Estado: {{ a.nuevo_estado }}</small>
+  <!-- Rooms Grid -->
+  <div class="rooms-grid" id="roomsGrid">
+    {% for hab in habitaciones %}
+    <div class="room-card" data-estado="{{ hab.estado|lower }}">
+      <img src="{{ url_for('static', filename=hab.imagen if hab.imagen else 'img/habitaciones/default.jpg') }}" alt="Habitación {{ hab.numero }}" class="room-image">
+      <div class="room-content">
+        <div class="room-header">
+          <div class="room-info">
+            <h3>Habitación {{ hab.numero }}</h3>
+            <p class="room-type">{{ hab.tipo }}</p>
+          </div>
+          <div class="room-actions">
+            <button class="btn-icon btn-edit" onclick="openEditDialog({{ hab.id_habitacion }})" title="Editar">✏️</button>
+            <button class="btn-icon btn-delete" onclick="deleteRoom({{ hab.id_habitacion }})" title="Eliminar">🗑️</button>
+          </div>
         </div>
-        <small class="text-secondary">{{ a.fecha }}</small>
-      </li>
-      {% else %}
-      <li class="list-group-item text-muted text-center">No hay actividades recientes.</li>
-      {% endfor %}
-    </ul>
+        <p class="room-description">{{ hab.descripcion or 'Sin descripción disponible.' }}</p>
+        <div class="room-details">
+          <span class="status-badge status-{{ hab.estado|lower|replace(' ', '-') }}">{{ hab.estado }}</span>
+          <div class="price-section">
+            <p class="price-label">Precio por noche</p>
+            <p class="price">S/ {{ "%.2f"|format(hab.precio_base) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-center text-muted p-4">No hay habitaciones para mostrar.</p>
+    {% endfor %}
   </div>
+</div>
 
+<!-- Add/Edit Room Dialog -->
+<div class="modal fade" id="roomModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Nueva Habitación</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="roomForm" class="modal-form" enctype="multipart/form-data">
+        <input type="hidden" id="roomId" name="id_habitacion">
+
+        <div class="form-group">
+          <label>Número de Habitación</label>
+          <input type="text" id="roomNumber" name="numero" required placeholder="Ej: 101">
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de Habitación</label>
+          <select id="roomType" name="id_tipo" required>
+            <option value="">-- Seleccione un tipo --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="roomStatus" name="estado" required>
+            <option value="Disponible">Disponible</option>
+            <option value="Ocupada">Ocupada</option>
+            <option value="En Limpieza">En Limpieza</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Imágenes de la Habitación</label>
+          <input type="file" id="roomImages" name="imagenes" class="form-control" 
+                 accept="image/png, image/jpeg, image/webp" multiple required>
+          <small class="text-muted">Puedes seleccionar varias imágenes (mínimo 3 recomendadas)</small>
+          <div class="preview-container" id="previewContainer"></div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-submit">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/gestion_habitaciones.js') }}"></script>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const ocupacion = {{ ocupacion|tojson }};
-  const ingresos = {{ ingresos_mensuales|tojson }};
+/* --- Vista previa dinámica de imágenes --- */
+const inputImgs = document.getElementById("roomImages");
+const preview = document.getElementById("previewContainer");
 
-  // === Inicialización de gráficos ===
-  const ctxOcup = document.getElementById("graficoOcupacion");
-  const ctxIng = document.getElementById("graficoIngresos");
-
-  let grafOcupacion = new Chart(ctxOcup, {
-    type: "pie",
-    data: {
-      labels: ocupacion.map(o => o.estado),
-      datasets: [{
-        data: ocupacion.map(o => o.cantidad),
-        backgroundColor: ["#198754", "#0d6efd", "#ffc107", "#dc3545"]
-      }]
-    },
-    options: { plugins: { legend: { position: "bottom" } } }
+inputImgs.addEventListener("change", () => {
+  preview.innerHTML = "";
+  Array.from(inputImgs.files).forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement("div");
+      div.classList.add("preview-item");
+      div.innerHTML = `
+        <img src="${e.target.result}" alt="img-${i}">
+        <button type="button" class="remove-btn" data-index="${i}">×</button>
+      `;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
   });
+});
 
-  let grafIngresos = new Chart(ctxIng, {
-    type: "bar",
-    data: {
-      labels: ingresos.map(i => i.mes),
-      datasets: [{
-        label: "Ingresos (S/)",
-        data: ingresos.map(i => i.total),
-        backgroundColor: "#0d6efd"
-      }]
-    },
-    options: {
-      scales: { y: { beginAtZero: true } },
-      plugins: { legend: { display: false } }
-    }
-  });
-
-  // === Filtro mensual dinámico ===
-  document.getElementById("filtroMes").addEventListener("change", async (e) => {
-    const mes = e.target.value;
-    if (!mes) return;
-
-    const res = await fetch("/admin/reportes/filtrar_mes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mes })
-    });
-
-    const data = await res.json();
-    if (data.error) {
-      alert("Error al filtrar: " + data.error);
-      return;
-    }
-
-    // Actualizar gráfico de ocupación
-    grafOcupacion.data.labels = data.ocupacion.map(o => o.estado);
-    grafOcupacion.data.datasets[0].data = data.ocupacion.map(o => o.cantidad);
-    grafOcupacion.update();
-
-    // Actualizar gráfico de ingresos
-    grafIngresos.data.labels = data.ingresos.map(i => i.categoria);
-    grafIngresos.data.datasets[0].data = data.ingresos.map(i => i.total);
-    grafIngresos.update();
-  });
-
-  // === Filtro general ===
-  document.getElementById("btnFiltrar").addEventListener("click", async () => {
-    const tipo = document.getElementById("tipoReporte").value;
-    const estado = document.getElementById("estadoFiltro").value;
-    const fecha_inicio = document.getElementById("fechaInicio").value;
-    const fecha_fin = document.getElementById("fechaFin").value;
-
-    const res = await fetch("/admin/reportes/filtrar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tipo, estado, fecha_inicio, fecha_fin })
-    });
-
-    const data = await res.json();
-    const tabla = document.getElementById("tablaReportes");
-    const thead = tabla.querySelector("thead");
-    const tbody = tabla.querySelector("tbody");
-
-    tbody.innerHTML = "";
-    if (!data.length) {
-      thead.innerHTML = "<tr><th>No se encontraron resultados</th></tr>";
-      return;
-    }
-
-    const headers = Object.keys(data[0]);
-    thead.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-
-    data.forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = headers.map(h => `<td>${row[h] ?? ""}</td>`).join("");
-      tbody.appendChild(tr);
-    });
-  });
+// Eliminar imagen de la vista previa (no del input)
+preview.addEventListener("click", e => {
+  if (e.target.classList.contains("remove-btn")) {
+    const idx = e.target.dataset.index;
+    const dt = new DataTransfer();
+    const files = Array.from(inputImgs.files);
+    files.splice(idx, 1);
+    files.forEach(f => dt.items.add(f));
+    inputImgs.files = dt.files;
+    e.target.closest(".preview-item").remove();
+  }
 });
 </script>
 {% endblock %}
