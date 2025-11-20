@@ -1,0 +1,12 @@
+{% if system_health.mem > 80 %}
+<div class="alert-card warning mb-4">
+    <div class="alert-icon">⚠️</div>
+    <div>
+        <div class="alert-title">Uso de Memoria Alto</div>
+        <div class="alert-text">
+            El uso de memoria del sistema es del <strong>{{ "%.1f"|format(system_health.mem) }}%</strong>.
+            Se recomienda monitorear y, si es necesario, reiniciar los servicios para optimizar el rendimiento.
+        </div>
+    </div>
+</div>
+{% endif %}

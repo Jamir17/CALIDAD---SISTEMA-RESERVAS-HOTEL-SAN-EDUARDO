@@ -91,10 +91,10 @@
     .task-item p { font-size: 0.875rem; color: #6b7280; margin: 0.25rem 0 0; }
     .task-item .task-meta { font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem; }
     .btn-start-task {
-        background-color: #3b82f6;
+        background-color: #16a34a; /* Verde */
         color: white;
         border: none;
-        padding: 0.5rem 1rem;
+        padding: 0.6rem 1.2rem;
         border-radius: 0.375rem;
         font-weight: 500;
         cursor: pointer;
@@ -119,8 +119,46 @@
     .alert-card.warning { background-color: #fef3c7; }
     .alert-card.info { background-color: #dbeafe; }
     .alert-card .alert-icon { margin-right: 0.75rem; flex-shrink: 0; }
-    .alert-card .alert-title { font-weight: 600; }
+    .alert-card .alert-title { font-weight: 600; color: #92400e; }
+    .alert-card.info .alert-title { color: #1e40af; }
     .alert-card .alert-text { font-size: 0.875rem; }
+    .text-success { color: #15803d !important; }
+    .text-warning { color: #b45309 !important; }
+    .text-danger { color: #b91c1c !important; }
+
+    /* Estilos para la Consola SQL */
+    .sql-console-container { padding: 1.5rem; }
+    .sql-console-container textarea {
+        width: 100%;
+        height: 150px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 1rem;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        background-color: #212529;
+        color: #f8f9fa;
+        resize: vertical;
+    }
+    .sql-result-container {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        min-height: 100px;
+        max-height: 400px;
+        overflow: auto;
+    }
+    .sql-result-container .table {
+        margin-bottom: 0;
+    }
+    .sql-result-container .alert {
+        margin-bottom: 0;
+    }
+    .btn-execute-sql {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
 </style>
 {% endblock %}
 
@@ -142,6 +180,9 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button" role="tab">Salud del sistema</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="console-tab" data-bs-toggle="tab" data-bs-target="#console" type="button" role="tab">Consola Interactiva</button>
+        </li>
     </ul>
 
     <!-- Contenido de las Pestañas -->
@@ -150,26 +191,35 @@
         <div class="tab-pane fade show active" id="overview" role="tabpanel">
             <div class="stat-grid">
                 <div class="stat-card-m">
-                    <div class="stat-header"><h3>Tiempo de actividad</h3></div>
-                    <div class="stat-value">99.98%</div>
+                    <div class="stat-header"><h3>Tiempo de Actividad</h3></div>
+                    <div class="stat-value">99.9%</div>
                     <div class="stat-footer text-success">Estable</div>
                 </div>
                 <div class="stat-card-m">
-                    <div class="stat-header"><h3>Uso de memoria</h3></div>
-                    <div class="stat-value">65%</div>
-                    <div class="stat-footer text-warning">Normal</div>
+                    <div class="stat-header"><h3>Uso de Memoria</h3></div>
+                    <div class="stat-value">{{ "%.1f"|format(system_health.mem) }}%</div>
+                    {% if system_health.mem > 80 %}
+                        <div class="stat-footer text-danger">Alto</div>
+                    {% elif system_health.mem > 60 %}
+                        <div class="stat-footer text-warning">Normal</div>
+                    {% else %}
+                        <div class="stat-footer text-success">Óptimo</div>
+                    {% endif %}
                 </div>
                 <div class="stat-card-m">
                     <div class="stat-header"><h3>Uso de CPU</h3></div>
-                    <div class="stat-value">42%</div>
-                    <div class="stat-footer text-success">Óptimo</div>
+                    <div class="stat-value">{{ "%.1f"|format(system_health.cpu) }}%</div>
+                    <div class="stat-footer text-success">Normal</div>
                 </div>
                 <div class="stat-card-m">
-                    <div class="stat-header"><h3>Último respaldo</h3></div>
-                    <div class="stat-value">20/11/2025 02:00</div>
+                    <div class="stat-header"><h3>Último Respaldo</h3></div>
+                    <div class="stat-value" style="font-size: 1.1rem;">{{ ultimo_respaldo }}</div>
                     <div class="stat-footer text-success">Reciente</div>
                 </div>
             </div>
+
+            <!-- Alertas dinámicas -->
+            {% include '_alertas_mantenimiento.html' %}
 
             <div class="card-m">
                 <div class="card-m-header">
@@ -179,30 +229,29 @@
                 <div class="card-m-body">
                     <table class="table table-hover">
                         <thead>
-                            <tr><th>Fecha</th><th>Tipo</th><th>Estado</th><th>Duración</th><th>Acciones</th></tr>
+                            <tr><th>Fecha y Hora</th><th>Acción</th><th>Habitación</th><th>Cliente</th><th>Nuevo Estado</th><th>Acciones</th></tr>
                         </thead>
                         <tbody>
+                            {% for act in actividades %}
                             <tr>
-                                <td>2025-11-20 14:30</td>
-                                <td>Actualización de seguridad</td>
-                                <td><span class="badge bg-success">Completado</span></td>
-                                <td>15 min</td>
-                                <td><a href="#" class="btn btn-sm btn-outline-primary">Ver detalles</a></td>
+                                <td>{{ act.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    {% if act.accion == 'Check-in' %} <span class="badge bg-info text-dark">Check-in</span>
+                                    {% elif act.accion == 'Check-out' %} <span class="badge bg-warning text-dark">Check-out</span>
+                                    {% elif act.accion == 'Limpieza OK' %} <span class="badge bg-success">Limpieza</span>
+                                    {% else %} {{ act.accion }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ act.habitacion_numero or 'N/A' }}</td>
+                                <td>{{ act.cliente_nombres or 'Sistema' }}</td>
+                                <td>{{ act.nuevo_estado_hab }}</td>
+                                <td>
+                                    <a href="{{ url_for('mantenimiento.detalle_log', id_actividad=act.id_actividad) }}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
+                                </td>
                             </tr>
-                            <tr>
-                                <td>2025-11-18 09:15</td>
-                                <td>Optimización de BD</td>
-                                <td><span class="badge bg-success">Completado</span></td>
-                                <td>45 min</td>
-                                <td><a href="#" class="btn btn-sm btn-outline-primary">Ver detalles</a></td>
-                            </tr>
-                            <tr>
-                                <td>2025-11-15 22:00</td>
-                                <td>Mantenimiento programado</td>
-                                <td><span class="badge bg-warning text-dark">En progreso</span></td>
-                                <td>30 min</td>
-                                <td><a href="#" class="btn btn-sm btn-outline-primary">Ver detalles</a></td>
-                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center">No hay actividades recientes.</td></tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -223,7 +272,7 @@
                             <p>Aplicar parches y actualizaciones de dependencias.</p>
                             <div class="task-meta">Frecuencia: Semanal | Próximo: 2025-11-27</div>
                         </div>
-                        <button class="btn-start-task">Iniciar</button>
+                        <button class="btn-start-task" onclick="runTask('updates')">Iniciar</button>
                     </div>
                     <div class="task-item">
                         <div>
@@ -231,7 +280,7 @@
                             <p>Reindexación, limpieza y optimización de consultas.</p>
                             <div class="task-meta">Frecuencia: Mensual | Próximo: 2025-12-05</div>
                         </div>
-                        <button class="btn-start-task">Iniciar</button>
+                        <button class="btn-start-task" onclick="runTask('db_optimization')">Iniciar</button>
                     </div>
                     <div class="task-item">
                         <div>
@@ -239,7 +288,7 @@
                             <p>Creación de copias de seguridad completas del sistema.</p>
                             <div class="task-meta">Frecuencia: Diario | Próximo: 2025-11-21</div>
                         </div>
-                        <button class="btn-start-task">Iniciar</button>
+                        <button class="btn-start-task" onclick="runTask('backup')">Iniciar</button>
                     </div>
                 </div>
             </div>
@@ -257,27 +306,29 @@
                         <div class="col-md-6">
                             <h5>Indicadores clave</h5>
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between"><span>Uso de memoria</span><span>65%</span></div>
-                                <div class="progress-bar-container"><div class="progress-bar bg-primary" style="width: 65%;"></div></div>
+                                <div class="d-flex justify-content-between"><span>Uso de memoria</span><span>{{ "%.1f"|format(system_health.mem) }}%</span></div>
+                                <div class="progress-bar-container"><div class="progress-bar bg-primary" style="width: {{ system_health.mem }}%;"></div></div>
                             </div>
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between"><span>Uso de CPU</span><span>42%</span></div>
-                                <div class="progress-bar-container"><div class="progress-bar bg-success" style="width: 42%;"></div></div>
+                                <div class="d-flex justify-content-between"><span>Uso de CPU</span><span>{{ "%.1f"|format(system_health.cpu) }}%</span></div>
+                                <div class="progress-bar-container"><div class="progress-bar bg-success" style="width: {{ system_health.cpu }}%;"></div></div>
                             </div>
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between"><span>Base de datos</span><span>2.3 GB</span></div>
-                                <div class="progress-bar-container"><div class="progress-bar bg-info" style="width: 70%;"></div></div>
+                                <div class="d-flex justify-content-between"><span>Base de datos</span><span>{{ "%.2f"|format(system_health.db_size) }} MB</span></div>
+                                <div class="progress-bar-container"><div class="progress-bar bg-info" style="width: {{ (system_health.db_size / 1024) * 100 }}%;"></div></div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <h5>Alertas</h5>
-                            <div class="alert-card warning">
+                             {% if system_health.mem > 80 %}
+                            <div class="alert-card warning" id="alerta-memoria">
                                 <div class="alert-icon">⚠️</div>
                                 <div>
                                     <div class="alert-title">Advertencia</div>
-                                    <div class="alert-text">La base de datos está alcanzando el 70% de su capacidad.</div>
+                                    <div class="alert-text">El uso de memoria es alto ({{ "%.1f"|format(system_health.mem) }}%). Considere reiniciar servicios.</div>
                                 </div>
                             </div>
+                            {% endif %}
                             <div class="alert-card info">
                                 <div class="alert-icon">ℹ️</div>
                                 <div>
@@ -290,6 +341,125 @@
                 </div>
             </div>
         </div>
+
+        <!-- Consola Interactiva -->
+        <div class="tab-pane fade" id="console" role="tabpanel">
+            <div class="card-m">
+                <div class="card-m-header">
+                    <h2>Consola SQL</h2>
+                    <p>Ejecuta consultas SQL directamente en la base de datos. Úsalo con precaución.</p>
+                </div>
+                <div class="sql-console-container">
+                    <form id="sqlForm">
+                        <div class="mb-3">
+                            <label for="sqlQuery" class="form-label fw-bold">Consulta SQL:</label>
+                            <textarea id="sqlQuery" name="query" placeholder="SELECT * FROM usuarios LIMIT 10;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-execute-sql">Ejecutar</button>
+                    </form>
+                    <div id="sqlResult" class="sql-result-container">
+                        <p class="text-muted">Los resultados aparecerán aquí.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('sqlForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const query = document.getElementById('sqlQuery').value;
+    const resultContainer = document.getElementById('sqlResult');
+    resultContainer.innerHTML = '<p class="text-info">Ejecutando...</p>';
+
+    try {
+        const response = await fetch("{{ url_for('mantenimiento.ejecutar_sql') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: query })
+        });
+        const data = await response.json();
+        renderSqlResult(data);
+    } catch (error) {
+        renderSqlResult({ ok: false, error: 'Error de red al conectar con el servidor.' });
+    }
+});
+
+function renderSqlResult(data) {
+    const container = document.getElementById('sqlResult');
+    if (!data.ok) {
+        container.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        return;
+    }
+
+    if (data.message) {
+        container.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+    } else if (data.result) {
+        if (data.result.length === 0) {
+            container.innerHTML = '<p class="text-muted">La consulta no devolvió resultados.</p>';
+            return;
+        }
+        const headers = data.columns;
+        let tableHtml = '<table class="table table-bordered table-striped table-sm"><thead><tr>';
+        headers.forEach(h => tableHtml += `<th>${h}</th>`);
+        tableHtml += '</tr></thead><tbody>';
+
+        data.result.forEach(row => {
+            tableHtml += '<tr>';
+            headers.forEach(h => {
+                const value = row[h] === null ? '<em>NULL</em>' : (row[h] === '' ? '<em>(vacío)</em>' : row[h]);
+                tableHtml += `<td>${value}</td>`;
+            });
+            tableHtml += '</tr>';
+        });
+
+        tableHtml += '</tbody></table>';
+        container.innerHTML = tableHtml;
+    }
+}
+
+function runTask(taskName) {
+    let url = '';
+    let successMessage = '';
+
+    switch(taskName) {
+        case 'backup':
+            url = "{{ url_for('mantenimiento.ejecutar_respaldo_mantenimiento') }}";
+            successMessage = '✅ Respaldo de la base de datos iniciado con éxito.';
+            break;
+        case 'updates':
+            url = "{{ url_for('mantenimiento.ejecutar_actualizaciones') }}";
+            successMessage = '✅ Tarea de actualización de seguridad completada.';
+            break;
+        case 'db_optimization':
+            // Simulación
+            alert('✅ Tarea de optimización de base de datos simulada y completada.');
+            return;
+        default:
+            alert('Tarea desconocida.');
+            return;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token if csrf_token else "" }}' // Para protección CSRF si la usas
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            alert(successMessage);
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+        console.log('Respuesta del servidor:', data.log || data.message); // Log para depuración
+    })
+    .catch(error => alert('❌ Error de red al ejecutar la tarea.'));
+}
+</script>
 {% endblock %}

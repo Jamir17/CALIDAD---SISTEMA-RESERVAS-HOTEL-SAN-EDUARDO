@@ -1,0 +1,61 @@
+{% extends "principal.html" %}
+
+{% block title %}Detalle de Actividad de Mantenimiento{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .detail-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #111827;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .detail-list {
+        list-style: none;
+        padding: 0;
+    }
+    .detail-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .detail-list li:last-child {
+        border-bottom: none;
+    }
+    .detail-list .label {
+        font-weight: 600;
+        color: #4b5563;
+    }
+    .detail-list .value {
+        color: #1f2937;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <h1>Detalle de Actividad #{{ log.id_actividad }}</h1>
+    </div>
+    <ul class="detail-list">
+        <li><span class="label">Fecha y Hora:</span> <span class="value">{{ log.fecha_hora.strftime('%d/%m/%Y a las %H:%M:%S') }}</span></li>
+        <li><span class="label">Acción Realizada:</span> <span class="value">{{ log.accion }}</span></li>
+        <li><span class="label">Nuevo Estado de Habitación:</span> <span class="value">{{ log.nuevo_estado_hab }}</span></li>
+        <li><span class="label">Habitación Afectada:</span> <span class="value">{{ log.habitacion_numero or 'No aplica' }}</span></li>
+        <li><span class="label">Reserva Asociada:</span> <span class="value">#{{ log.id_reserva or 'No aplica' }}</span></li>
+        <li><span class="label">Cliente Asociado:</span> <span class="value">{{ log.cliente_nombres or 'Sistema' }} {{ log.cliente_apellidos or '' }}</span></li>
+    </ul>
+    <a href="{{ url_for('mantenimiento.panel_mantenimiento') }}" class="btn btn-secondary mt-4">Volver al Panel</a>
+</div>
+{% endblock %}
