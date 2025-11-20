@@ -7,7 +7,7 @@ def panel_mantenimiento():
     """
     Muestra el panel principal de mantenimiento.
     """
-    if session.get('rol') != 1:  # Solo para administradores
+    if session.get('rol') != 4:  # Solo para administradores
         return redirect(url_for('index'))
 
     # Aquí iría la lógica para obtener datos reales. Por ahora, solo renderiza.
