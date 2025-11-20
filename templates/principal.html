@@ -49,13 +49,7 @@
         <li><a href="{{ url_for('respaldo.panel_respaldo') }}" class="{{ 'active' if 'respaldo' in request.endpoint else '' }}">Respaldos</a></li>
       </ul>
 
-      {% set mantenimiento_active = 'mantenimiento' in request.endpoint %}
-      <a href="javascript:void(0)" onclick="toggleMenu('submenuMantenimiento')" class="{{ 'active' if mantenimiento_active else '' }}">
-        Mantenimiento ▼
-      </a>
-      <ul id="submenuMantenimiento" class="submenu" style="display: {{ 'block' if mantenimiento_active else 'none' }}">
-        <li><a href="{{ url_for('mantenimiento.panel_mantenimiento') }}" class="{{ 'active' if request.endpoint == 'mantenimiento.panel_mantenimiento' else '' }}">Visión general</a></li>
-      </ul>
+
 
     {% elif session.get('rol') == 2 %}
       <a href="{{ url_for('reservas_admin.panel_reservas') }}" class="{{ 'active' if 'reservas_admin' in request.endpoint else '' }}">Reservas</a>
