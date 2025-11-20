@@ -206,3 +206,50 @@ def ejecutar_sql():
     finally:
         if con.open:
             con.close()
+
+@mantenimiento_bp.route('/api/contenido/<clave>', methods=['GET'])
+def obtener_contenido(clave):
+    """Obtiene un contenido dinámico desde la BD."""
+    if session.get('rol') != 4:
+        return jsonify({'ok': False, 'error': 'No autorizado.'}), 403
+    
+    try:
+        con = obtener_conexion()
+        with con.cursor() as cur:
+            cur.execute("SELECT titulo, contenido FROM contenido_dinamico WHERE clave = %s", (clave,))
+            contenido = cur.fetchone()
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    finally:
+        if 'con' in locals() and con.open:
+            con.close()
+
+    return jsonify({'ok': True, 'data': contenido or {'titulo': '', 'contenido': ''}})
+
+@mantenimiento_bp.route('/api/contenido/<clave>', methods=['POST'])
+def guardar_contenido(clave):
+    """Guarda o actualiza un contenido dinámico en la BD."""
+    if session.get('rol') != 4:
+        return jsonify({'ok': False, 'error': 'No autorizado.'}), 403
+
+    data = request.get_json()
+    titulo = data.get('titulo', '')
+    contenido = data.get('contenido', '')
+
+    try:
+        con = obtener_conexion()
+        with con.cursor() as cur:
+            # UPSERT: Inserta si no existe, actualiza si ya existe.
+            cur.execute("""
+                INSERT INTO contenido_dinamico (clave, titulo, contenido, ultima_modificacion)
+                VALUES (%s, %s, %s, NOW())
+                ON DUPLICATE KEY UPDATE titulo = VALUES(titulo), contenido = VALUES(contenido), ultima_modificacion = NOW()
+            """, (clave, titulo, contenido))
+            con.commit()
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+    finally:
+        if 'con' in locals() and con.open:
+            con.close()
+            
+    return jsonify({'ok': True, 'message': 'Anuncio guardado correctamente.'})

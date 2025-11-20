@@ -159,6 +159,18 @@
         background-color: #0d6efd;
         border-color: #0d6efd;
     }
+CREATE TABLE contenido_dinamico (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    clave VARCHAR(50) NOT NULL UNIQUE,
+    titulo VARCHAR(255),
+    contenido TEXT,
+    ultima_modificacion DATETIME NOT NULL
+);
+    .content-editor-container { padding: 1.5rem; }
+    .content-editor-container textarea {
+        height: 250px;
+        font-family: sans-serif;
+    }
 </style>
 {% endblock %}
 
@@ -182,6 +194,9 @@
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="console-tab" data-bs-toggle="tab" data-bs-target="#console" type="button" role="tab">Consola Interactiva</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="editor-tab" data-bs-toggle="tab" data-bs-target="#editor" type="button" role="tab">Editor de Anuncios</button>
         </li>
     </ul>
 
@@ -363,12 +378,44 @@
                 </div>
             </div>
         </div>
+
+        <!-- Editor de Contenido -->
+        <div class="tab-pane fade" id="editor" role="tabpanel">
+            <div class="card-m">
+                <div class="card-m-header">
+                    <h2>Editor de Anuncios de la Página Principal</h2>
+                    <p>Crea o modifica el anuncio que se muestra en la página de inicio. Puedes usar HTML básico.</p>
+                </div>
+                <div class="content-editor-container">
+                    <form id="contentForm">
+                        <div class="mb-3">
+                            <label for="contentTitle" class="form-label fw-bold">Título del Anuncio:</label>
+                            <input type="text" class="form-control" id="contentTitle" placeholder="Ej: Cierre de Piscina por Mantenimiento">
+                        </div>
+                        <div class="mb-3">
+                            <label for="contentBody" class="form-label fw-bold">Contenido del Anuncio (HTML permitido):</label>
+                            <textarea class="form-control" id="contentBody" placeholder="Ej: <p>Estimados huéspedes, les informamos que la <b>piscina</b> estará cerrada el día <b>lunes 24</b> por mantenimiento. Disculpen las molestias.</p>"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Guardar Anuncio</button>
+                    </form>
+                    <div id="contentSaveResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar contenido del editor cuando se muestra la pestaña
+    const editorTab = document.getElementById('editor-tab');
+    if (editorTab) {
+        editorTab.addEventListener('show.bs.tab', loadContentForEditor);
+    }
+});
+
 document.getElementById('sqlForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const query = document.getElementById('sqlQuery').value;
@@ -420,6 +467,47 @@ function renderSqlResult(data) {
         container.innerHTML = tableHtml;
     }
 }
+
+async function loadContentForEditor() {
+    const resultContainer = document.getElementById('contentSaveResult');
+    try {
+        const response = await fetch("{{ url_for('mantenimiento.obtener_contenido', clave='aviso_principal') }}");
+        const data = await response.json();
+        if (data.ok) {
+            document.getElementById('contentTitle').value = data.data.titulo || '';
+            document.getElementById('contentBody').value = data.data.contenido || '';
+            resultContainer.innerHTML = '';
+        } else {
+            resultContainer.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
+        }
+    } catch (error) {
+        resultContainer.innerHTML = `<div class="alert alert-danger">Error de red al cargar el contenido.</div>`;
+    }
+}
+
+document.getElementById('contentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const titulo = document.getElementById('contentTitle').value;
+    const contenido = document.getElementById('contentBody').value;
+    const resultContainer = document.getElementById('contentSaveResult');
+    resultContainer.innerHTML = '<p class="text-info">Guardando...</p>';
+
+    try {
+        const response = await fetch("{{ url_for('mantenimiento.guardar_contenido', clave='aviso_principal') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo: titulo, contenido: contenido })
+        });
+        const data = await response.json();
+        if (data.ok) {
+            resultContainer.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+        } else {
+            resultContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        }
+    } catch (error) {
+        resultContainer.innerHTML = `<div class="alert alert-danger">Error de red al guardar el contenido.</div>`;
+    }
+});
 
 function runTask(taskName) {
     let url = '';
