@@ -59,6 +59,7 @@ app.register_blueprint(reportes_bp)
 @app.route("/")
 def index():
     valoraciones = []
+    anuncio = None
     try:
         with obtener_conexion() as conexion:
             with conexion.cursor() as cursor:
@@ -75,10 +76,15 @@ def index():
                     LIMIT 3
                 """)
                 valoraciones = cursor.fetchall()
+
+                # Obtener el anuncio principal
+                cursor.execute("SELECT titulo, contenido FROM contenido_dinamico WHERE clave = 'aviso_principal'")
+                anuncio = cursor.fetchone()
+
     except Exception as e:
         print(f"Error al obtener valoraciones para el index: {e}")
 
-    return render_template("index.html", nombre=session.get("nombre"), valoraciones=valoraciones)
+    return render_template("index.html", nombre=session.get("nombre"), valoraciones=valoraciones, anuncio=anuncio)
 
 @app.route("/habitaciones-principales")
 def habitaciones_principales():

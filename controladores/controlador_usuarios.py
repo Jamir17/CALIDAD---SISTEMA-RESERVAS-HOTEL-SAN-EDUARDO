@@ -161,6 +161,9 @@ def iniciosesion():
         elif rol == 3:  # Cliente
             flash("Inicio de sesión correcto.", "success")
             return redirect(url_for("habitaciones.habitaciones_cliente"))
+        elif rol == 4: # Mantenimiento
+            flash("Bienvenido al panel de mantenimiento.", "success")
+            return redirect(url_for("mantenimiento.panel_mantenimiento"))
         else:
             flash("Rol no reconocido. Contacte al administrador.", "error")
             return redirect(url_for("usuarios.iniciosesion"))
