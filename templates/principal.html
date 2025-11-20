@@ -52,10 +52,21 @@
                 <li><a href="{{ url_for('respaldo.panel_respaldo') }}" class="{{ 'active' if 'respaldo' in request.endpoint else '' }}">Respaldos</a></li>
             </ul>
 
+            {% set mantenimiento_active = 'mantenimiento_overview' in request.endpoint or 'mantenimiento_tasks' in request.endpoint %}
+            <a href="#" onclick="toggleMantenimientoMenu()" class="{{ 'active' if mantenimiento_active else '' }}">
+                Mantenimiento ▼
+            </a>
+            <ul id="submenuMantenimiento" style="list-style:none; padding-left:15px; display: {% if mantenimiento_active %}block{% else %}none{% endif %};">
+                <li><a href="{{ url_for('mantenimiento.panel_mantenimiento') }}">Visión General</a></li>
+            </ul>
+
         {% elif session['rol'] == 2 %}
             <a href="{{ url_for('reservas_admin.panel_reservas') }}" class="{{ 'active' if 'reservas_admin' in request.endpoint else '' }}">Reservas</a>
             <a href="{{ url_for('checkinout.panel_checkinout') }}" class="{{ 'active' if 'checkinout' in request.endpoint else '' }}">Check-in/out</a>
             <a href="{{ url_for('reservas_cliente.historial_reservas_cliente') }}" class="{{ 'active' if 'reservas_cliente' in request.endpoint else '' }}">Historial de reservas por cliente</a>
+
+        {% elif session['rol'] == 4 %} {# Rol Mantenimiento #}
+            <a href="{{ url_for('incidencias.panel_incidencias') }}" class="{{ 'active' if 'incidencias' in request.endpoint else '' }}">Gestión de Incidencias</a>
         {% endif %}
     </div>
 
@@ -83,6 +94,11 @@
     <script>
     function toggleSeguridadMenu() {
         const menu = document.getElementById('submenuSeguridad');
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleMantenimientoMenu() {
+        const menu = document.getElementById('submenuMantenimiento');
         menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
     </script>
