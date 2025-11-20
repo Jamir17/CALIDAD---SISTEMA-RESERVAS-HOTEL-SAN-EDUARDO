@@ -1,0 +1,111 @@
+/* ====== Layout general ====== */
+.container {
+  max-width: 1200px;
+}
+
+/* ====== Tarjetas KPI ====== */
+.card {
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+.card h6 {
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ====== Gráficos ====== */
+canvas {
+  width: 100% !important;
+  height: 220px !important;
+}
+
+/* ====== Filtros ====== */
+.form-label {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+#filtroMes {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+}
+
+#filtroMes:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+}
+
+/* ====== Tabla de resultados ====== */
+.table {
+  font-size: 0.95rem;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-weight: 600;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #f9fafb;
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+/* ====== Actividades ====== */
+.list-group-item {
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  transition: background 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* ====== Colores personalizados ====== */
+.text-success {
+  color: #198754 !important;
+}
+
+.text-info {
+  color: #0dcaf0 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-primary {
+  color: #0d6efd !important;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 768px) {
+  .card h3 {
+    font-size: 1.3rem;
+  }
+  .card h6 {
+    font-size: 0.8rem;
+  }
+  #filtroMes {
+    width: 150px;
+  }
+}
