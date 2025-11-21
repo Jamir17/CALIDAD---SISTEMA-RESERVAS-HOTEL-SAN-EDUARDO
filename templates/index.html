@@ -22,6 +22,24 @@
       </div>
     </section>
 
+    <!-- Anuncio de Mantenimiento -->
+    {% if anuncio and anuncio.contenido %}
+    <section class="anuncio-section">
+      <div class="container">
+        <div class="anuncio-box">
+          <div class="anuncio-header">
+            <h4><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-triangle"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            {{ anuncio.titulo or 'Aviso Importante' }}</h4>
+            <button class="anuncio-close-btn" onclick="this.parentElement.parentElement.parentElement.style.display='none'">&times;</button>
+          </div>
+          <div class="anuncio-body">
+            {{ anuncio.contenido | safe }}
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
     <!-- Tabs de Servicios -->
     <section id="tabs" class="tabs-section">
       <div class="container">
@@ -415,6 +433,56 @@
 {% block extra_css %}
   {{ super() }}
   <style>
+    /* Estilos para la sección de Anuncios */
+    .anuncio-section {
+      padding: 2rem 0;
+      background-color: #fff8e1; /* Un fondo amarillo claro para llamar la atención */
+    }
+    .anuncio-box {
+      border: 1px solid #ffecb3;
+      border-radius: 8px;
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .anuncio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background-color: #fff9c4;
+      border-bottom: 1px solid #fff59d;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .anuncio-header h4 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #5d4037;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .anuncio-header svg {
+        color: #f57f17;
+    }
+    .anuncio-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #757575;
+    }
+    .anuncio-body {
+      padding: 1.5rem;
+      color: #333;
+      line-height: 1.6;
+    }
+    .anuncio-body p {
+      margin-bottom: 1rem;
+    }
+    .anuncio-body p:last-child {
+      margin-bottom: 0;
+    }
     /* =========================================
        ESTILOS PARA EL WIDGET DE CHAT (ASISTENTE VIRTUAL)
        ========================================= */

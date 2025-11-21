@@ -23,7 +23,7 @@
   <section class="listado">
     <div class="grid-servicios">
       {% for s in servicios %}
-      <div class="card-servicio">
+      <div class="card-servicio {% if s.en_mantenimiento %}disabled{% endif %}">
         <img src="{{ url_for('static', filename='img/servicios/' + s['nombre']|lower|replace(' ', '_') + '.jpg') }}"
              alt="{{ s['nombre'] }}"
              onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/servicios/default.jpg') }}';">
@@ -31,12 +31,16 @@
           <h5>{{ s['nombre'] }}</h5>
           <p class="desc">{{ s['descripcion'] }}</p>
           <p class="precio">S/ {{ '%.2f'|format(s['precio']|float) }}</p>
-          <button class="btn-agregar"
-                  data-id="{{ s['id_servicio'] }}"
-                  data-nombre="{{ s['nombre'] }}"
-                  data-precio="{{ s['precio'] }}">
-            Agregar
-          </button>
+          {% if s.en_mantenimiento %}
+            <button class="btn-agregar" disabled>En Mantenimiento</button>
+          {% else %}
+            <button class="btn-agregar"
+                    data-id="{{ s['id_servicio'] }}"
+                    data-nombre="{{ s['nombre'] }}"
+                    data-precio="{{ s['precio'] }}">
+              Agregar
+            </button>
+          {% endif %}
         </div>
       </div>
       {% endfor %}
@@ -208,6 +212,21 @@
 
 .btn-agregar:hover {
   background: #157347;
+}
+
+.card-servicio.disabled {
+    filter: grayscale(90%);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.card-servicio.disabled .btn-agregar {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.card-servicio.disabled:hover {
+    transform: none;
 }
 
 /* ===========================
@@ -457,9 +476,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .replace(/\s+/g, "_");
 
       const imgSrc = `/static/img/servicios/${slug}.jpg`;
+      const esMantenimiento = s.en_mantenimiento;
 
       const card = `
-        <div class="card-servicio">
+        <div class="card-servicio ${esMantenimiento ? 'disabled' : ''}">
           <img src="${imgSrc}"
               alt="${s.nombre}"
               onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/servicios/default.jpg') }}';">
@@ -467,12 +487,15 @@ document.addEventListener("DOMContentLoaded", () => {
             <h5>${s.nombre}</h5>
             <p class="desc">${s.descripcion}</p>
             <p class="precio">S/ ${parseFloat(s.precio).toFixed(2)}</p>
-            <button class="btn-agregar"
-                    data-id="${s.id_servicio}"
-                    data-nombre="${s.nombre}"
-                    data-precio="${s.precio}">
-              Agregar
-            </button>
+            ${esMantenimiento 
+              ? `<button class="btn-agregar" disabled>En Mantenimiento</button>`
+              : `<button class="btn-agregar"
+                        data-id="${s.id_servicio}"
+                        data-nombre="${s.nombre}"
+                        data-precio="${s.precio}">
+                  Agregar
+                </button>`
+            }
           </div>
         </div>`;
       contenedor.insertAdjacentHTML("beforeend", card);
@@ -486,6 +509,8 @@ document.addEventListener("DOMContentLoaded", () => {
   contenedor.addEventListener("click", e => {
     if (e.target.classList.contains("btn-agregar")) {
       const btn = e.target;
+      if (btn.disabled) return; // No hacer nada si el botón está deshabilitado
+
       const id = btn.dataset.id;
       const nombre = btn.dataset.nombre;
       const precio = parseFloat(btn.dataset.precio);

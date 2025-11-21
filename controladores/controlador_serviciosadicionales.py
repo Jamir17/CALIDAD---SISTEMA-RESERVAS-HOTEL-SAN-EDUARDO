@@ -7,6 +7,9 @@ from flask import make_response
 
 servicios = Blueprint('servicios', __name__, url_prefix='/servicios')
 
+import re
+from datetime import datetime, date
+
 # ================================
 # LISTAR SERVICIOS DISPONIBLES
 # ================================
@@ -33,7 +36,8 @@ def listar_servicios():
             'nombre': fila.get('nombre', 'Servicio sin nombre'),
             'descripcion': fila.get('descripcion', 'Sin descripción disponible'),
             'precio': precio_val,
-            'estado': fila.get('estado', 1)
+            'estado': fila.get('estado', 1),
+            'en_mantenimiento': False  # Siempre disponible en la carga inicial
         })
 
     return render_template(
@@ -43,21 +47,83 @@ def listar_servicios():
         fecha_actual=date.today().strftime("%Y-%m-%d")
     )
 
+def _parse_maintenance_date(text: str):
+    if not text:
+        return None
+    
+    text = text.lower()
+    # Busca patrones como "26 de noviembre"
+    match = re.search(r'(\d{1,2})\s+de\s+([a-zA-Z]+)', text)
+    
+    if not match:
+        return None
+        
+    day = int(match.group(1))
+    month_name = match.group(2)
+    
+    month_map = {
+        'enero': 1, 'febrero': 2, 'marzo': 3, 'abril': 4, 'mayo': 5, 'junio': 6,
+        'julio': 7, 'agosto': 8, 'septiembre': 9, 'octubre': 10, 'noviembre': 11, 'diciembre': 12
+    }
+    month = month_map.get(month_name)
+    
+    if not month:
+        return None
+
+    # Asumir el año actual. Podría mejorarse para manejar cambios de año.
+    year = datetime.now().year
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+def _get_maintained_services(text: str):
+    if not text:
+        return set()
+    
+    maintained_services = set()
+    contenido = text.lower()
+    mapa_mantenimiento = {
+        'piscina': 'piscina',
+        'gimnasio': 'gimnasio',
+        'spa': 'spa y masajes relajantes',
+        'sauna': 'sauna y jacuzzi',
+        'jacuzzi': 'sauna y jacuzzi'
+    }
+    for keyword, service_name in mapa_mantenimiento.items():
+        if keyword in contenido:
+            maintained_services.add(service_name)
+    return maintained_services
+
 # ================================
 # FILTRAR SERVICIOS DISPONIBLES
 # ================================
 @servicios.route('/disponibles', methods=['POST'])
 def servicios_disponibles():
     data = request.get_json()
-    fecha = data.get('fecha')
+    fecha_str = data.get('fecha')
     hora = data.get('hora')
 
-    if not fecha or not hora:
+    if not fecha_str or not hora:
         return jsonify({'ok': False, 'msg': 'Fecha u hora no proporcionada.'}), 400
 
+    user_date = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    
     con = obtener_conexion()
     with con.cursor() as cur:
-        # 🧩 1️⃣ Obtener todos los servicios activos
+        # Obtener el anuncio principal
+        cur.execute("SELECT contenido FROM contenido_dinamico WHERE clave = 'aviso_principal'")
+        anuncio = cur.fetchone()
+        
+        # Procesar anuncio para obtener fecha y servicios en mantenimiento
+        maintenance_date = None
+        maintained_services = set()
+        if anuncio and anuncio.get('contenido'):
+            contenido_anuncio = anuncio['contenido']
+            maintenance_date = _parse_maintenance_date(contenido_anuncio)
+            maintained_services = _get_maintained_services(contenido_anuncio)
+
+        # 1. Obtener todos los servicios activos
         cur.execute("""
             SELECT id_servicio, nombre, descripcion, precio, tipo_disponibilidad
             FROM servicios
@@ -65,19 +131,27 @@ def servicios_disponibles():
         """)
         servicios = cur.fetchall()
 
-        # 🧩 2️⃣ Buscar servicios reservados en ese horario (solo los de tipo "único")
+        # 2. Buscar servicios reservados en ese horario (solo los de tipo "único")
         cur.execute("""
             SELECT sr.id_servicio
             FROM servicio_reservado sr
             WHERE sr.fecha = %s AND sr.hora = %s AND sr.estado = 'Ocupado'
-        """, (fecha, hora))
+        """, (fecha_str, hora))
         reservados = {row["id_servicio"] for row in cur.fetchall()}
 
     con.close()
 
-    # 🧩 3️⃣ Filtrar: ocultar servicios "únicos" reservados, mostrar siempre los "múltiples"
+    # 3. Filtrar y añadir estado de mantenimiento
     disponibles = []
     for s in servicios:
+        # Comprobar si el servicio está en mantenimiento EN LA FECHA SELECCIONADA
+        is_under_maintenance = (
+            maintenance_date and
+            user_date == maintenance_date and
+            s.get('nombre', '').lower() in maintained_services
+        )
+        s['en_mantenimiento'] = is_under_maintenance
+        
         if s["tipo_disponibilidad"] == "multiple" or s["id_servicio"] not in reservados:
             disponibles.append(s)
 
