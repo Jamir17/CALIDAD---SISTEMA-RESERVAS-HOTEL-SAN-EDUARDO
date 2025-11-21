@@ -110,6 +110,17 @@ INSERT INTO `clientes` (`id_cliente`, `tipo_documento`, `num_documento`, `nombre
 	(8, 'DNI', '72318703', 'Isis', 'Dulcemaria', 'Perú', '', '', '', 9),
 	(9, 'DNI', '73242600', 'Maguiña', 'sanchez rosmer', 'Perú', NULL, NULL, NULL, NULL);
 
+-- Volcando estructura para tabla bd_hotel_san_eduardo.contenido_dinamico
+CREATE TABLE IF NOT EXISTS `contenido_dinamico` (
+  `id_contenido` int NOT NULL AUTO_INCREMENT,
+  `clave` varchar(50) NOT NULL,
+  `titulo` varchar(255) DEFAULT NULL,
+  `contenido` text,
+  `ultima_modificacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_contenido`),
+  UNIQUE KEY `clave` (`clave`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Volcando estructura para tabla bd_hotel_san_eduardo.facturacion
 CREATE TABLE IF NOT EXISTS `facturacion` (
   `id_factura` int NOT NULL AUTO_INCREMENT,
