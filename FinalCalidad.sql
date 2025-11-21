@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
--- Host:                         127.0.0.1
--- Versión del servidor:         8.0.42 - MySQL Community Server - GPL
+-- Host:                         localhost
+-- Versión del servidor:         8.0.43 - MySQL Community Server - GPL
 -- SO del servidor:              Win64
--- HeidiSQL Versión:             12.8.0.6908
+-- HeidiSQL Versión:             12.12.0.7122
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -32,26 +32,29 @@ CREATE TABLE IF NOT EXISTS `actividad` (
   KEY `fk_actividad_habitacion` (`id_habitacion`),
   CONSTRAINT `fk_actividad_habitacion` FOREIGN KEY (`id_habitacion`) REFERENCES `habitaciones` (`id_habitacion`) ON DELETE SET NULL,
   CONSTRAINT `fk_actividad_reserva` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.actividad: ~16 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.actividad: ~19 rows (aproximadamente)
 INSERT INTO `actividad` (`id_actividad`, `accion`, `id_reserva`, `id_habitacion`, `nuevo_estado_hab`, `fecha_hora`) VALUES
-	(1, 'Check-in', 2, 5, 'Ocupada', '2025-10-21 01:08:45'),
-	(2, 'Check-out', 2, 5, 'En Limpieza', '2025-10-21 01:08:52'),
-	(3, 'Check-in', 4, 1, 'Ocupada', '2025-10-31 08:21:57'),
-	(4, 'Check-out', 4, 1, 'En Limpieza', '2025-10-31 08:26:01'),
-	(5, 'Limpieza OK', NULL, 5, 'Disponible', '2025-10-31 08:27:19'),
-	(6, 'Limpieza OK', NULL, 1, 'Disponible', '2025-10-31 08:27:23'),
-	(7, 'Check-in', 3, 1, 'Ocupada', '2025-10-31 08:27:30'),
-	(8, 'Check-in', 5, 3, 'Ocupada', '2025-11-04 09:54:13'),
-	(9, 'Check-out', 5, 3, 'En Limpieza', '2025-11-04 09:54:33'),
-	(10, 'Limpieza OK', NULL, 3, 'Disponible', '2025-11-04 09:56:53'),
-	(11, 'Check-in', 30, 3, 'Ocupada', '2025-11-07 02:16:29'),
-	(12, 'Check-out', 30, 3, 'En Limpieza', '2025-11-07 02:16:45'),
-	(13, 'Limpieza OK', NULL, 3, 'Disponible', '2025-11-07 02:16:54'),
-	(14, 'Check-in', 48, 1, 'Ocupada', '2025-11-11 11:49:06'),
-	(15, 'Check-out', 48, 1, 'En Limpieza', '2025-11-11 11:49:10'),
-	(16, 'Limpieza OK', NULL, 1, 'Disponible', '2025-11-11 11:49:37');
+	(1, 'Check-in', NULL, NULL, 'Ocupada', '2025-10-21 01:08:45'),
+	(2, 'Check-out', NULL, NULL, 'En Limpieza', '2025-10-21 01:08:52'),
+	(3, 'Check-in', NULL, NULL, 'Ocupada', '2025-10-31 08:21:57'),
+	(4, 'Check-out', NULL, NULL, 'En Limpieza', '2025-10-31 08:26:01'),
+	(5, 'Limpieza OK', NULL, NULL, 'Disponible', '2025-10-31 08:27:19'),
+	(6, 'Limpieza OK', NULL, NULL, 'Disponible', '2025-10-31 08:27:23'),
+	(7, 'Check-in', NULL, NULL, 'Ocupada', '2025-10-31 08:27:30'),
+	(8, 'Check-in', NULL, NULL, 'Ocupada', '2025-11-04 09:54:13'),
+	(9, 'Check-out', NULL, NULL, 'En Limpieza', '2025-11-04 09:54:33'),
+	(10, 'Limpieza OK', NULL, NULL, 'Disponible', '2025-11-04 09:56:53'),
+	(11, 'Check-in', NULL, NULL, 'Ocupada', '2025-11-07 02:16:29'),
+	(12, 'Check-out', NULL, NULL, 'En Limpieza', '2025-11-07 02:16:45'),
+	(13, 'Limpieza OK', NULL, NULL, 'Disponible', '2025-11-07 02:16:54'),
+	(14, 'Check-in', NULL, NULL, 'Ocupada', '2025-11-11 11:49:06'),
+	(15, 'Check-out', NULL, NULL, 'En Limpieza', '2025-11-11 11:49:10'),
+	(16, 'Limpieza OK', NULL, NULL, 'Disponible', '2025-11-11 11:49:37'),
+	(17, 'Check-in', NULL, NULL, 'Ocupada', '2025-11-21 00:00:57'),
+	(18, 'Check-out', NULL, NULL, 'En Limpieza', '2025-11-21 00:01:13'),
+	(19, 'Check-in', 87, 16, 'Ocupada', '2025-11-21 01:46:18');
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.check_in
 CREATE TABLE IF NOT EXISTS `check_in` (
@@ -62,9 +65,11 @@ CREATE TABLE IF NOT EXISTS `check_in` (
   PRIMARY KEY (`id_checkin`),
   KEY `id_reserva` (`id_reserva`),
   CONSTRAINT `check_in_ibfk_1` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.check_in: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.check_in: ~1 rows (aproximadamente)
+INSERT INTO `check_in` (`id_checkin`, `id_reserva`, `fecha`, `hora`) VALUES
+	(2, 87, '2025-11-21', '01:46:18');
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.check_out
 CREATE TABLE IF NOT EXISTS `check_out` (
@@ -76,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `check_out` (
   PRIMARY KEY (`id_checkout`),
   KEY `id_reserva` (`id_reserva`),
   CONSTRAINT `check_out_ibfk_1` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.check_out: ~0 rows (aproximadamente)
 
@@ -140,58 +145,11 @@ CREATE TABLE IF NOT EXISTS `facturacion` (
   CONSTRAINT `facturacion_ibfk_1` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`),
   CONSTRAINT `facturacion_ibfk_2` FOREIGN KEY (`id_tipo_pago`) REFERENCES `tipo_pago` (`id_tipo_pago`),
   CONSTRAINT `facturacion_ibfk_3` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.facturacion: ~48 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.facturacion: ~1 rows (aproximadamente)
 INSERT INTO `facturacion` (`id_factura`, `id_reserva`, `id_tipo_pago`, `id_usuario`, `fecha_emision`, `total`, `estado`, `comprobante_pago`) VALUES
-	(1, 1, 4, 7, '2025-10-16', 160.00, 'Pagado', '67283a6ab49e7.jpeg'),
-	(2, 2, 3, 7, '2025-10-16', 745.00, 'Pagado', 'IMG_0672.png'),
-	(3, 3, 1, 6, '2025-10-21', 365.00, 'Pagado', NULL),
-	(4, 4, 2, 6, '2025-10-31', 80.00, 'Pagado', NULL),
-	(5, 5, 2, 6, '2025-11-04', 480.00, 'Pagado', NULL),
-	(6, 6, 2, 6, '2025-11-04', 720.00, 'Pagado', NULL),
-	(7, 7, 2, 6, '2025-11-06', 205.00, 'Pagado', NULL),
-	(8, 8, 2, 6, '2025-11-06', 80.00, 'Pagado', NULL),
-	(9, 9, 1, 6, '2025-11-06', 20.00, 'Pagado', NULL),
-	(10, 10, 1, 6, '2025-11-06', 20.00, 'Pagado', NULL),
-	(11, 11, 1, 6, '2025-11-06', 80.00, 'Pagado', NULL),
-	(12, 12, 1, 6, '2025-11-06', 0.00, 'Pagado', 'static\\img\\comprobantes\\zalzar.png'),
-	(13, 13, 1, 6, '2025-11-06', 0.00, 'Pagado', 'static\\img\\comprobantes\\zalzar.png'),
-	(14, 14, 1, 6, '2025-11-06', 0.00, 'Pagado', 'static\\img\\comprobantes\\zalzar.png'),
-	(15, 15, 1, 6, '2025-11-06', 0.00, 'Pagado', 'static\\img\\comprobantes\\logo.jpg'),
-	(16, 16, 1, 6, '2025-11-06', 80.00, 'Pagado', 'static\\img\\comprobantes\\unnamed_1.jpg'),
-	(17, 17, 1, 6, '2025-11-06', 80.00, 'Pagado', 'static\\img\\comprobantes\\1-4.jpg'),
-	(18, 18, 1, 6, '2025-11-06', 720.00, 'Pagado', 'static\\img\\comprobantes\\zalzar.png'),
-	(19, 19, 1, 6, '2025-11-06', 80.00, 'Pagado', 'static\\img\\comprobantes\\2.png'),
-	(20, 20, 1, 6, '2025-11-06', 120.00, 'Pagado', 'static\\img\\comprobantes\\Imagen_de_WhatsApp_2025-09-20_a_las_21.48.53_b4281512.jpg'),
-	(21, 21, 1, 6, '2025-11-06', 1260.00, 'Pagado', 'static\\img\\comprobantes\\logo.jpg'),
-	(22, 22, 1, 6, '2025-11-06', 1260.00, 'Pagado', 'static\\img\\comprobantes\\Copia_de_Diagrama_en_blanco.png'),
-	(23, 23, 1, 6, '2025-11-06', 180.00, 'Pagado', 'static\\img\\comprobantes\\zalzar.png'),
-	(24, 24, 2, 6, '2025-11-06', 540.00, 'Pagado', NULL),
-	(25, 29, 1, 6, '2025-11-07', 480.00, 'Pagado', 'static\\img\\comprobantes\\kaosbn.jpg'),
-	(26, 31, 1, 6, '2025-11-07', 80.00, 'Pagado', 'static\\img\\comprobantes\\Captura_de_pantalla_2025-11-07_013645.png'),
-	(27, 32, 1, 6, '2025-11-07', 20.00, 'Pagado', NULL),
-	(28, 33, 2, 6, '2025-11-07', 80.00, 'Pagado', NULL),
-	(29, 34, 1, 6, '2025-11-07', 115.00, 'Pagado', NULL),
-	(30, 36, 2, 8, '2025-11-07', 540.00, 'Anulado', NULL),
-	(31, 36, 1, 8, '2025-11-07', 20.00, 'Anulado', NULL),
-	(32, 36, 1, 8, '2025-11-07', 20.00, 'Anulado', NULL),
-	(33, 36, 1, 8, '2025-11-07', 25.00, 'Anulado', NULL),
-	(34, 37, 1, 8, '2025-11-07', 180.00, 'Anulado', 'static\\img\\comprobantes\\logo_-_copia.jpg'),
-	(35, 38, 2, 8, '2025-11-07', 540.00, 'Anulado', NULL),
-	(36, 39, 3, 8, '2025-11-07', 540.00, 'Anulado', 'static\\img\\comprobantes\\logo_-_copia.jpg'),
-	(37, 40, 1, 8, '2025-11-07', 540.00, 'Anulado', 'static\\img\\comprobantes\\logo_-_copia.jpg'),
-	(38, 39, 1, 8, '2025-11-07', 90.00, 'Anulado', NULL),
-	(39, 41, 1, 8, '2025-11-08', 20.00, 'Pagado', NULL),
-	(40, 42, 1, 8, '2025-11-08', 90.00, 'Pagado', NULL),
-	(41, 43, 1, 8, '2025-11-08', 20.00, 'Pagado', NULL),
-	(42, 44, 1, 8, '2025-11-08', 20.00, 'Pagado', NULL),
-	(43, 45, 1, 8, '2025-11-08', 80.00, 'Anulado', 'static\\img\\comprobantes\\logo_-_copia.jpg'),
-	(44, 46, 1, 8, '2025-11-08', 120.00, 'Anulado', 'static\\img\\comprobantes\\logo_-_copia.jpg'),
-	(45, 47, 1, 8, '2025-11-08', 80.00, 'Anulado', 'static\\img\\comprobantes\\logo_-_copia.jpg'),
-	(46, 48, 1, 8, '2025-11-09', 160.00, 'Pagado', 'static\\img\\comprobantes\\logo_-_copia.jpg'),
-	(47, 49, 1, 8, '2025-11-13', 1080.00, 'Anulado', NULL),
-	(48, 49, 1, 8, '2025-11-18', 20.00, 'Anulado', NULL);
+	(53, 87, 2, 7, '2025-11-21', 480.00, 'Pagado', NULL);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.habitaciones
 CREATE TABLE IF NOT EXISTS `habitaciones` (
@@ -204,19 +162,19 @@ CREATE TABLE IF NOT EXISTS `habitaciones` (
   UNIQUE KEY `numero` (`numero`),
   KEY `id_tipo` (`id_tipo`),
   CONSTRAINT `habitaciones_ibfk_1` FOREIGN KEY (`id_tipo`) REFERENCES `tipo_habitacion` (`id_tipo`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.habitaciones: ~9 rows (aproximadamente)
 INSERT INTO `habitaciones` (`id_habitacion`, `numero`, `id_tipo`, `estado`, `imagen`) VALUES
-	(1, '101', 1, 'Disponible', 'static/img/habitaciones/individual_1.jpg'),
-	(2, '102', 1, 'Disponible', 'static/img/habitaciones/individual_2.jpg'),
-	(3, '201', 2, 'Disponible', 'static/img/habitaciones/doble_1.jpg'),
-	(4, '202', 2, 'Disponible', 'static/img/habitaciones/doble_2.jpg'),
-	(5, '301', 3, 'Disponible', 'static/img/habitaciones/familiar_1.jpg'),
-	(6, '302', 3, 'Disponible', 'static/img/habitaciones/familiar_2.jpg'),
-	(7, '104', 2, 'Disponible', 'img/habitaciones/Sala-de-reuniones-scaled.jpg'),
-	(10, '103', 3, 'Disponible', 'img/habitaciones/default.jpg'),
-	(11, '105', 8, 'Disponible', 'static/img/habitaciones/individual_1.jpg');
+	(15, '101', 9, 'Disponible', 'img/habitaciones/h1individual.jpg'),
+	(16, '201', 2, 'Ocupada', 'img/habitaciones/habitaciondoble.jpg'),
+	(17, '301', 1, 'Disponible', 'img/habitaciones/hestandar.jpg'),
+	(18, '401', 3, 'Disponible', 'img/habitaciones/familiar.jpg'),
+	(19, '501', 5, 'Disponible', 'img/habitaciones/dobledoscamas.jpg'),
+	(20, '601', 7, 'Disponible', 'img/habitaciones/dobleestanjdar.jpg'),
+	(21, '701', 4, 'Disponible', 'img/habitaciones/estandar.jpg'),
+	(22, '801', 6, 'Disponible', 'img/habitaciones/triple.png'),
+	(23, '901', 8, 'Disponible', 'img/habitaciones/suite.jpg');
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.historial_notificaciones
 CREATE TABLE IF NOT EXISTS `historial_notificaciones` (
@@ -230,9 +188,9 @@ CREATE TABLE IF NOT EXISTS `historial_notificaciones` (
   PRIMARY KEY (`id_notificacion`),
   KEY `id_usuario` (`id_usuario`),
   CONSTRAINT `historial_notificaciones_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.historial_notificaciones: ~28 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.historial_notificaciones: ~33 rows (aproximadamente)
 INSERT INTO `historial_notificaciones` (`id_notificacion`, `id_usuario`, `tipo`, `correo_destino`, `asunto`, `estado`, `fecha_envio`) VALUES
 	(1, 6, 'confirmacion', 'lorena_yjl@hotmail.com', 'Confirmacion - Hotel San Eduardo', 'Enviado', '2025-10-21 01:39:06'),
 	(2, 6, 'confirmacion', 'jamir.merino.17@hotmail.com', 'Confirmación de Reserva #3 • Hotel San Eduardo', 'Enviado', '2025-10-21 01:40:15'),
@@ -261,7 +219,12 @@ INSERT INTO `historial_notificaciones` (`id_notificacion`, `id_usuario`, `tipo`,
 	(25, 8, 'confirmacion', 'jamir_merino@hotmail.com', 'Confirmación de Reserva #48 • Hotel San Eduardo', 'Enviado', '2025-11-09 23:23:59'),
 	(26, 8, 'confirmacion', 'jamir_merino@hotmail.com', 'Confirmación de Reserva #49 • Hotel San Eduardo', 'Enviado', '2025-11-13 21:49:27'),
 	(27, 8, 'confirmacion', 'jamir_merino@hotmail.com', 'Confirmación de Reserva #49 • Hotel San Eduardo', 'Enviado', '2025-11-18 23:23:03'),
-	(28, 8, 'cancelacion', 'jamir_merino@hotmail.com', 'Cancelación de reserva #49 • Hotel San Eduardo', 'Enviado', '2025-11-19 00:21:13');
+	(28, 8, 'cancelacion', 'jamir_merino@hotmail.com', 'Cancelación de reserva #49 • Hotel San Eduardo', 'Enviado', '2025-11-19 00:21:13'),
+	(29, 8, 'confirmacion', 'jamir_merino@hotmail.com', 'Confirmación de Reserva #50 • Hotel San Eduardo', 'Enviado', '2025-11-20 23:44:48'),
+	(30, 8, 'confirmacion', 'jamir_merino@hotmail.com', 'Confirmación de Reserva #51 • Hotel San Eduardo', 'Enviado', '2025-11-20 23:46:18'),
+	(31, 7, 'confirmacion', 'jamir@gmail.com', 'Confirmación de Reserva #85 • Hotel San Eduardo', 'Enviado', '2025-11-21 01:03:54'),
+	(32, 7, 'confirmacion', 'jamir@gmail.com', 'Confirmación de Reserva #86 • Hotel San Eduardo', 'Enviado', '2025-11-21 01:07:20'),
+	(33, 7, 'confirmacion', 'jamir@gmail.com', 'Confirmación de Reserva #87 • Hotel San Eduardo', 'Enviado', '2025-11-21 01:45:08');
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.imagenes_habitacion
 CREATE TABLE IF NOT EXISTS `imagenes_habitacion` (
@@ -271,25 +234,20 @@ CREATE TABLE IF NOT EXISTS `imagenes_habitacion` (
   PRIMARY KEY (`id_imagen`),
   KEY `id_habitacion` (`id_habitacion`),
   CONSTRAINT `imagenes_habitacion_ibfk_1` FOREIGN KEY (`id_habitacion`) REFERENCES `habitaciones` (`id_habitacion`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.imagenes_habitacion: ~15 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.imagenes_habitacion: ~10 rows (aproximadamente)
 INSERT INTO `imagenes_habitacion` (`id_imagen`, `id_habitacion`, `ruta_imagen`) VALUES
-	(19, 1, 'static/img/habitaciones/individual_1.jpg'),
-	(20, 1, 'static/img/habitaciones/individual_2.jpg'),
-	(21, 1, 'static/img/habitaciones/individual_3.jpg'),
-	(22, 3, 'static/img/habitaciones/doble_1.jpg'),
-	(23, 3, 'static/img/habitaciones/doble_2.jpg'),
-	(24, 3, 'static/img/habitaciones/doble_3.jpg'),
-	(25, 5, 'static/img/habitaciones/familiar_1.jpg'),
-	(26, 5, 'static/img/habitaciones/familiar_2.jpg'),
-	(27, 5, 'static/img/habitaciones/familiar_3.jpg'),
-	(28, 7, 'img/habitaciones/Sala-de-reuniones-scaled.jpg'),
-	(29, 7, 'img/habitaciones/3010.jpg'),
-	(30, 7, 'img/habitaciones/media_x5gdi2kk_e-learning_skills-and-techniques_essential-bar-skills_speed-and-efficiency_split_bartender-at-bar-with-cockta.jpg'),
-	(31, 10, 'img/habitaciones/default.jpg'),
-	(32, 10, 'img/habitaciones/32537213-42f4-4389-b1f6-fadff7fb7c7c.jpg'),
-	(33, 10, 'img/habitaciones/67283a6ab49e7.jpeg');
+	(41, 15, 'img/habitaciones/h1individual.jpg'),
+	(42, 16, 'img/habitaciones/habitaciondoble.jpg'),
+	(43, 17, 'img/habitaciones/hestandar.jpg'),
+	(44, 16, 'img/habitaciones/habitaciondoble.jpg'),
+	(45, 18, 'img/habitaciones/familiar.jpg'),
+	(46, 19, 'img/habitaciones/dobledoscamas.jpg'),
+	(47, 20, 'img/habitaciones/dobleestanjdar.jpg'),
+	(48, 21, 'img/habitaciones/estandar.jpg'),
+	(51, 22, 'img/habitaciones/triple.png'),
+	(52, 23, 'img/habitaciones/suite.jpg');
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.incidencias
 CREATE TABLE IF NOT EXISTS `incidencias` (
@@ -366,7 +324,7 @@ CREATE TABLE IF NOT EXISTS `recuperacion` (
   CONSTRAINT `recuperacion_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id_usuario`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.recuperacion: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.recuperacion: ~1 rows (aproximadamente)
 INSERT INTO `recuperacion` (`id`, `usuario_id`, `token`, `expiracion`) VALUES
 	(3, 8, '6P5CSSAOgefyjBY4Ut-BnuVhIfyNiRr5gxuP4bV8aV8', '2025-11-20 23:00:13');
 
@@ -411,59 +369,11 @@ CREATE TABLE IF NOT EXISTS `reservas` (
   CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`),
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`id_habitacion`) REFERENCES `habitaciones` (`id_habitacion`),
   CONSTRAINT `reservas_ibfk_3` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=88 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla bd_hotel_san_eduardo.reservas: ~49 rows (aproximadamente)
+-- Volcando datos para la tabla bd_hotel_san_eduardo.reservas: ~1 rows (aproximadamente)
 INSERT INTO `reservas` (`id_reserva`, `codigo_confirmacion`, `id_cliente`, `id_habitacion`, `id_usuario`, `fecha_reserva`, `fecha_entrada`, `fecha_salida`, `num_huespedes`, `estado`, `motivo_cancelacion`, `fecha_cancelacion`, `noches`, `total`) VALUES
-	(1, NULL, 6, 1, 7, '2025-10-17 04:52:52', '2025-10-16', '2025-10-18', 1, 'Cancelada', 'Cancelado por el cliente', '2025-10-17 00:01:25', 0, 0.00),
-	(2, NULL, 6, 5, 7, '2025-10-17 04:52:52', '2025-10-16', '2025-10-19', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(3, NULL, 5, 1, 6, '2025-10-21 01:40:13', '2025-10-22', '2025-10-24', 1, 'Cancelada', 'Cancelado por el cliente', '2025-10-31 08:28:35', 0, 0.00),
-	(4, NULL, 5, 1, 6, '2025-10-31 08:19:37', '2025-10-31', '2025-11-01', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(5, NULL, 5, 3, 6, '2025-11-04 09:50:11', '2025-11-05', '2025-11-09', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(6, NULL, 5, 3, 6, '2025-11-04 11:43:39', '2025-11-05', '2025-11-11', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(7, NULL, 5, 2, 6, '2025-11-06 00:51:42', '2025-11-06', '2025-11-08', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(8, NULL, 5, 1, 6, '2025-11-06 16:04:15', '2025-11-07', '2025-11-08', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(9, NULL, 5, NULL, 6, '2025-11-06 16:17:38', '2025-11-06', '2025-11-06', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(10, NULL, 5, NULL, 6, '2025-11-06 16:39:20', '2025-11-06', '2025-11-06', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(11, NULL, 5, 1, 6, '2025-11-06 21:01:00', '2025-11-06', '2025-11-07', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(12, NULL, 6, 1, 6, '2025-11-06 21:11:21', '2025-11-06', '2025-11-07', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(13, NULL, 6, 1, 6, '2025-11-06 21:12:58', '2025-11-06', '2025-11-07', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(14, NULL, 6, 1, 6, '2025-11-06 21:13:15', '2025-11-06', '2025-11-07', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(15, NULL, 6, 1, 6, '2025-11-06 21:23:01', '2025-11-06', '2025-11-07', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(16, NULL, 6, 1, 6, '2025-11-06 21:26:37', '2025-11-06', '2025-11-07', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(17, NULL, 6, 1, 6, '2025-11-06 21:31:35', '2025-11-06', '2025-11-07', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(18, NULL, 6, 1, 6, '2025-11-06 21:33:14', '2025-11-06', '2025-11-15', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(19, NULL, 5, 1, 6, '2025-11-06 21:42:50', '2025-11-06', '2025-11-07', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-06 21:51:09', 0, 0.00),
-	(20, NULL, 5, 3, 6, '2025-11-06 21:43:37', '2025-11-07', '2025-11-08', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-06 21:51:07', 0, 0.00),
-	(21, NULL, 5, 6, 6, '2025-11-06 21:46:11', '2025-11-13', '2025-11-20', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-06 21:48:24', 0, 0.00),
-	(22, NULL, 5, 6, 6, '2025-11-06 21:49:05', '2025-11-13', '2025-11-20', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-06 21:51:04', 0, 0.00),
-	(23, NULL, 5, 6, 6, '2025-11-06 21:51:32', '2025-11-07', '2025-11-08', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(24, NULL, 5, 5, 6, '2025-11-06 22:07:28', '2025-11-07', '2025-11-10', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(25, NULL, 1, 6, 7, '2025-11-07 00:31:07', '2025-11-07', '2025-11-10', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(26, NULL, 1, 6, 7, '2025-11-07 00:31:07', '2025-11-07', '2025-11-10', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(27, NULL, 8, 2, 7, '2025-11-07 01:41:28', '2025-11-08', '2025-11-09', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(28, NULL, 8, 3, 7, '2025-11-07 01:56:29', '2025-11-07', '2025-11-10', 1, 'Finalizada', NULL, NULL, 0, 0.00),
-	(29, NULL, 5, 4, 6, '2025-11-07 02:11:28', '2025-11-07', '2025-11-11', 1, 'Finalizada', NULL, NULL, 4, 480.00),
-	(30, NULL, 8, 3, 7, '2025-11-07 02:12:34', '2025-11-07', '2025-11-10', 1, 'Finalizada', NULL, NULL, 3, 360.00),
-	(31, NULL, 5, 1, 6, '2025-11-07 02:23:56', '2025-11-08', '2025-11-09', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-07 11:27:21', 1, 80.00),
-	(32, NULL, 5, NULL, 6, '2025-11-07 02:39:43', '2025-11-08', '2025-11-08', 1, 'Cancelada', NULL, NULL, 0, 0.00),
-	(33, NULL, 5, 2, 6, '2025-11-07 11:10:05', '2025-11-07', '2025-11-08', 1, 'Cancelada', NULL, NULL, 1, 80.00),
-	(34, NULL, 5, NULL, 6, '2025-11-07 11:19:03', '2025-11-07', '2025-11-07', 1, 'Cancelada', NULL, NULL, 0, 0.00),
-	(35, 'CHAT-066388B6', 9, 1, NULL, '2025-11-07 11:44:20', '2025-11-08', '2025-11-09', 1, 'Cancelada', NULL, NULL, 0, 0.00),
-	(36, NULL, 7, 5, 8, '2025-11-07 21:43:26', '2025-11-08', '2025-11-11', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-07 22:55:29', 3, 540.00),
-	(37, NULL, 7, 5, 8, '2025-11-07 23:12:55', '2025-11-08', '2025-11-09', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-07 23:19:19', 1, 180.00),
-	(38, NULL, 7, 6, 8, '2025-11-07 23:17:58', '2025-11-08', '2025-11-11', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-07 23:19:22', 3, 540.00),
-	(39, NULL, 7, 5, 8, '2025-11-07 23:20:12', '2025-11-08', '2025-11-11', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-08 00:01:36', 3, 540.00),
-	(40, NULL, 7, 6, 8, '2025-11-07 23:25:27', '2025-11-08', '2025-11-11', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-08 00:01:54', 3, 540.00),
-	(41, NULL, 7, NULL, 8, '2025-11-08 00:02:27', '2025-11-14', '2025-11-14', 1, 'Activa', NULL, NULL, 0, 0.00),
-	(42, NULL, 7, NULL, 8, '2025-11-08 00:04:50', '2025-11-12', '2025-11-12', 1, 'Activa', NULL, NULL, 0, 0.00),
-	(43, NULL, 7, NULL, 8, '2025-11-08 00:13:37', '2025-11-13', '2025-11-13', 1, 'Activa', NULL, NULL, 0, 0.00),
-	(44, NULL, 7, NULL, 8, '2025-11-08 00:19:38', '2025-11-08', '2025-11-08', 1, 'Activa', NULL, NULL, 0, 0.00),
-	(45, NULL, 7, 1, 8, '2025-11-08 00:41:15', '2025-11-09', '2025-11-10', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-08 00:41:40', 1, 80.00),
-	(46, NULL, 7, 3, 8, '2025-11-08 00:45:38', '2025-11-08', '2025-11-09', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-08 00:46:05', 1, 120.00),
-	(47, NULL, 7, 1, 8, '2025-11-08 00:47:56', '2025-11-09', '2025-11-10', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-08 00:48:25', 1, 80.00),
-	(48, NULL, 7, 1, 8, '2025-11-09 23:23:57', '2025-11-10', '2025-11-12', 1, 'Finalizada', NULL, NULL, 2, 160.00),
-	(49, NULL, 7, 5, 8, '2025-11-13 21:49:24', '2025-11-14', '2025-11-20', 1, 'Cancelada', 'Cancelado por el cliente', '2025-11-19 00:21:10', 6, 1080.00);
+	(87, NULL, 6, 16, 7, '2025-11-21 01:45:06', '2025-11-21', '2025-11-25', 1, 'Activa', NULL, NULL, 4, 480.00);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.reserva_servicio
 CREATE TABLE IF NOT EXISTS `reserva_servicio` (
@@ -486,43 +396,43 @@ CREATE TABLE IF NOT EXISTS `reserva_servicio` (
   CONSTRAINT `fk_reservaservicio_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE SET NULL,
   CONSTRAINT `fk_reservaservicio_reserva` FOREIGN KEY (`id_reserva`) REFERENCES `reservas` (`id_reserva`) ON DELETE SET NULL,
   CONSTRAINT `fk_reservaservicio_servicio` FOREIGN KEY (`id_servicio`) REFERENCES `servicios` (`id_servicio`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.reserva_servicio: ~33 rows (aproximadamente)
 INSERT INTO `reserva_servicio` (`id_reserva_servicio`, `id_reserva`, `id_cliente`, `id_servicio`, `fecha_uso`, `hora_uso`, `cantidad`, `estado`, `origen`, `subtotal`, `fecha`, `hora`) VALUES
-	(1, 2, NULL, 1, NULL, NULL, 1, 'Pendiente', 'Independiente', 80.00, NULL, NULL),
-	(2, 2, NULL, 2, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
-	(3, 2, NULL, 3, NULL, NULL, 1, 'Pendiente', 'Independiente', 50.00, NULL, NULL),
-	(4, 2, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(5, 2, NULL, 5, NULL, NULL, 1, 'Pendiente', 'Independiente', 30.00, NULL, NULL),
-	(6, 3, NULL, 1, NULL, NULL, 1, 'Pendiente', 'Independiente', 80.00, NULL, NULL),
-	(7, 3, NULL, 2, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
-	(8, 3, NULL, 3, NULL, NULL, 1, 'Pendiente', 'Independiente', 50.00, NULL, NULL),
-	(9, 3, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(10, 3, NULL, 5, NULL, NULL, 1, 'Pendiente', 'Independiente', 30.00, NULL, NULL),
+	(1, NULL, NULL, 1, NULL, NULL, 1, 'Pendiente', 'Independiente', 80.00, NULL, NULL),
+	(2, NULL, NULL, 2, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
+	(3, NULL, NULL, 3, NULL, NULL, 1, 'Pendiente', 'Independiente', 50.00, NULL, NULL),
+	(4, NULL, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(5, NULL, NULL, 5, NULL, NULL, 1, 'Pendiente', 'Independiente', 30.00, NULL, NULL),
+	(6, NULL, NULL, 1, NULL, NULL, 1, 'Pendiente', 'Independiente', 80.00, NULL, NULL),
+	(7, NULL, NULL, 2, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
+	(8, NULL, NULL, 3, NULL, NULL, 1, 'Pendiente', 'Independiente', 50.00, NULL, NULL),
+	(9, NULL, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(10, NULL, NULL, 5, NULL, NULL, 1, 'Pendiente', 'Independiente', 30.00, NULL, NULL),
 	(16, NULL, 6, 1, NULL, NULL, 1, 'Pendiente', 'Independiente', 80.00, '2025-11-06', '06:00:00'),
 	(17, NULL, 6, 1, NULL, NULL, 1, 'Pendiente', 'Independiente', 80.00, '2025-11-06', '06:00:00'),
-	(18, 7, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(19, 7, NULL, 2, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
+	(18, NULL, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(19, NULL, NULL, 2, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
 	(20, NULL, 6, 4, '2025-11-06', '13:00:00', 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
 	(21, NULL, 6, 6, '2025-11-06', '13:00:00', 1, 'Pendiente', 'Independiente', 90.00, NULL, NULL),
 	(22, NULL, 6, 8, '2025-11-06', '13:00:00', 1, 'Pendiente', 'Independiente', 40.00, NULL, NULL),
-	(23, 9, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(24, 10, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(25, 32, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(26, 34, NULL, 8, NULL, NULL, 1, 'Pendiente', 'Independiente', 40.00, NULL, NULL),
-	(27, 34, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(28, 34, NULL, 9, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
-	(29, 34, NULL, 10, NULL, NULL, 1, 'Pendiente', 'Independiente', 30.00, NULL, NULL),
-	(30, 36, 7, 4, '2025-11-10', '09:00:00', 1, 'Cancelado', 'Vinculado', 20.00, NULL, NULL),
-	(31, 36, 7, 4, '2025-11-08', '06:30:00', 1, 'Cancelado', 'Vinculado', 20.00, NULL, NULL),
-	(32, 36, 7, 9, '2025-11-09', '07:30:00', 1, 'Cancelado', 'Vinculado', 25.00, NULL, NULL),
-	(33, 39, 7, 6, '2025-11-08', '06:30:00', 1, 'Cancelado', 'Vinculado', 90.00, NULL, NULL),
-	(34, 41, 7, 4, '2025-11-14', '07:00:00', 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(35, 42, 7, 6, '2025-11-12', '07:00:00', 1, 'Pendiente', 'Independiente', 90.00, NULL, NULL),
-	(36, 43, 7, 4, '2025-11-13', '08:00:00', 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(37, 44, 7, 4, '2025-11-08', '09:00:00', 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
-	(38, 49, 7, 4, '2025-11-19', '06:00:00', 1, 'Cancelado', 'Vinculado', 20.00, NULL, NULL);
+	(23, NULL, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(24, NULL, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(25, NULL, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(26, NULL, NULL, 8, NULL, NULL, 1, 'Pendiente', 'Independiente', 40.00, NULL, NULL),
+	(27, NULL, NULL, 4, NULL, NULL, 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(28, NULL, NULL, 9, NULL, NULL, 1, 'Pendiente', 'Independiente', 25.00, NULL, NULL),
+	(29, NULL, NULL, 10, NULL, NULL, 1, 'Pendiente', 'Independiente', 30.00, NULL, NULL),
+	(30, NULL, 7, 4, '2025-11-10', '09:00:00', 1, 'Cancelado', 'Vinculado', 20.00, NULL, NULL),
+	(31, NULL, 7, 4, '2025-11-08', '06:30:00', 1, 'Cancelado', 'Vinculado', 20.00, NULL, NULL),
+	(32, NULL, 7, 9, '2025-11-09', '07:30:00', 1, 'Cancelado', 'Vinculado', 25.00, NULL, NULL),
+	(33, NULL, 7, 6, '2025-11-08', '06:30:00', 1, 'Cancelado', 'Vinculado', 90.00, NULL, NULL),
+	(34, NULL, 7, 4, '2025-11-14', '07:00:00', 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(35, NULL, 7, 6, '2025-11-12', '07:00:00', 1, 'Pendiente', 'Independiente', 90.00, NULL, NULL),
+	(36, NULL, 7, 4, '2025-11-13', '08:00:00', 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(37, NULL, 7, 4, '2025-11-08', '09:00:00', 1, 'Pendiente', 'Independiente', 20.00, NULL, NULL),
+	(38, NULL, 7, 4, '2025-11-19', '06:00:00', 1, 'Cancelado', 'Vinculado', 20.00, NULL, NULL);
 
 -- Volcando estructura para tabla bd_hotel_san_eduardo.roles
 CREATE TABLE IF NOT EXISTS `roles` (
@@ -643,7 +553,7 @@ INSERT INTO `usuarios` (`id_usuario`, `dni`, `nombres`, `apellidos`, `correo`, `
 	(4, NULL, 'LILIANA', 'MAYRA', 'lorena@lsp.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+1111111111111111', 1, 3),
 	(5, NULL, 'Jose', 'Fiestas', 'josefiestas@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+58123456789', 1, 3),
 	(6, '16712223', 'Lorena', 'Merino', 'lorena_yjl@hotmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51971868785', 1, 3),
-	(7, '72318704', 'Jamir', 'Merino Mayra', 'jamir@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51942030088', 1, 1),
+	(7, '72318704', 'Jamir', 'Merino Mayra', 'jamir@gmail.com', '$argon2id$v=19$m=65536,t=3,p=4$zZXEbH6c5A27baHq+T9elA$mhSVUX8lbBaHzVbSFhv/3xD8AB1+S87ZIdaROKitIuM', '+51942030088', 1, 2),
 	(8, '72318705', 'Jamir', 'Merino Mayra', 'jamir_merino@hotmail.com', '$argon2id$v=19$m=65536,t=3,p=4$sCuxQ29bn++odGShDO06Kg$ww5OdRxnAhSX5Y6UMeU3I5lf5+IDHP1KVv4UXhnZR0Y', '+51942030088', 1, 3),
 	(9, '72318703', 'Isis', 'Dulcemaria', '', '', '', 1, 3);
 
@@ -664,7 +574,7 @@ CREATE TABLE IF NOT EXISTS `valoraciones` (
 
 -- Volcando datos para la tabla bd_hotel_san_eduardo.valoraciones: ~1 rows (aproximadamente)
 INSERT INTO `valoraciones` (`id_valoracion`, `id_cliente`, `id_reserva`, `puntuacion`, `comentario`, `fecha_valoracion`) VALUES
-	(1, 7, 48, 5, 'Buena estadia', '2025-11-18 23:24:23');
+	(1, 7, NULL, 5, 'Buena estadia', '2025-11-18 23:24:23');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
