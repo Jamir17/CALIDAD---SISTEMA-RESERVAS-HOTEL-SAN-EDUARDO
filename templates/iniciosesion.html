@@ -3,92 +3,104 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/iniciosesion.css') }}">
+
 <style>
-  /* ===============================
+/* 🎉 Toast minimalista universal */
+.toast-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: white;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: toastSlide 0.4s forwards, toastHide 0.4s 2.8s forwards;
+  z-index: 4000;
+}
+
+/* Colores según categoría */
+.toast-message[data-category="info"]     { background: #2563eb; } /* Azul */
+.toast-message[data-category="success"] { background: #059669; } /* Verde */
+.toast-message[data-category="error"]   { background: #dc2626; } /* Rojo */
+.toast-message[data-category="warning"] { background: #d97706; } /* Amarillo */
+.toast-message[data-category="message"] { background: #4b5563; } /* Gris */
+
+/* Animaciones */
+@keyframes toastSlide {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastHide {
+  to { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ===============================
    🌿 Modal de confirmación éxito
    =============================== */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.55);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 3000;
-  }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+}
+.modal-overlay.open { display: flex; }
 
-  .modal-overlay.open {
-    display: flex;
-  }
+.modal-success {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 30px 36px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  .modal-success {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 30px 36px;
-    text-align: center;
-    max-width: 420px;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
-    animation: fadeIn 0.3s ease-out;
-  }
+.modal-success h2 { color: #047857; margin-top: 12px; font-weight: 700; }
+.modal-success p  { color: #374151; margin: 8px 0 16px; font-size: 15px; }
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .modal-success h2 {
-    color: #047857;
-    margin-top: 12px;
-    font-weight: 700;
-  }
-
-  .modal-success p {
-    color: #374151;
-    margin: 8px 0 16px;
-    font-size: 15px;
-  }
-
-  .modal-success .checkmark {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: #10b981;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0 auto;
-  }
-
-  .modal-success .checkmark svg {
-    width: 36px;
-    height: 36px;
-    stroke: #fff;
-    stroke-width: 3;
-    fill: none;
-  }
+.modal-success .checkmark {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #10b981;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+}
+.modal-success .checkmark svg {
+  width: 36px;
+  height: 36px;
+  stroke: #fff;
+  stroke-width: 3;
+  fill: none;
+}
 </style>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 {% endblock %}
+
 
 {% block content %}
 <div class="auth-page">
   <div class="auth-container">
+
+    <!-- 🔥 TOAST: Todos los mensajes flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    {% for category, message in messages %}
-    {% if category == 'success' %}
-    <div id="successMessage" data-message="{{ message }}"></div>
-    {% else %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
-    {% endif %}
-    {% endfor %}
+      {% for category, message in messages %}
+        <div class="toast-message" data-category="{{ category }}">{{ message }}</div>
+      {% endfor %}
     {% endif %}
     {% endwith %}
 
@@ -97,21 +109,19 @@
       <p>Ingresa a tu cuenta para gestionar tus reservas</p>
     </div>
 
-    {% if error %}
-    <div class="alert alert-error">{{ error }}</div>
-    {% endif %}
-
     <form method="POST" action="{{ url_for('usuarios.iniciosesion') }}">
       <div class="form-group">
         <label class="form-label" for="email">Correo electrónico</label>
-        <input type="email" id="email" name="email" class="form-input" placeholder="tu@email.com" required
-          value="{{ correo }}">
+        <input type="email" id="email" name="email" class="form-input"
+               placeholder="tu@email.com" required
+               value="{{ correo }}">
       </div>
 
       <div class="form-group">
         <label class="form-label" for="password">Contraseña</label>
         <div class="password-wrapper">
-          <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
+          <input type="password" id="password" name="password"
+                 class="form-input" placeholder="••••••••" required>
           <span class="toggle-password" onclick="togglePasswordVisibility('password', this)">
             <i class="fas fa-eye"></i>
           </span>
@@ -119,7 +129,8 @@
       </div>
 
       <div class="checkbox-group">
-        <input type="checkbox" id="remember" name="recordarme" {% if session.get('correo_recordado') %}checked{% endif %}>
+        <input type="checkbox" id="remember" name="recordarme"
+               {% if session.get('correo_recordado') %}checked{% endif %}>
         <label for="remember">Recordarme</label>
       </div>
 
@@ -129,65 +140,64 @@
     </form>
 
     <div class="form-footer">
-      ¿No tienes una cuenta? <a href="{{ url_for('usuarios.registro') }}">Regístrate aquí</a>
+      ¿No tienes una cuenta?
+      <a href="{{ url_for('usuarios.registro') }}">Regístrate aquí</a>
     </div>
-    <div class="form-footer">¿Olvidaste tu contraseña?
+
+    <div class="form-footer">
+      ¿Olvidaste tu contraseña?
       <a href="{{ url_for('seguridad.recuperar_contraseña') }}">Recupérala aquí</a>
     </div>
+
   </div>
 </div>
+
 
 <!-- ===============================
      🌿 MODAL DE CONFIRMACIÓN ÉXITO
      =============================== -->
 <div class="modal-overlay" id="modalSuccess" aria-hidden="true" role="dialog">
-  <div class="modal-success" role="document">
+  <div class="modal-success">
     <div class="checkmark">
-      <svg viewBox="0 0 52 52">
-        <path d="M14 27 l7 7 l17 -17" />
-      </svg>
+      <svg viewBox="0 0 52 52"><path d="M14 27 l7 7 l17 -17" /></svg>
     </div>
     <h2>¡Cuenta creada con éxito!</h2>
     <p>Ahora puedes iniciar sesión con tus credenciales.</p>
   </div>
 </div>
 
+
 <script>
-  // ===============================
-  // 🎉 Modal éxito (auto 5 segundos)
-  // ===============================
-  function togglePasswordVisibility(idDelCampo, elementoToggle) {
-    const passwordInput = document.getElementById(idDelCampo);
-    const icon = elementoToggle.querySelector('i');
+// 👁 Mostrar/ocultar contraseña
+function togglePasswordVisibility(idDelCampo, elementoToggle) {
+  const input = document.getElementById(idDelCampo);
+  const icon = elementoToggle.querySelector("i");
+  const isPassword = input.type === "password";
 
-    if (!passwordInput || !icon) return;
+  input.type = isPassword ? "text" : "password";
+  icon.classList.toggle("fa-eye");
+  icon.classList.toggle("fa-eye-slash");
+}
 
-    const isPassword = passwordInput.type === 'password';
-    passwordInput.type = isPassword ? 'text' : 'password';
+// 🎉 Modal éxito (3s)
+document.addEventListener("DOMContentLoaded", () => {
+  const successDiv = document.getElementById("successMessage");
+  if (successDiv) {
+    const modal = document.getElementById("modalSuccess");
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
 
-    if (isPassword) {
-      icon.classList.remove('fa-eye');
-      icon.classList.add('fa-eye-slash');
-    } else {
-      icon.classList.remove('fa-eye-slash');
-      icon.classList.add('fa-eye');
-    }
+    setTimeout(() => {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }, 3000);
   }
 
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const successDiv = document.getElementById("successMessage");
-    if (successDiv) {
-      const modal = document.getElementById("modalSuccess");
-      modal.classList.add("open");
-      modal.setAttribute("aria-hidden", "false");
-
-      // Se cierra automáticamente después de 5 segundos
-      setTimeout(() => {
-        modal.classList.remove("open");
-        modal.setAttribute("aria-hidden", "true");
-      }, 3000);
-    }
+  // 🔥 Manejar todos los toasts
+  document.querySelectorAll(".toast-message").forEach(toast => {
+    setTimeout(() => toast.remove(), 3500);
   });
+});
 </script>
+
 {% endblock %}

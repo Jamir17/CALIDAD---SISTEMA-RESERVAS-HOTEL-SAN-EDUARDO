@@ -60,15 +60,15 @@ app.register_blueprint(reportes_bp)
 def index():
     valoraciones = []
     anuncio = None
+    tipos_habitacion = []
+
     try:
         with obtener_conexion() as conexion:
             with conexion.cursor() as cursor:
+                # 🔹 Valoraciones (igual que antes)
                 cursor.execute("""
                     SELECT 
-                        v.puntuacion, 
-                        v.comentario, 
-                        c.nombres, 
-                        c.apellidos
+                        v.puntuacion, v.comentario, c.nombres, c.apellidos
                     FROM valoraciones v
                     JOIN clientes c ON v.id_cliente = c.id_cliente
                     WHERE v.puntuacion >= 3 AND v.comentario IS NOT NULL AND v.comentario != ''
@@ -77,14 +77,31 @@ def index():
                 """)
                 valoraciones = cursor.fetchall()
 
-                # Obtener el anuncio principal
+                # 🔹 Anuncio (igual que antes)
                 cursor.execute("SELECT titulo, contenido FROM contenido_dinamico WHERE clave = 'aviso_principal'")
                 anuncio = cursor.fetchone()
 
-    except Exception as e:
-        print(f"Error al obtener valoraciones para el index: {e}")
+                # 🔹 Tipos de habitación (para el carrusel dinámico)
+                cursor.execute("""
+                    SELECT 
+                        t.id_tipo, t.nombre, t.descripcion, t.capacidad, t.precio_base, t.comodidades,
+                        (SELECT h.imagen FROM habitaciones h WHERE h.id_tipo = t.id_tipo LIMIT 1) AS imagen
+                    FROM tipo_habitacion t
+                """)
+                tipos_habitacion = cursor.fetchall()
 
-    return render_template("index.html", nombre=session.get("nombre"), valoraciones=valoraciones, anuncio=anuncio)
+    except Exception as e:
+        print(f"Error al obtener datos para el index: {e}")
+
+    return render_template(
+        "index.html",
+        nombre=session.get("nombre"),
+        valoraciones=valoraciones,
+        anuncio=anuncio,
+        tipos_habitacion=tipos_habitacion
+    )
+
+
 
 @app.route("/habitaciones-principales")
 def habitaciones_principales():

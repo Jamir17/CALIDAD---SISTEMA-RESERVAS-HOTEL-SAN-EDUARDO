@@ -137,6 +137,7 @@
     </section>
 
     <!-- Habitaciones -->
+    <!-- Habitaciones dinámicas -->
     <section id="habitaciones" class="rooms-section">
       <div class="container">
         <div class="section-header">
@@ -144,120 +145,43 @@
           <p>Espacios elegantes y confortables para una estancia inolvidable</p>
         </div>
 
-        <div class="rooms-grid">
-          <article class="room-card">
-            <div class="room-image">
-              <img src="{{ url_for('static', filename='img/habitacion_1.jpg') }}" alt="Habitación Estándar">
-              <div class="room-price">S/ 120 por noche</div>
-            </div>
-            <div class="room-content">
-              <h3>Habitación Estándar</h3>
-              <div class="room-features">
-                <span class="badge">18m²</span>
-                <span class="badge">1 huésped</span>
-                <span class="badge">Una cama Doble</span>
-                <span class="badge">WiFi gratuito</span>
-                <span class="badge">Baño privado</span>
-                <span class="badge">Tv de Pantalla Plana</span>
+        {% if tipos_habitacion %}
+        <div class="carousel-container">
+          <div class="carousel-track">
+            {% for tipo in tipos_habitacion %}
+            <article class="room-card">
+              <div class="room-image">
+                <img src="{{ url_for('static', filename=(tipo.imagen.replace('static/', '') if tipo.imagen else 'img/default_room.jpg')) }}" alt="{{ tipo.nombre }}">
+                <div class="room-price">S/ {{ tipo.precio_base|int }} por noche</div>
               </div>
-            </div>
-          </article>
+              <div class="room-content">
+                <h3>{{ tipo.nombre }}</h3>
+                <p>{{ tipo.descripcion }}</p>
+                <div class="room-features">
+                  <span class="badge">{{ tipo.capacidad }} huésped{{ 'es' if tipo.capacidad > 1 else '' }}</span>
+                  {% for comod in tipo.comodidades.split(',') %}
+                  <span class="badge">{{ comod.strip() }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
 
-          <article class="room-card">
-            <div class="room-image">
-              <img src="{{ url_for('static', filename='img/habitacion_2.jpg') }}" alt="Suite Junior">
-              <div class="room-price">S/ 280 por noche</div>
-            </div>
-            <div class="room-content">
-              <h3>Habitación Doble - 2 camas</h3>
-              <div class="room-features">
-                <span class="badge">18m²</span>
-                <span class="badge">4 huéspedes</span>
-                <span class="badge">Sala de estar</span>
-                <span class="badge">WiFi gratuito</span>
-                <span class="badge">Baño privado</span>
-                <span class="badge">Tv de Pantalla Plana</span>
-              </div>
-            </div>
-            
-          </article>
-
-          <article class="room-card">
-            <div class="room-image">
-              <img src="{{ url_for('static', filename='img/habitacion_3.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">S/ 450 por noche</div>
-            </div>
-            <div class="room-content">
-              <h3>Habitación Triple</h3>
-              <div class="room-features">
-                <span class="badge">18m²</span>
-                <span class="badge">5 huéspedes</span>
-                <span class="badge">Terraza privada</span>
-                <span class="badge">WiFi gratuito</span>
-                <span class="badge">Baño privado</span>
-                <span class="badge">Tv de Pantalla Plana</span>
-              </div>
-            </div>
-          </article>
-           <article class="room-card">
-            <div class="room-image">
-              <img src="{{ url_for('static', filename='img/habitacion_4.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">S/ 550 por noche</div>
-            </div>
-            <div class="room-content">
-              <h3>Habitación Doble Estándar</h3>
-              <div class="room-features">
-                <span class="badge">18m²</span>
-                <span class="badge">6 huéspedes</span>
-                <span class="badge">Vistas a un patio interio</span>
-                <span class="badge">WiFi gratuito</span>
-                <span class="badge">Baño privado</span>
-                <span class="badge">Tv de Pantalla Plana</span>
-              </div>
-            </div>
-          </article>
-              <article class="room-card">
-            <div class="room-image">
-              <img src="{{ url_for('static', filename='img/habitacion_5.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">S/ 450 por noche</div>
-            </div>
-            <div class="room-content">
-              <h3>Suite Presidencial</h3>
-              <div class="room-features">
-                <span class="badge">50m²</span>
-                <span class="badge">6 huéspedes</span>
-                <span class="badge">Terraza privada</span>
-                <span class="badge">WiFi gratuito</span>
-                <span class="badge">Baño privado</span>
-                <span class="badge">Tv de Pantalla Plana con Cable</span>
-                <span class="badge">Aire acondicionado</span>
-                <span class="badge">Jacuzzi</span>
-                <span class="badge">Piscina</span>
-              </div>
-            </div>
-          </article>
-              <article class="room-card">
-            <div class="room-image">
-              <img src="{{ url_for('static', filename='img/habitacion_6.jpg') }}" alt="Suite Presidencial">
-              <div class="room-price">S/ 80 por noche</div>
-            </div>
-            <div class="room-content">
-              <h3>Habitación Indivudual</h3>
-              <div class="room-features">
-                <span class="badge">180m²</span>
-                <span class="badge">1 huéspedes</span>
-                <span class="badge">Una cama Sencilla</span>
-                <span class="badge">WiFi gratuito</span>
-              </div>
-            </div>
-          </article>
+          <!-- Botones de navegación -->
+          <button class="carousel-btn prev" aria-label="Anterior">‹</button>
+          <button class="carousel-btn next" aria-label="Siguiente">›</button>
         </div>
 
-        <div class="text-center">
+        <div class="text-center mt-4">
           <a href="{{ url_for('habitaciones_principales') }}" class="btn btn-primary btn-lg">Ver Todas las Habitaciones</a>
         </div>
+        {% else %}
+          <p class="text-center text-muted">No hay tipos de habitaciones disponibles actualmente.</p>
+        {% endif %}
       </div>
     </section>
+
 
     <!-- Galería -->
     <section class="gallery-section">
@@ -682,6 +606,95 @@
       .whatsapp-option-text span { font-size: 11px; }
       .whatsapp-icon-small { width: 24px; height: 24px; }
     }
+
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.6s ease-in-out;
+  will-change: transform;
+}
+
+.room-card {
+  flex: 0 0 calc(33.333% - 14px);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.room-card:hover {
+  transform: translateY(-4px);
+}
+
+.room-image {
+  position: relative;
+}
+
+.room-image img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.room-price {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #2563eb;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.8rem;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.carousel-btn:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-btn.prev {
+  left: 10px;
+}
+
+.carousel-btn.next {
+  right: 10px;
+}
+
+@media (max-width: 768px) {
+  .room-card {
+    flex: 0 0 80%;
+  }
+}
+
+
   </style>
 {% endblock %}
 
@@ -781,5 +794,80 @@
     window.addEventListener('resize', () => setTimeout(() => scrollBottom($msgs), 120));
     window.addEventListener('resize', () => { $msgs.scrollTop = $msgs.scrollHeight; });
   })();
+
   </script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const track = document.querySelector(".carousel-track");
+  const prevBtn = document.querySelector(".carousel-btn.prev");
+  const nextBtn = document.querySelector(".carousel-btn.next");
+  const slides = Array.from(track.children);
+
+  if (!track || slides.length === 0) return;
+
+  const visible = 3; // Cuántas se ven
+  const total = slides.length;
+  let index = 0;
+  let autoScroll;
+  const slideWidth = slides[0].getBoundingClientRect().width + 20; // + gap
+
+  // Clonar los primeros 3 al final para suavizar el loop
+  for (let i = 0; i < visible; i++) {
+    const clone = slides[i].cloneNode(true);
+    track.appendChild(clone);
+  }
+
+  function moveTo(indexValue) {
+    track.style.transition = "transform 0.6s ease-in-out";
+    track.style.transform = `translateX(-${indexValue * slideWidth}px)`;
+  }
+
+  function nextSlide() {
+    index++;
+    moveTo(index);
+    if (index === total) {
+      setTimeout(() => {
+        track.style.transition = "none";
+        index = 0;
+        track.style.transform = `translateX(0)`;
+      }, 600);
+    }
+  }
+
+  function prevSlide() {
+    if (index === 0) {
+      track.style.transition = "none";
+      index = total;
+      track.style.transform = `translateX(-${index * slideWidth}px)`;
+      setTimeout(() => {
+        moveTo(--index);
+      }, 10);
+    } else {
+      index--;
+      moveTo(index);
+    }
+  }
+
+  nextBtn.addEventListener("click", nextSlide);
+  prevBtn.addEventListener("click", prevSlide);
+
+  // Auto scroll con pausa al pasar el mouse
+  function startAuto() {
+    stopAuto();
+    autoScroll = setInterval(nextSlide, 3500);
+  }
+  function stopAuto() {
+    clearInterval(autoScroll);
+  }
+
+  track.addEventListener("mouseenter", stopAuto);
+  track.addEventListener("mouseleave", startAuto);
+
+  if (total > visible) startAuto();
+});
+</script>
+
+
 {% endblock %}
