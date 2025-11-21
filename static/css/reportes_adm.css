@@ -109,3 +109,26 @@ canvas {
     width: 150px;
   }
 }
+
+/* Base container */
+.container { max-width: 1280px; }
+
+/* KPI */
+.kpi { border-radius: 10px; box-shadow: 0 6px 18px rgba(13,110,253,0.06); }
+.kpi small { color: #6c757d; }
+.kpi h3 { margin: 6px 0 0; font-size: 1.6rem; color: #0d6efd; }
+
+/* grid charts */
+.grid-charts {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(3, 1fr);
+}
+.chart-card { padding: 14px; border-radius: 12px; min-height: 240px; }
+
+/* responsive */
+@media (max-width: 1100px) { .grid-charts { grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 700px) { .grid-charts { grid-template-columns: 1fr; } .chart-card { min-height: 200px; } }
+
+/* small table tweaks */
+#tabla_facturas td, #tabla_facturas th { vertical-align: middle; font-size: 0.92rem; }

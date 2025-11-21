@@ -38,6 +38,10 @@
       <a href="{{ url_for('gestion_habitaciones.panel_habitaciones') }}" class="{{ 'active' if 'gestion_habitaciones' in request.endpoint else '' }}">Gestión de habitaciones</a>
       <a href="{{ url_for('incidencias.panel_incidencias') }}" class="{{ 'active' if 'incidencias' in request.endpoint else '' }}">Gestión de incidencias</a>
       <a href="{{ url_for('reservas_cliente.historial_reservas_cliente') }}" class="{{ 'active' if 'reservas_cliente' in request.endpoint else '' }}">Historial de reservas</a>
+      <a href="{{ url_for('reportes.reportes_admin') }}"
+        class="{{ 'active' if 'reportes' in request.endpoint else '' }}">
+        Reportes
+        </a>
 
       {% set seguridad_active = 'gestion_usuarios_roles' in request.endpoint or 'gestion_roles' in request.endpoint or 'respaldo' in request.endpoint %}
       <a href="javascript:void(0)" onclick="toggleMenu('submenuSeguridad')" class="{{ 'active' if seguridad_active else '' }}">

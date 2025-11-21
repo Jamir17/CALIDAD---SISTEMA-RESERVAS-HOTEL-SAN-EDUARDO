@@ -8,135 +8,120 @@
 
 {% block content %}
 <div class="container py-4">
-
-  <!-- ENCABEZADO -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div>
       <h1 class="fw-bold text-primary mb-0">Panel de Reportes</h1>
-      <p class="text-muted mb-0">Monitoreo general del Hotel San Eduardo</p>
+      <p class="text-muted mb-0">Monitoreo general — Hotel San Eduardo</p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-      <label for="filtroMes" class="fw-semibold text-muted">Filtrar por mes:</label>
-      <input type="month" id="filtroMes" class="form-control" style="max-width:180px;">
+
+    <div class="d-flex gap-2 align-items-center">
+      <label for="filtroMes" class="fw-semibold text-muted mb-0">Mes:</label>
+      <input type="month" id="filtroMes" class="form-control" style="max-width:180px;" value="{{ current_month or '' }}">
+      <button id="btnRefrescar" class="btn btn-outline-secondary ms-2">Refrescar</button>
     </div>
   </div>
 
-  <!-- TARJETAS KPI -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Reservas</h6>
-        <h3 class="fw-bold">{{ kpis.total_reservas }}</h3>
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-2">
+      <div class="kpi card p-3 text-center">
+        <small>Reservas</small>
+        <h3 id="kpi_reservas">{{ kpis.total_reservas }}</h3>
       </div>
     </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Clientes</h6>
-        <h3 class="fw-bold">{{ kpis.total_clientes }}</h3>
+    <div class="col-sm-6 col-md-2">
+      <div class="kpi card p-3 text-center">
+        <small>Clientes</small>
+        <h3 id="kpi_clientes">{{ kpis.total_clientes }}</h3>
       </div>
     </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Ingresos Hospedaje (S/)</h6>
-        <h3 class="fw-bold text-success">{{ "%.2f"|format(kpis.ingresos_hospedaje) }}</h3>
+    <div class="col-sm-6 col-md-2">
+      <div class="kpi card p-3 text-center">
+        <small>Ingresos (Hospedaje)</small>
+        <h3 id="kpi_ing_hosp">{{ "%.2f"|format(kpis.ingresos_hospedaje) }}</h3>
       </div>
     </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Ingresos Servicios (S/)</h6>
-        <h3 class="fw-bold text-info">{{ "%.2f"|format(kpis.ingresos_servicios) }}</h3>
+    <div class="col-sm-6 col-md-2">
+      <div class="kpi card p-3 text-center">
+        <small>Ingresos (Servicios)</small>
+        <h3 id="kpi_ing_serv">{{ "%.2f"|format(kpis.ingresos_servicios) }}</h3>
       </div>
     </div>
-    <div class="col-md-2 col-6">
-      <div class="card shadow-sm border-0 text-center p-3">
-        <h6 class="text-muted">Incidencias</h6>
-        <h3 class="fw-bold text-danger">{{ kpis.total_incidencias }}</h3>
-      </div>
-    </div>
-  </div>
-
-  <!-- GRAFICOS -->
-  <div class="row g-4 mb-5">
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6 class="fw-bold text-primary mb-3">Ocupación por Estado</h6>
-        <canvas id="graficoOcupacion" height="220"></canvas>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card shadow-sm p-3">
-        <h6 class="fw-bold text-primary mb-3">Ingresos Mensuales</h6>
-        <canvas id="graficoIngresos" height="220"></canvas>
+    <div class="col-sm-12 col-md-2">
+      <div class="kpi card p-3 text-center">
+        <small>Ganancias Totales</small>
+        <h3 id="kpi_ganancias">{{ "%.2f"|format(kpis.ganancias_totales) }}</h3>
       </div>
     </div>
   </div>
 
-  <!-- FILTROS -->
-  <div class="card shadow-sm p-4 mb-4">
-    <div class="row g-3 align-items-end">
-      <div class="col-md-3">
-        <label class="form-label fw-semibold">Tipo de Reporte</label>
-        <select id="tipoReporte" class="form-select">
-          <option value="reservas">Reservas</option>
-          <option value="facturacion">Facturación</option>
-          <option value="habitaciones">Habitaciones</option>
-          <option value="clientes">Clientes</option>
-          <option value="incidencias">Incidencias</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label fw-semibold">Estado</label>
-        <select id="estadoFiltro" class="form-select">
-          <option value="">Todos</option>
-          <option value="Activa">Activa</option>
-          <option value="Finalizada">Finalizada</option>
-          <option value="Cancelada">Cancelada</option>
-          <option value="Pagado">Pagado</option>
-          <option value="Pendiente">Pendiente</option>
-          <option value="Resuelta">Resuelta</option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label fw-semibold">Desde</label>
-        <input type="date" id="fechaInicio" class="form-control">
-      </div>
-      <div class="col-md-2">
-        <label class="form-label fw-semibold">Hasta</label>
-        <input type="date" id="fechaFin" class="form-control">
-      </div>
-      <div class="col-md-2 text-end">
-        <button id="btnFiltrar" class="btn btn-primary w-100">Filtrar</button>
-      </div>
+  <!-- GRID GRAFICOS -->
+  <div class="grid-charts">
+    <div class="card chart-card">
+      <h6>Ingresos Mensuales (Hospedaje + Servicios)</h6>
+      <canvas id="chart_ingresos"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Reservas por Estado</h6>
+      <canvas id="chart_reservas_estado"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Top 8 Habitaciones por Ingresos</h6>
+      <canvas id="chart_habitaciones"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Uso de Servicios (cantidad / total)</h6>
+      <canvas id="chart_servicios"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Ingresos por Tipo de Pago</h6>
+      <canvas id="chart_tipos_pago"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Reservas por Día (últimos 30 días)</h6>
+      <canvas id="chart_reservas_dia"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Notificaciones Enviadas (últimos 30 días)</h6>
+      <canvas id="chart_notificaciones"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Cancelaciones por Día (últimos 30 días)</h6>
+      <canvas id="chart_cancelaciones"></canvas>
+    </div>
+
+    <div class="card chart-card">
+      <h6>Valoración promedio</h6>
+      <canvas id="chart_valoracion"></canvas>
     </div>
   </div>
 
-  <!-- TABLA DE RESULTADOS -->
-  <div class="card shadow-sm p-3">
-    <h6 class="fw-bold text-primary mb-3">Resultados del Reporte</h6>
+  <div class="mt-4 card p-3">
+    <h6>Tabla rápida — últimas 20 facturas</h6>
     <div class="table-responsive">
-      <table class="table table-striped align-middle" id="tablaReportes">
-        <thead class="table-light"></thead>
-        <tbody></tbody>
+      <table class="table table-sm" id="tabla_facturas">
+        <thead><tr><th>#</th><th>Fecha</th><th>Total</th><th>Estado</th></tr></thead>
+        <tbody>
+          {% for f in ult_facturas %}
+          <tr>
+            <td>{{ f.id_factura }}</td>
+            <td>{{ f.fecha_emision }}</td>
+            <td>{{ "%.2f"|format(f.total) }}</td>
+            <td>{{ f.estado }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted">No hay facturas</td></tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
-  </div>
-
-  <!-- ACTIVIDADES -->
-  <div class="mt-5">
-    <h5 class="fw-bold text-primary mb-3">Últimas Actividades</h5>
-    <ul class="list-group">
-      {% for a in ult_actividades %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>{{ a.accion }}</strong> — Habitación {{ a.habitacion or '—' }}
-          <br><small class="text-muted">Estado: {{ a.nuevo_estado }}</small>
-        </div>
-        <small class="text-secondary">{{ a.fecha }}</small>
-      </li>
-      {% else %}
-      <li class="list-group-item text-muted text-center">No hay actividades recientes.</li>
-      {% endfor %}
-    </ul>
   </div>
 
 </div>
@@ -144,102 +129,126 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const ocupacion = {{ ocupacion|tojson }};
-  const ingresos = {{ ingresos_mensuales|tojson }};
+const initialReportData = {{ report_data|tojson }};
+let charts = {};
 
-  // === Inicialización de gráficos ===
-  const ctxOcup = document.getElementById("graficoOcupacion");
-  const ctxIng = document.getElementById("graficoIngresos");
+function buildBarChart(ctx, labels, datasets, opts = {}) {
+  return new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: Object.assign({
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true } }
+    }, opts)
+  });
+}
 
-  let grafOcupacion = new Chart(ctxOcup, {
-    type: "pie",
-    data: {
-      labels: ocupacion.map(o => o.estado),
-      datasets: [{
-        data: ocupacion.map(o => o.cantidad),
-        backgroundColor: ["#198754", "#0d6efd", "#ffc107", "#dc3545"]
-      }]
-    },
-    options: { plugins: { legend: { position: "bottom" } } }
+function drawAll(data) {
+  // KPIs
+  const k = data.kpis || data.kpis === undefined ? data.kpis : {};
+  document.getElementById('kpi_reservas').textContent = k.total_reservas ?? 0;
+  document.getElementById('kpi_clientes').textContent = k.total_clientes ?? 0;
+  document.getElementById('kpi_ing_hosp').textContent = parseFloat(k.ingresos_hospedaje || 0).toFixed(2);
+  document.getElementById('kpi_ing_serv').textContent = parseFloat(k.ingresos_servicios || 0).toFixed(2);
+  // nuevo KPI
+  document.getElementById('kpi_ganancias').textContent = parseFloat(k.ganancias_totales || ( (k.ingresos_hospedaje||0) + (k.ingresos_servicios||0) ) ).toFixed(2);
+
+  // Ingresos Mensuales
+  const ctx_ing = document.getElementById('chart_ingresos').getContext('2d');
+  const labels_ing = (data.ingresos_mensuales || []).map(x => x.mes);
+  const totals_ing = (data.ingresos_mensuales || []).map(x => x.total);
+  if (charts.ingresos) charts.ingresos.destroy();
+  charts.ingresos = buildBarChart(ctx_ing, labels_ing, [{ label: 'S/', data: totals_ing }]);
+
+  // Reservas por estado
+  const ctx_res = document.getElementById('chart_reservas_estado').getContext('2d');
+  const labels_res = (data.reservas_estado || []).map(x => x.estado);
+  const values_res = (data.reservas_estado || []).map(x => x.cantidad);
+  if (charts.reservas_estado) charts.reservas_estado.destroy();
+  charts.reservas_estado = buildBarChart(ctx_res, labels_res, [{ label: 'Reservas', data: values_res }]);
+
+  // Top habitaciones
+  const ctx_hab = document.getElementById('chart_habitaciones').getContext('2d');
+  const labels_hab = (data.top_habitaciones || []).map(x => x.numero);
+  const values_hab = (data.top_habitaciones || []).map(x => x.total);
+  if (charts.habitaciones) charts.habitaciones.destroy();
+  charts.habitaciones = buildBarChart(ctx_hab, labels_hab, [{ label: 'S/', data: values_hab }]);
+
+  // Servicios (cantidad y total) — doble dataset
+  const ctx_ser = document.getElementById('chart_servicios').getContext('2d');
+  const labels_ser = (data.servicios || []).map(x => x.nombre);
+  const cantidad_ser = (data.servicios || []).map(x => x.cantidad);
+  const total_ser = (data.servicios || []).map(x => x.total);
+  if (charts.servicios) charts.servicios.destroy();
+  charts.servicios = buildBarChart(ctx_ser, labels_ser, [
+    { label: 'Cantidad', data: cantidad_ser },
+    { label: 'Total (S/)', data: total_ser }
+  ], { scales: { y: { beginAtZero: true } } });
+
+  // Tipos de pago
+  const ctx_pago = document.getElementById('chart_tipos_pago').getContext('2d');
+  const labels_pago = (data.ingresos_por_pago || []).map(x => x.metodo);
+  const values_pago = (data.ingresos_por_pago || []).map(x => x.total);
+  if (charts.pagos) charts.pagos.destroy();
+  charts.pagos = buildBarChart(ctx_pago, labels_pago, [{ label: 'S/', data: values_pago }]);
+
+  // Reservas por dia
+  const ctx_rdia = document.getElementById('chart_reservas_dia').getContext('2d');
+  const labels_rdia = (data.reservas_por_dia || []).map(x => x.fecha);
+  const values_rdia = (data.reservas_por_dia || []).map(x => x.cantidad);
+  if (charts.reservas_dia) charts.reservas_dia.destroy();
+  charts.reservas_dia = buildBarChart(ctx_rdia, labels_rdia, [{ label: 'Reservas', data: values_rdia }]);
+
+  // Notificaciones por dia
+  const ctx_not = document.getElementById('chart_notificaciones').getContext('2d');
+  const labels_not = (data.notificaciones_por_dia || []).map(x => x.fecha);
+  const values_not = (data.notificaciones_por_dia || []).map(x => x.cantidad);
+  if (charts.notificaciones) charts.notificaciones.destroy();
+  charts.notificaciones = buildBarChart(ctx_not, labels_not, [{ label: 'Enviadas', data: values_not }]);
+
+  // Cancelaciones por día
+  const ctx_can = document.getElementById('chart_cancelaciones').getContext('2d');
+  const labels_can = (data.cancelaciones_por_dia || []).map(x => x.fecha);
+  const values_can = (data.cancelaciones_por_dia || []).map(x => x.cantidad);
+  if (charts.cancelaciones) charts.cancelaciones.destroy();
+  charts.cancelaciones = buildBarChart(ctx_can, labels_can, [{ label: 'Cancelaciones', data: values_can }]);
+
+  // Valoración promedio (simple barra)
+  const ctx_val = document.getElementById('chart_valoracion').getContext('2d');
+  const avg = data.valoracion_promedio ? parseFloat(data.valoracion_promedio) : 0;
+  if (charts.valoracion) charts.valoracion.destroy();
+  charts.valoracion = buildBarChart(ctx_val, ['Promedio'], [{ label: 'Puntuación', data: [avg] }], { scales: { y: { min: 0, max: 5 } } });
+}
+
+// fetch data (POST) — /admin/reportes/data
+async function fetchReportData(mes = null) {
+  const body = mes ? { mes } : {};
+  const res = await fetch("{{ url_for('reportes.data') }}", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // draw initial
+  drawAll(initialReportData);
+
+  // handlers
+  document.getElementById('btnRefrescar').addEventListener('click', async () => {
+    const mes = document.getElementById('filtroMes').value || null;
+    const data = await fetchReportData(mes);
+    if (data.error) { alert('Error: ' + data.error); return; }
+    drawAll(data);
   });
 
-  let grafIngresos = new Chart(ctxIng, {
-    type: "bar",
-    data: {
-      labels: ingresos.map(i => i.mes),
-      datasets: [{
-        label: "Ingresos (S/)",
-        data: ingresos.map(i => i.total),
-        backgroundColor: "#0d6efd"
-      }]
-    },
-    options: {
-      scales: { y: { beginAtZero: true } },
-      plugins: { legend: { display: false } }
-    }
-  });
-
-  // === Filtro mensual dinámico ===
-  document.getElementById("filtroMes").addEventListener("change", async (e) => {
-    const mes = e.target.value;
-    if (!mes) return;
-
-    const res = await fetch("/admin/reportes/filtrar_mes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mes })
-    });
-
-    const data = await res.json();
-    if (data.error) {
-      alert("Error al filtrar: " + data.error);
-      return;
-    }
-
-    // Actualizar gráfico de ocupación
-    grafOcupacion.data.labels = data.ocupacion.map(o => o.estado);
-    grafOcupacion.data.datasets[0].data = data.ocupacion.map(o => o.cantidad);
-    grafOcupacion.update();
-
-    // Actualizar gráfico de ingresos
-    grafIngresos.data.labels = data.ingresos.map(i => i.categoria);
-    grafIngresos.data.datasets[0].data = data.ingresos.map(i => i.total);
-    grafIngresos.update();
-  });
-
-  // === Filtro general ===
-  document.getElementById("btnFiltrar").addEventListener("click", async () => {
-    const tipo = document.getElementById("tipoReporte").value;
-    const estado = document.getElementById("estadoFiltro").value;
-    const fecha_inicio = document.getElementById("fechaInicio").value;
-    const fecha_fin = document.getElementById("fechaFin").value;
-
-    const res = await fetch("/admin/reportes/filtrar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tipo, estado, fecha_inicio, fecha_fin })
-    });
-
-    const data = await res.json();
-    const tabla = document.getElementById("tablaReportes");
-    const thead = tabla.querySelector("thead");
-    const tbody = tabla.querySelector("tbody");
-
-    tbody.innerHTML = "";
-    if (!data.length) {
-      thead.innerHTML = "<tr><th>No se encontraron resultados</th></tr>";
-      return;
-    }
-
-    const headers = Object.keys(data[0]);
-    thead.innerHTML = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-
-    data.forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = headers.map(h => `<td>${row[h] ?? ""}</td>`).join("");
-      tbody.appendChild(tr);
-    });
+  document.getElementById('filtroMes').addEventListener('change', async (e) => {
+    const mes = e.target.value || null;
+    const data = await fetchReportData(mes);
+    if (data.error) { alert('Error: ' + data.error); return; }
+    drawAll(data);
   });
 });
 </script>

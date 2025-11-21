@@ -1,317 +1,290 @@
-# ============================================================
-# 📊 CONTROLADOR DE REPORTES ADMINISTRATIVOS - HOTEL SAN EDUARDO
-# ============================================================
+# controlador_reportes.py
+# =========================
+# Controlador de reportes - Hotel San Eduardo
+# =========================
 
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, flash
 from bd import obtener_conexion
 from datetime import datetime
+import traceback
 
 reportes_bp = Blueprint("reportes", __name__, url_prefix="/admin/reportes")
 
-# ============================================================
-# PANEL PRINCIPAL DE REPORTES
-# ============================================================
+# --- utilidades para soportar cursores que devuelven tuplas o dicts ---
+def _is_dict_row(r): 
+    return isinstance(r, dict)
+def _get(r, key, default=None):
+    if r is None: return default
+    if _is_dict_row(r): return r.get(key, default)
+    try:
+        return r[key]
+    except Exception:
+        return default
+
+# --- función central que obtiene TODOS los datos del reporte ---
+def get_report_data(mes_str=None):
+    """
+    Retorna un dict con la misma estructura que /data necesita.
+    mes_str: 'YYYY-MM' o None (para últimos 12 meses)
+    """
+    anio = mes = None
+    if mes_str:
+        try:
+            anio, mes = map(int, mes_str.split("-"))
+        except Exception:
+            # formato inválido -> ignoramos y devolvemos último año
+            anio = mes = None
+
+    resultados = {
+        "kpis": {},
+        "ingresos_mensuales": [],
+        "reservas_estado": [],
+        "top_habitaciones": [],
+        "servicios": [],
+        "ingresos_por_pago": [],
+        "reservas_por_dia": [],
+        "notificaciones_por_dia": [],
+        "cancelaciones_por_dia": [],
+        "valoracion_promedio": 0.0
+    }
+
+    con = None
+    try:
+        con = obtener_conexion()
+        with con.cursor() as cur:
+            # KPIs básicos
+            cur.execute("SELECT COUNT(*) AS cnt FROM reservas")
+            row = cur.fetchone()
+            resultados["kpis"]["total_reservas"] = int(_get(row,"cnt", _get(row,0,0)) or 0)
+
+            cur.execute("SELECT COUNT(*) AS cnt FROM clientes")
+            row = cur.fetchone()
+            resultados["kpis"]["total_clientes"] = int(_get(row,"cnt", _get(row,0,0)) or 0)
+
+            # Ingresos hospedaje (facturacion) solo 'Pagado'
+            cur.execute("SELECT IFNULL(SUM(total),0) AS total FROM facturacion WHERE estado='Pagado'")
+            row = cur.fetchone()
+            resultados["kpis"]["ingresos_hospedaje"] = float(_get(row,"total", _get(row,0,0)) or 0)
+
+            # Ingresos servicios: sumar reserva_servicio.subtotal excluyendo 'Cancelado'
+            # Ajusta este filtro si tu lógica de "pagado" es distinta.
+            cur.execute("SELECT IFNULL(SUM(subtotal),0) AS total FROM reserva_servicio WHERE estado <> 'Cancelado'")
+            row = cur.fetchone()
+            resultados["kpis"]["ingresos_servicios"] = float(_get(row,"total", _get(row,0,0)) or 0)
+
+            resultados["kpis"]["ganancias_totales"] = round(resultados["kpis"]["ingresos_hospedaje"] + resultados["kpis"]["ingresos_servicios"], 2)
+
+            # ingresos mensuales combinados (hospedaje + servicios)
+            if anio and mes:
+                # consultas por mes específico
+                cur.execute("""
+                    SELECT DATE_FORMAT(fecha_emision, '%%b %%Y') AS mes, IFNULL(SUM(total),0) AS total
+                    FROM facturacion
+                    WHERE estado='Pagado' AND YEAR(fecha_emision)=%s AND MONTH(fecha_emision)=%s
+                    GROUP BY YEAR(fecha_emision), MONTH(fecha_emision)
+                """, (anio, mes))
+                fact = cur.fetchall()
+
+                cur.execute("""
+                    SELECT DATE_FORMAT(fecha, '%%b %%Y') AS mes, IFNULL(SUM(subtotal),0) AS total
+                    FROM reserva_servicio
+                    WHERE estado <> 'Cancelado' AND fecha IS NOT NULL AND YEAR(fecha)=%s AND MONTH(fecha)=%s
+                    GROUP BY YEAR(fecha), MONTH(fecha)
+                """, (anio, mes))
+                serv = cur.fetchall()
+            else:
+                # últimos 12 meses (para mostrar histórico)
+                cur.execute("""
+                    SELECT DATE_FORMAT(fecha_emision, '%%b %%Y') AS mes, IFNULL(SUM(total),0) AS total,
+                           YEAR(fecha_emision) AS yy, MONTH(fecha_emision) AS mm
+                    FROM facturacion
+                    WHERE estado='Pagado' AND fecha_emision >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                    GROUP BY YEAR(fecha_emision), MONTH(fecha_emision)
+                    ORDER BY YEAR(fecha_emision), MONTH(fecha_emision)
+                """)
+                fact = cur.fetchall()
+
+                cur.execute("""
+                    SELECT DATE_FORMAT(fecha, '%%b %%Y') AS mes, IFNULL(SUM(subtotal),0) AS total,
+                           YEAR(fecha) AS yy, MONTH(fecha) AS mm
+                    FROM reserva_servicio
+                    WHERE fecha IS NOT NULL AND estado <> 'Cancelado' AND fecha >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                    GROUP BY YEAR(fecha), MONTH(fecha)
+                    ORDER BY YEAR(fecha), MONTH(fecha)
+                """)
+                serv = cur.fetchall()
+
+            # combinar por par (yy,mm) -> mes label + suma total
+            meses = {}
+            if fact:
+                for r in fact:
+                    yy = _get(r,"yy", _get(r,2, None))
+                    mm = _get(r,"mm", _get(r,3, None))
+                    label = _get(r,"mes", _get(r,0, ""))
+                    key = (yy, mm, label)
+                    meses[key] = meses.get(key, 0) + float(_get(r,"total", _get(r,1,0)) or 0)
+            if serv:
+                for r in serv:
+                    yy = _get(r,"yy", _get(r,2, None))
+                    mm = _get(r,"mm", _get(r,3, None))
+                    label = _get(r,"mes", _get(r,0, ""))
+                    key = (yy, mm, label)
+                    meses[key] = meses.get(key, 0) + float(_get(r,"total", _get(r,1,0)) or 0)
+
+            resultados["ingresos_mensuales"] = [{"mes": k[2], "total": meses[k]} for k in sorted(meses.keys())]
+
+            # reservas por estado
+            if anio and mes:
+                cur.execute("""
+                    SELECT estado, COUNT(*) AS cantidad
+                    FROM reservas
+                    WHERE YEAR(fecha_reserva)=%s AND MONTH(fecha_reserva)=%s
+                    GROUP BY estado
+                """, (anio, mes))
+            else:
+                cur.execute("SELECT estado, COUNT(*) AS cantidad FROM reservas GROUP BY estado")
+            filas = cur.fetchall()
+            resultados["reservas_estado"] = [{"estado": _get(r,"estado", _get(r,0,"")), "cantidad": int(_get(r,"cantidad", _get(r,1,0)) or 0)} for r in (filas or [])]
+
+            # top habitaciones por ingresos (facturacion -> reservas -> habitaciones)
+            cur.execute("""
+                SELECT h.numero, IFNULL(SUM(f.total),0) AS total
+                FROM facturacion f
+                LEFT JOIN reservas r ON f.id_reserva = r.id_reserva
+                LEFT JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
+                WHERE f.estado='Pagado'
+                GROUP BY h.id_habitacion, h.numero
+                ORDER BY total DESC
+                LIMIT 8
+            """)
+            filas = cur.fetchall()
+            resultados["top_habitaciones"] = [{"numero": _get(r,"numero", _get(r,0,"—")), "total": float(_get(r,"total", _get(r,1,0)) or 0)} for r in (filas or [])]
+
+            # servicios: cantidad (veces reservadas) + total (suma subtotal)
+            cur.execute("""
+                SELECT s.nombre, COUNT(rs.id_reserva_servicio) AS cantidad, IFNULL(SUM(rs.subtotal),0) AS total
+                FROM reserva_servicio rs
+                LEFT JOIN servicios s ON rs.id_servicio = s.id_servicio
+                WHERE rs.estado <> 'Cancelado'
+                GROUP BY rs.id_servicio, s.nombre
+                ORDER BY cantidad DESC
+            """)
+            filas = cur.fetchall()
+            resultados["servicios"] = [{"nombre": _get(r,"nombre", _get(r,0,"")), "cantidad": int(_get(r,"cantidad", _get(r,1,0)) or 0), "total": float(_get(r,"total", _get(r,2,0)) or 0)} for r in (filas or [])]
+
+            # ingresos por tipo de pago (facturacion)
+            cur.execute("""
+                SELECT tp.descripcion AS metodo, IFNULL(SUM(f.total),0) AS total
+                FROM facturacion f
+                LEFT JOIN tipo_pago tp ON f.id_tipo_pago = tp.id_tipo_pago
+                WHERE f.estado='Pagado'
+                GROUP BY f.id_tipo_pago, tp.descripcion
+            """)
+            filas = cur.fetchall()
+            resultados["ingresos_por_pago"] = [{"metodo": _get(r,"metodo", _get(r,0,"")), "total": float(_get(r,"total", _get(r,1,0)) or 0)} for r in (filas or [])]
+
+            # reservas por dia (últimos 30 días)
+            cur.execute("""
+                SELECT DATE(fecha_reserva) AS fecha, COUNT(*) AS cantidad
+                FROM reservas
+                WHERE fecha_reserva >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY DATE(fecha_reserva)
+                ORDER BY DATE(fecha_reserva)
+            """)
+            filas = cur.fetchall()
+            resultados["reservas_por_dia"] = [{"fecha": str(_get(r,"fecha", _get(r,0,""))), "cantidad": int(_get(r,"cantidad", _get(r,1,0)) or 0)} for r in (filas or [])]
+
+            # notificaciones por dia
+            cur.execute("""
+                SELECT DATE(fecha_envio) AS fecha, COUNT(*) AS cantidad
+                FROM historial_notificaciones
+                WHERE fecha_envio >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY DATE(fecha_envio)
+                ORDER BY DATE(fecha_envio)
+            """)
+            filas = cur.fetchall()
+            resultados["notificaciones_por_dia"] = [{"fecha": str(_get(r,"fecha", _get(r,0,""))), "cantidad": int(_get(r,"cantidad", _get(r,1,0)) or 0)} for r in (filas or [])]
+
+            # cancelaciones por dia (últimos 30 días)
+            cur.execute("""
+                SELECT DATE(fecha_cancelacion) AS fecha, COUNT(*) AS cantidad
+                FROM reservas
+                WHERE estado='Cancelada' AND fecha_cancelacion >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY DATE(fecha_cancelacion)
+                ORDER BY DATE(fecha_cancelacion)
+            """)
+            filas = cur.fetchall()
+            resultados["cancelaciones_por_dia"] = [{"fecha": str(_get(r,"fecha", _get(r,0,""))), "cantidad": int(_get(r,"cantidad", _get(r,1,0)) or 0)} for r in (filas or [])]
+
+            # valoracion promedio
+            cur.execute("SELECT IFNULL(AVG(puntuacion),0) AS avg_p FROM valoraciones")
+            row = cur.fetchone()
+            resultados["valoracion_promedio"] = float(_get(row,"avg_p", _get(row,0,0)) or 0)
+
+    except Exception as e:
+        # imprimimos traza para debugging (en dev), devolveremos error en endpoint si corresponde
+        print("ERROR get_report_data:", e)
+        traceback.print_exc()
+        raise
+    finally:
+        if con:
+            con.close()
+
+    return resultados
+
+
+# === ruta principal: renderiza template con initialReportData pre-cargado ===
 @reportes_bp.route("/", endpoint="reportes_admin")
 def panel_reportes():
     if not session.get("usuario_id"):
         return redirect(url_for("usuarios.iniciosesion"))
 
-    # === Valores base ===
-    kpis = {
-        "total_reservas": 0,
-        "total_clientes": 0,
-        "ingresos_hospedaje": 0.0,
-        "ingresos_servicios": 0.0,
-        "total_incidencias": 0
-    }
-    ocupacion = []
-    ingresos_mensuales = []
-    ult_actividades = []
-
     try:
+        # usamos la misma función para obtener datos iniciales (últimos 12 meses)
+        report_data = get_report_data(None)
+
+        # Además queremos enviar algunos objetos para mostrar en servidor (ult_facturas)
         con = obtener_conexion()
+        ult_facturas = []
         with con.cursor() as cur:
-            # === Total de Reservas ===
-            cur.execute("SELECT COUNT(*) FROM reservas")
-            kpis["total_reservas"] = cur.fetchone()[0] or 0
-
-            # === Total de Clientes ===
-            cur.execute("SELECT COUNT(*) FROM clientes")
-            kpis["total_clientes"] = cur.fetchone()[0] or 0
-
-            # === Ingresos por hospedaje ===
-            cur.execute("SELECT IFNULL(SUM(total), 0) FROM facturacion WHERE estado='Pagado'")
-            kpis["ingresos_hospedaje"] = float(cur.fetchone()[0] or 0)
-
-            # === Ingresos por servicios ===
-            cur.execute("SELECT IFNULL(SUM(subtotal), 0) FROM reserva_servicio WHERE estado='Pagado'")
-            kpis["ingresos_servicios"] = float(cur.fetchone()[0] or 0)
-
-            # === Total de Incidencias ===
-            cur.execute("SELECT COUNT(*) FROM incidencias")
-            kpis["total_incidencias"] = cur.fetchone()[0] or 0
-
-            # === Ocupación general (todas las reservas) ===
-            cur.execute("""
-                SELECT estado, COUNT(*) AS cantidad
-                FROM reservas
-                GROUP BY estado
-                ORDER BY cantidad DESC
-            """)
-            ocupacion = [{"estado": r[0], "cantidad": r[1]} for r in cur.fetchall()]
-
-            # === Ingresos mensuales combinados (hospedaje + servicios) ===
-            cur.execute("""
-                SELECT DATE_FORMAT(fecha_emision, '%b') AS mes, SUM(total) AS total
-                FROM facturacion
-                WHERE estado='Pagado'
-                GROUP BY MONTH(fecha_emision)
-                ORDER BY MONTH(fecha_emision)
-            """)
-            ingresos_fact = cur.fetchall()
-
-            cur.execute("""
-                SELECT DATE_FORMAT(fecha, '%b') AS mes, SUM(subtotal) AS total
-                FROM reserva_servicio
-                WHERE estado='Pagado'
-                GROUP BY MONTH(fecha)
-                ORDER BY MONTH(fecha)
-            """)
-            ingresos_serv = cur.fetchall()
-
-            # Combinar resultados mensuales
-            meses = {}
-            for m, total in ingresos_fact + ingresos_serv:
-                meses[m] = meses.get(m, 0) + float(total or 0)
-            ingresos_mensuales = [{"mes": m, "total": t} for m, t in meses.items()]
-
-            # === Últimas Actividades ===
-            cur.execute("""
-                SELECT a.accion, h.numero AS habitacion, a.nuevo_estado_hab,
-                       DATE_FORMAT(a.fecha_hora, '%d/%m/%Y %H:%i') AS fecha
-                FROM actividad a
-                LEFT JOIN habitaciones h ON a.id_habitacion = h.id_habitacion
-                ORDER BY a.fecha_hora DESC
-                LIMIT 8
-            """)
-            ult_actividades = [
-                {"accion": a[0], "habitacion": a[1], "nuevo_estado": a[2], "fecha": a[3]}
-                for a in cur.fetchall()
-            ]
-
-    except Exception as e:
-        print(f"❌ Error al cargar reportes: {e}")
-        flash("Error al cargar los reportes administrativos.", "error")
-
-    finally:
-        if 'con' in locals():
-            con.close()
-
-    return render_template(
-        "reportes_adm.html",
-        kpis=kpis,
-        ocupacion=ocupacion,
-        ingresos_mensuales=ingresos_mensuales,
-        ult_actividades=ult_actividades
-    )
-
-# ============================================================
-# 🔍 FILTRO DINÁMICO POR MES (AJAX)
-# ============================================================
-@reportes_bp.route("/filtrar_mes", methods=["POST"])
-def filtrar_mes():
-    data = request.get_json() or {}
-    mes_str = data.get("mes")  # Formato YYYY-MM
-
-    if not mes_str:
-        return jsonify({"error": "Mes no especificado"}), 400
-
-    try:
-        anio, mes = map(int, mes_str.split("-"))
-    except ValueError:
-        return jsonify({"error": "Formato de mes inválido"}), 400
-
-    resultados = {"ocupacion": [], "ingresos": []}
-
-    try:
-        con = obtener_conexion()
-        with con.cursor() as cur:
-            # === Ocupación por estado (solo reservas válidas) ===
-            # === Ocupación por estado (solo reservas válidas) ===
-            cur.execute("""
-                SELECT estado, COUNT(*) AS cantidad
-                FROM reservas
-                WHERE YEAR(fecha_reserva) = %s AND MONTH(fecha_reserva) = %s
-                GROUP BY estado
-            """, (anio, mes))
-            resultados["ocupacion"] = [
-                {"estado": r["estado"] or "Sin estado", "cantidad": r["cantidad"] or 0}
-                for r in cur.fetchall()
-            ]
-
-            # === Ingresos hospedaje ===
-            cur.execute("""
-                SELECT IFNULL(SUM(total), 0) AS total
-                FROM facturacion
-                WHERE estado = 'Pagado'
-                AND YEAR(fecha_emision) = %s
-                AND MONTH(fecha_emision) = %s
-            """, (anio, mes))
-            ingresos_hospedaje = float(cur.fetchone()["total"] or 0)
-
-            # === Ingresos servicios ===
-            cur.execute("""
-                SELECT IFNULL(SUM(subtotal), 0) AS total
-                FROM reserva_servicio
-                WHERE estado = 'Pagado'
-                AND fecha IS NOT NULL
-                AND YEAR(fecha) = %s
-                AND MONTH(fecha) = %s
-            """, (anio, mes))
-            ingresos_servicios = float(cur.fetchone()["total"] or 0)
-
-
-            resultados["ingresos"] = [
-                {"categoria": "Hospedaje", "total": ingresos_hospedaje},
-                {"categoria": "Servicios", "total": ingresos_servicios},
-                {"categoria": "Total", "total": ingresos_hospedaje + ingresos_servicios},
-            ]
-
-    except Exception as e:
-        import traceback
-        print("❌ ERROR DETALLADO EN /filtrar_mes:")
-        traceback.print_exc()  # muestra el error completo con línea exacta
-        return jsonify({"error": str(e)}), 500
-    
-    finally:
-        if 'con' in locals():
-            con.close()
-
-    return jsonify(resultados)
-
-
-# ============================================================
-# 🔍 API: FILTRO GENERAL DE REPORTES
-# ============================================================
-@reportes_bp.route("/filtrar", methods=["POST"])
-def filtrar_reportes():
-    data = request.get_json() or {}
-    tipo = data.get("tipo")
-    estado = data.get("estado")
-    fecha_inicio = data.get("fecha_inicio")
-    fecha_fin = data.get("fecha_fin")
-
-    resultados = []
-    con = obtener_conexion()
-
-    try:
-        with con.cursor() as cur:
-            if tipo == "reservas":
-                query = """
-                    SELECT r.id_reserva, c.nombres, h.numero, r.estado,
-                           DATE(r.fecha_reserva), r.total
-                    FROM reservas r
-                    LEFT JOIN clientes c ON r.id_cliente = c.id_cliente
-                    LEFT JOIN habitaciones h ON r.id_habitacion = h.id_habitacion
-                    WHERE 1=1
-                """
-                params = []
-                if estado:
-                    query += " AND r.estado=%s"
-                    params.append(estado)
-                if fecha_inicio and fecha_fin:
-                    query += " AND DATE(r.fecha_reserva) BETWEEN %s AND %s"
-                    params.extend([fecha_inicio, fecha_fin])
-                cur.execute(query, tuple(params))
-                reservas = [
-                    {"ID": r[0], "Cliente": r[1], "Habitación": r[2], "Estado": r[3], "Fecha": str(r[4]), "Total": float(r[5])}
-                    for r in cur.fetchall()
-                ]
-
-                # Incluir también servicios reservados
-                cur.execute("""
-                    SELECT rs.id_reserva_servicio, c.nombres, s.nombre, rs.estado,
-                           rs.fecha, rs.subtotal
-                    FROM reserva_servicio rs
-                    LEFT JOIN clientes c ON rs.id_cliente = c.id_cliente
-                    LEFT JOIN servicios s ON rs.id_servicio = s.id_servicio
-                    WHERE 1=1
-                """)
-                servicios = [
-                    {"ID": f"S-{r[0]}", "Cliente": r[1], "Servicio": r[2], "Estado": r[3], "Fecha": str(r[4]), "Total": float(r[5])}
-                    for r in cur.fetchall()
-                ]
-
-                resultados = reservas + servicios
-
-            elif tipo == "facturacion":
-                query = """
-                    SELECT f.id_factura, u.nombres, f.fecha_emision, f.total, f.estado
-                    FROM facturacion f
-                    LEFT JOIN usuarios u ON f.id_usuario = u.id_usuario
-                    WHERE 1=1
-                """
-                params = []
-                if estado:
-                    query += " AND f.estado=%s"
-                    params.append(estado)
-                if fecha_inicio and fecha_fin:
-                    query += " AND f.fecha_emision BETWEEN %s AND %s"
-                    params.extend([fecha_inicio, fecha_fin])
-                cur.execute(query, tuple(params))
-                resultados = [
-                    {"ID": r[0], "Usuario": r[1], "Fecha": str(r[2]), "Total": float(r[3]), "Estado": r[4]}
-                    for r in cur.fetchall()
-                ]
-
-            elif tipo == "habitaciones":
-                query = """
-                    SELECT h.numero, t.nombre, t.precio_base, h.estado
-                    FROM habitaciones h
-                    LEFT JOIN tipo_habitacion t ON h.id_tipo = t.id_tipo
-                    WHERE 1=1
-                """
-                params = []
-                if estado:
-                    query += " AND h.estado=%s"
-                    params.append(estado)
-                cur.execute(query, tuple(params))
-                resultados = [
-                    {"Habitación": r[0], "Tipo": r[1], "Precio Base": float(r[2]), "Estado": r[3]}
-                    for r in cur.fetchall()
-                ]
-
-            elif tipo == "clientes":
-                cur.execute("SELECT id_cliente, nombres, apellidos, correo, telefono FROM clientes")
-                resultados = [
-                    {"ID": r[0], "Nombres": r[1], "Apellidos": r[2], "Correo": r[3], "Teléfono": r[4]}
-                    for r in cur.fetchall()
-                ]
-
-            elif tipo == "incidencias":
-                query = """
-                    SELECT i.id_incidencia, h.numero, i.descripcion, i.estado, i.prioridad, i.fecha_reporte
-                    FROM incidencias i
-                    LEFT JOIN habitaciones h ON i.id_habitacion = h.id_habitacion
-                    WHERE 1=1
-                """
-                params = []
-                if estado:
-                    query += " AND i.estado=%s"
-                    params.append(estado)
-                if fecha_inicio and fecha_fin:
-                    query += " AND i.fecha_reporte BETWEEN %s AND %s"
-                    params.extend([fecha_inicio, fecha_fin])
-                cur.execute(query, tuple(params))
-                resultados = [
-                    {"ID": r[0], "Habitación": r[1], "Descripción": r[2], "Estado": r[3], "Prioridad": r[4], "Fecha": str(r[5])}
-                    for r in cur.fetchall()
-                ]
-
-    except Exception as e:
-        print(f"❌ Error en filtro de reportes: {e}")
-
-    finally:
+            cur.execute("SELECT id_factura, fecha_emision, total, estado FROM facturacion ORDER BY fecha_emision DESC LIMIT 20")
+            filas = cur.fetchall()
+            for f in filas:
+                ult_facturas.append({
+                    "id_factura": _get(f,"id_factura", _get(f,0)),
+                    "fecha_emision": _get(f,"fecha_emision", _get(f,1)),
+                    "total": float(_get(f,"total", _get(f,2,0)) or 0),
+                    "estado": _get(f,"estado", _get(f,3,""))
+                })
         con.close()
 
-    return jsonify(resultados)
+        current_month = datetime.now().strftime("%Y-%m")
+        return render_template("reportes_adm.html",
+                               kpis=report_data["kpis"],
+                               ult_facturas=ult_facturas,
+                               report_data=report_data,
+                               current_month=current_month)
+    except Exception as e:
+        print("❌ Error al cargar panel:", e)
+        traceback.print_exc()
+        flash("Error al cargar reportes (ver consola)", "error")
+        # renderizamos pero con datos vacíos para evitar 500 en producción
+        return render_template("reportes_adm.html",
+                               kpis={"total_reservas":0,"total_clientes":0,"ingresos_hospedaje":0,"ingresos_servicios":0,"ganancias_totales":0},
+                               ult_facturas=[],
+                               report_data={"kpis":{},"ingresos_mensuales":[], "reservas_estado":[], "top_habitaciones":[], "servicios":[], "ingresos_por_pago":[], "reservas_por_dia":[], "notificaciones_por_dia":[], "cancelaciones_por_dia":[], "valoracion_promedio":0},
+                               current_month=datetime.now().strftime("%Y-%m")
+                               )
+
+# === endpoint que devuelve JSON usado por el JS (POST /admin/reportes/data) ===
+@reportes_bp.route("/data", methods=["POST"])
+def data():
+    payload = request.get_json() or {}
+    mes = payload.get("mes")
+    try:
+        resultados = get_report_data(mes)
+        return jsonify(resultados)
+    except Exception as e:
+        print("❌ ERROR en /data:", e)
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
