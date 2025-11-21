@@ -1084,10 +1084,6 @@ if (btnAplicar) {
         const serviciosNoGratis = seleccionados.filter(s => !s.gratis);
         const serviciosGratis = r.servicios.filter(s => s.gratis);
         r.servicios = [...serviciosGratis, ...serviciosNoGratis];
-    });reservas.forEach(r => {
-        const serviciosNoGratis = seleccionados.filter(s => !s.gratis);
-        const serviciosGratis = r.servicios.filter(s => s.gratis);
-        r.servicios = [...serviciosGratis, ...serviciosNoGratis];
     });
 
     document.getElementById("modal-servicios").classList.remove("show");

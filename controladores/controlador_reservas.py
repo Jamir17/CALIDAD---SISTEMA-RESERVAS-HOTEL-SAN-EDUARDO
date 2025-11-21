@@ -493,6 +493,8 @@ def confirmar_reserva():
 
             # 🧾 Insertar servicios adicionales (si existen)
             for s in reserva_temp.get("servicios", []):
+                if s.get("gratis"):
+                    continue
                 subtotal = float(s["precio"]) * int(s["qty"])
                 cur.execute("""
                     INSERT INTO reserva_servicio (id_reserva, id_servicio, cantidad, subtotal)
