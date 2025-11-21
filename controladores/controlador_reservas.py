@@ -9,6 +9,125 @@ from flask import make_response
 
 reservas_bp = Blueprint("reservas", __name__)
 
+from datetime import datetime, date, timedelta
+
+def _parse_to_date(value):
+    """Convierte value a objeto date de forma segura.
+       Acepta: date, datetime, str en formatos comunes.
+       Devuelve None si no puede parsear.
+    """
+    if value is None:
+        return None
+    # si ya es date
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    # si es datetime
+    if isinstance(value, datetime):
+        return value.date()
+    # si es string, probar varios formatos
+    if isinstance(value, str):
+        for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%d/%m/%Y", "%d-%m-%Y"):
+            try:
+                return datetime.strptime(value, fmt).date()
+            except Exception:
+                pass
+        # intentar parseo heurístico (ISO)
+        try:
+            return datetime.fromisoformat(value).date()
+        except Exception:
+            return None
+    # fallback
+    return None
+
+@reservas_bp.route("/cliente/habitacion/<int:id_habitacion>/ocupadas")
+def obtener_fechas_ocupadas(id_habitacion):
+    """Devuelve una lista de fechas ocupadas (YYYY-MM-DD) para una habitación."""
+    con = obtener_conexion()
+    try:
+        with con.cursor() as cur:
+            cur.execute("""
+                SELECT fecha_entrada, fecha_salida
+                FROM reservas
+                WHERE id_habitacion = %s
+                  AND estado IN ('Activa', 'Pendiente')
+            """, (id_habitacion,))
+            registros = cur.fetchall()
+
+        fechas_ocupadas = set()
+
+        for fila in registros:
+            # soporte para cursor que devuelve dicts o tuplas
+            if fila is None:
+                continue
+
+            if isinstance(fila, dict):
+                raw_ini = fila.get("fecha_entrada") or fila.get("fecha_inicio") or fila.get("entrada")
+                raw_fin = fila.get("fecha_salida") or fila.get("fecha_fin") or fila.get("salida")
+            else:
+                # tupla: asumimos (fecha_entrada, fecha_salida, ...)
+                raw_ini = fila[0] if len(fila) > 0 else None
+                raw_fin = fila[1] if len(fila) > 1 else None
+
+            fecha_ini = _parse_to_date(raw_ini)
+            fecha_fin = _parse_to_date(raw_fin)
+
+            # si no podemos parsear, saltar este registro
+            if not fecha_ini or not fecha_fin:
+                continue
+
+            # si rango inválido o 0 noches, saltar
+            if fecha_fin <= fecha_ini:
+                continue
+
+            actual = fecha_ini
+            while actual < fecha_fin:
+                fechas_ocupadas.add(actual.strftime("%Y-%m-%d"))
+                actual += timedelta(days=1)
+
+        return jsonify(sorted(list(fechas_ocupadas)))
+    except Exception as e:
+        print("❌ Error al obtener fechas ocupadas:", e)
+        # opcional: imprimir stacktrace para debug en local
+        import traceback; traceback.print_exc()
+        return jsonify([]), 200
+    finally:
+        try:
+            con.close()
+        except Exception:
+            pass
+
+def safe_strftime(value, fmt="%Y-%m-%d"):
+    """
+    Convierte value a string formateado de forma segura.
+    - Si value es datetime -> usa .strftime(fmt)
+    - Si value es str -> intenta parsearlo con varios formatos y luego formatear
+    - Si no puede -> devuelve str(value)
+    """
+    if value is None:
+        return None
+
+    # ya es str con el formato deseado (optimización)
+    if isinstance(value, str):
+        # intentamos parsear ISO / SQL DATETIME / fecha corta
+        for f in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%d/%m/%Y", "%d-%m-%Y"):
+            try:
+                dt = datetime.strptime(value, f)
+                return dt.strftime(fmt)
+            except Exception:
+                pass
+        # si no pudimos parsear, devolvemos la cadena tal cual
+        return value
+
+    # si ya es datetime (o date)
+    if hasattr(value, "strftime"):
+        try:
+            return value.strftime(fmt)
+        except Exception:
+            return str(value)
+
+    # fallback general
+    return str(value)
+
 @reservas_bp.route("/cliente/habitaciones")
 def habitaciones_cliente():
     if not session.get("usuario_id"):
@@ -765,38 +884,3 @@ def descargar_comprobante(id_reserva):
 from datetime import timedelta
 from flask import jsonify
 
-@reservas_bp.route("/cliente/habitacion/<int:id_habitacion>/ocupadas")
-def obtener_fechas_ocupadas(id_habitacion):
-    """Devuelve una lista de fechas ocupadas (YYYY-MM-DD) para una habitación."""
-    con = obtener_conexion()
-    try:
-        with con.cursor() as cur:
-            cur.execute("""
-                SELECT DATE(fecha_entrada), DATE(fecha_salida)
-                FROM reservas
-                WHERE id_habitacion = %s
-                  AND estado IN ('Activa', 'Pendiente')
-            """, (id_habitacion,))
-            registros = cur.fetchall()
-
-        fechas_ocupadas = set()
-
-        for fila in registros:
-            if not fila or not all(fila):
-                continue
-
-            fecha_ini, fecha_fin = fila
-            actual = fecha_ini
-
-            # 🔹 No incluir la fecha de salida (checkout)
-            while actual < fecha_fin:
-                fechas_ocupadas.add(actual.strftime("%Y-%m-%d"))
-                actual += timedelta(days=1)
-
-        return jsonify(sorted(list(fechas_ocupadas)))
-
-    except Exception as e:
-        print("❌ Error al obtener fechas ocupadas:", e)
-        return jsonify([]), 200
-    finally:
-        con.close()

@@ -610,6 +610,14 @@
 #resumenContenido::-webkit-scrollbar-thumb { background: #0d6efd; border-radius: 6px; }
 
 .empty { color:#6b7280; }
+
+/* Placeholder para los espacios del primer día (mantienen tamaño visual uniforme) */
+.dia-placeholder {
+  padding: 8px;
+  border-radius: 6px;
+  background: transparent;
+  visibility: hidden; /* ocupa espacio, pero no es visible */
+}
 </style>
 {% endblock %}
 
@@ -1195,9 +1203,11 @@ function eliminarFiltros() {
 // ======================================
 // 📅 CALENDARIO DE DISPONIBILIDAD
 // ======================================
+// ==================== CALENDARIO CORREGIDO ====================
 let mesActual = new Date().getMonth();
 let anioActual = new Date().getFullYear();
-let fechasGlobalOcupadas = [];
+// ahora usamos Set para lookup rápido
+let fechasGlobalOcupadasSet = new Set();
 
 function abrirCalendario(idHabitacion) {
   const modal = document.getElementById("modal-calendario");
@@ -1210,18 +1220,47 @@ function abrirCalendario(idHabitacion) {
     .then(fechas => {
       console.log("🔹 Fechas recibidas del backend:", fechas);
 
-      if (!Array.isArray(fechas) || !fechas.length) {
-        cont.innerHTML = "<p>No hay fechas reservadas.</p>";
+      // Normalizar: asegurar formato YYYY-MM-DD (defensivo)
+      const normalizadas = (Array.isArray(fechas) ? fechas : [])
+        .map(f => {
+          if (!f) return null;
+          // Si viene con hora, tomar parte antes de 'T'
+          if (typeof f === "string" && f.includes("T")) return f.split("T")[0];
+          // Si viene ya en YYYY-MM-DD, devolver tal cual; en caso contrario intentar parse
+          if (/^\d{4}-\d{2}-\d{2}$/.test(f)) return f;
+          // intento defensivo: crear fecha y formatear
+          try {
+            const d = new Date(f + "T00:00:00");
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            return `${y}-${m}-${dd}`;
+          } catch (e) {
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      if (!normalizadas.length) {
+        // mostrar calendar vacío del mes actual
+        fechasGlobalOcupadasSet = new Set();
+        mesActual = new Date().getMonth();
+        anioActual = new Date().getFullYear();
+        renderizarCalendario();
         return;
       }
 
-      // 🔹 Guardamos global
-      fechasGlobalOcupadas = fechas.map(f => f.split("T")[0]); // por si llegan con hora
+      // Guardamos en un Set (rápido y sin duplicados)
+      fechasGlobalOcupadasSet = new Set(normalizadas);
 
-      // 🔹 Establecer mes inicial basado en las fechas recibidas
-      const primeraFecha = new Date(fechasGlobalOcupadas[0]);
-      mesActual = primeraFecha.getMonth();
-      anioActual = primeraFecha.getFullYear();
+      // Opcional: si prefieres abrir en el mes de la PRIMERA reserva,
+      // descomenta las siguientes dos líneas. Por defecto, abrimos el mes actual.
+      // const primeraFecha = new Date([...fechasGlobalOcupadasSet][0] + "T00:00:00");
+      // mesActual = primeraFecha.getMonth(), anioActual = primeraFecha.getFullYear();
+
+      // dejamos mesActual/anioActual en el mes actual para experiencia más intuitiva
+      mesActual = new Date().getMonth();
+      anioActual = new Date().getFullYear();
 
       renderizarCalendario();
     })
@@ -1230,7 +1269,6 @@ function abrirCalendario(idHabitacion) {
       cont.innerHTML = "<p>Error al cargar fechas.</p>";
     });
 }
-
 
 function renderizarCalendario() {
   const cont = document.getElementById("calendarContainer");
@@ -1246,7 +1284,7 @@ function renderizarCalendario() {
   const diasMes = ultimoDia.getDate();
   const nombresDias = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
-  // Encabezado
+  // Encabezado (semana)
   nombresDias.forEach(d => {
     const div = document.createElement("div");
     div.textContent = d;
@@ -1254,26 +1292,33 @@ function renderizarCalendario() {
     cont.appendChild(div);
   });
 
-  // Espacios antes del primer día
+  // Espacios antes del primer día (placeholder con clase)
   for (let i = 0; i < primerDia.getDay(); i++) {
-    cont.appendChild(document.createElement("div"));
+    const ph = document.createElement("div");
+    ph.className = "dia-placeholder";
+    cont.appendChild(ph);
   }
 
   // Días del mes
   for (let d = 1; d <= diasMes; d++) {
-    const fechaStr = `${anioActual}-${String(mesActual + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const mm = String(mesActual + 1).padStart(2,"0");
+    const dd = String(d).padStart(2,"0");
+    const fechaStr = `${anioActual}-${mm}-${dd}`; // YYYY-MM-DD (normalizado)
+
     const div = document.createElement("div");
     div.textContent = d;
     div.classList.add("dia");
+    div.setAttribute("data-date", fechaStr);
 
-  if (fechasGlobalOcupadas.some(f => f.startsWith(fechaStr))) {
-    div.classList.add("ocupado");
-  } else {
-    div.classList.add("libre");
-  }
+    // marcar ocupado si está en el Set
+    if (fechasGlobalOcupadasSet.has(fechaStr)) {
+      div.classList.add("ocupado");
+    } else {
+      div.classList.add("libre");
+    }
 
-  console.log("Fecha:", fechaStr, "→", fechasGlobalOcupadas.includes(fechaStr) ? "OCUPADA" : "LIBRE");
-
+    // console para depuración (más consistente con Set)
+    console.log("Fecha:", fechaStr, "→", fechasGlobalOcupadasSet.has(fechaStr) ? "OCUPADA" : "LIBRE");
 
     cont.appendChild(div);
   }
@@ -1295,6 +1340,7 @@ function cambiarMes(dir) {
 function cerrarCalendario() {
   document.getElementById("modal-calendario").classList.remove("show");
 }
+
 
 
 // =============================
