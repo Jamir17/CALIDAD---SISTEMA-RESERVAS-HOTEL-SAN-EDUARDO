@@ -145,80 +145,74 @@ function buildBarChart(ctx, labels, datasets, opts = {}) {
 }
 
 function drawAll(data) {
-  // KPIs
-  const k = data.kpis || data.kpis === undefined ? data.kpis : {};
-  document.getElementById('kpi_reservas').textContent = k.total_reservas ?? 0;
-  document.getElementById('kpi_clientes').textContent = k.total_clientes ?? 0;
+  data = data || {};
+  // KPIs - si faltan, fallback a ceros
+  const k = (data && data.kpis) ? data.kpis : {};
+  document.getElementById('kpi_reservas').textContent = (k.total_reservas ?? 0);
+  document.getElementById('kpi_clientes').textContent = (k.total_clientes ?? 0);
   document.getElementById('kpi_ing_hosp').textContent = parseFloat(k.ingresos_hospedaje || 0).toFixed(2);
   document.getElementById('kpi_ing_serv').textContent = parseFloat(k.ingresos_servicios || 0).toFixed(2);
-  // nuevo KPI
-  document.getElementById('kpi_ganancias').textContent = parseFloat(k.ganancias_totales || ( (k.ingresos_hospedaje||0) + (k.ingresos_servicios||0) ) ).toFixed(2);
+  document.getElementById('kpi_ganancias').textContent = parseFloat(k.ganancias_totales ?? ((k.ingresos_hospedaje||0) + (k.ingresos_servicios||0))).toFixed(2);
+
+  // Helper para destruir chart si existe
+  const safeDestroy = (name) => { if (charts[name]) { try { charts[name].destroy(); } catch(e){} charts[name] = null; } };
 
   // Ingresos Mensuales
-  const ctx_ing = document.getElementById('chart_ingresos').getContext('2d');
   const labels_ing = (data.ingresos_mensuales || []).map(x => x.mes);
   const totals_ing = (data.ingresos_mensuales || []).map(x => x.total);
-  if (charts.ingresos) charts.ingresos.destroy();
-  charts.ingresos = buildBarChart(ctx_ing, labels_ing, [{ label: 'S/', data: totals_ing }]);
+  safeDestroy('ingresos');
+  charts.ingresos = buildBarChart(document.getElementById('chart_ingresos').getContext('2d'), labels_ing, [{ label: 'S/', data: totals_ing }]);
 
   // Reservas por estado
-  const ctx_res = document.getElementById('chart_reservas_estado').getContext('2d');
   const labels_res = (data.reservas_estado || []).map(x => x.estado);
   const values_res = (data.reservas_estado || []).map(x => x.cantidad);
-  if (charts.reservas_estado) charts.reservas_estado.destroy();
-  charts.reservas_estado = buildBarChart(ctx_res, labels_res, [{ label: 'Reservas', data: values_res }]);
+  safeDestroy('reservas_estado');
+  charts.reservas_estado = buildBarChart(document.getElementById('chart_reservas_estado').getContext('2d'), labels_res, [{ label: 'Reservas', data: values_res }]);
 
   // Top habitaciones
-  const ctx_hab = document.getElementById('chart_habitaciones').getContext('2d');
   const labels_hab = (data.top_habitaciones || []).map(x => x.numero);
   const values_hab = (data.top_habitaciones || []).map(x => x.total);
-  if (charts.habitaciones) charts.habitaciones.destroy();
-  charts.habitaciones = buildBarChart(ctx_hab, labels_hab, [{ label: 'S/', data: values_hab }]);
+  safeDestroy('habitaciones');
+  charts.habitaciones = buildBarChart(document.getElementById('chart_habitaciones').getContext('2d'), labels_hab, [{ label: 'S/', data: values_hab }]);
 
   // Servicios (cantidad y total) — doble dataset
-  const ctx_ser = document.getElementById('chart_servicios').getContext('2d');
   const labels_ser = (data.servicios || []).map(x => x.nombre);
   const cantidad_ser = (data.servicios || []).map(x => x.cantidad);
   const total_ser = (data.servicios || []).map(x => x.total);
-  if (charts.servicios) charts.servicios.destroy();
-  charts.servicios = buildBarChart(ctx_ser, labels_ser, [
+  safeDestroy('servicios');
+  charts.servicios = buildBarChart(document.getElementById('chart_servicios').getContext('2d'), labels_ser, [
     { label: 'Cantidad', data: cantidad_ser },
     { label: 'Total (S/)', data: total_ser }
   ], { scales: { y: { beginAtZero: true } } });
 
   // Tipos de pago
-  const ctx_pago = document.getElementById('chart_tipos_pago').getContext('2d');
   const labels_pago = (data.ingresos_por_pago || []).map(x => x.metodo);
   const values_pago = (data.ingresos_por_pago || []).map(x => x.total);
-  if (charts.pagos) charts.pagos.destroy();
-  charts.pagos = buildBarChart(ctx_pago, labels_pago, [{ label: 'S/', data: values_pago }]);
+  safeDestroy('pagos');
+  charts.pagos = buildBarChart(document.getElementById('chart_tipos_pago').getContext('2d'), labels_pago, [{ label: 'S/', data: values_pago }]);
 
   // Reservas por dia
-  const ctx_rdia = document.getElementById('chart_reservas_dia').getContext('2d');
   const labels_rdia = (data.reservas_por_dia || []).map(x => x.fecha);
   const values_rdia = (data.reservas_por_dia || []).map(x => x.cantidad);
-  if (charts.reservas_dia) charts.reservas_dia.destroy();
-  charts.reservas_dia = buildBarChart(ctx_rdia, labels_rdia, [{ label: 'Reservas', data: values_rdia }]);
+  safeDestroy('reservas_dia');
+  charts.reservas_dia = buildBarChart(document.getElementById('chart_reservas_dia').getContext('2d'), labels_rdia, [{ label: 'Reservas', data: values_rdia }]);
 
   // Notificaciones por dia
-  const ctx_not = document.getElementById('chart_notificaciones').getContext('2d');
   const labels_not = (data.notificaciones_por_dia || []).map(x => x.fecha);
   const values_not = (data.notificaciones_por_dia || []).map(x => x.cantidad);
-  if (charts.notificaciones) charts.notificaciones.destroy();
-  charts.notificaciones = buildBarChart(ctx_not, labels_not, [{ label: 'Enviadas', data: values_not }]);
+  safeDestroy('notificaciones');
+  charts.notificaciones = buildBarChart(document.getElementById('chart_notificaciones').getContext('2d'), labels_not, [{ label: 'Enviadas', data: values_not }]);
 
   // Cancelaciones por día
-  const ctx_can = document.getElementById('chart_cancelaciones').getContext('2d');
   const labels_can = (data.cancelaciones_por_dia || []).map(x => x.fecha);
   const values_can = (data.cancelaciones_por_dia || []).map(x => x.cantidad);
-  if (charts.cancelaciones) charts.cancelaciones.destroy();
-  charts.cancelaciones = buildBarChart(ctx_can, labels_can, [{ label: 'Cancelaciones', data: values_can }]);
+  safeDestroy('cancelaciones');
+  charts.cancelaciones = buildBarChart(document.getElementById('chart_cancelaciones').getContext('2d'), labels_can, [{ label: 'Cancelaciones', data: values_can }]);
 
   // Valoración promedio (simple barra)
-  const ctx_val = document.getElementById('chart_valoracion').getContext('2d');
   const avg = data.valoracion_promedio ? parseFloat(data.valoracion_promedio) : 0;
-  if (charts.valoracion) charts.valoracion.destroy();
-  charts.valoracion = buildBarChart(ctx_val, ['Promedio'], [{ label: 'Puntuación', data: [avg] }], { scales: { y: { min: 0, max: 5 } } });
+  safeDestroy('valoracion');
+  charts.valoracion = buildBarChart(document.getElementById('chart_valoracion').getContext('2d'), ['Promedio'], [{ label: 'Puntuación', data: [avg] }], { scales: { y: { min: 0, max: 5 } } });
 }
 
 // fetch data (POST) — /admin/reportes/data
@@ -229,27 +223,44 @@ async function fetchReportData(mes = null) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error('Server error: ' + (txt || res.status));
+  }
   return res.json();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // draw initial
-  drawAll(initialReportData);
+  // draw initial (usa report_data inyectado por Jinja al cargar)
+  try {
+    drawAll(initialReportData);
+  } catch (e) {
+    console.error("Error dibujando inicial:", e);
+  }
 
   // handlers
   document.getElementById('btnRefrescar').addEventListener('click', async () => {
     const mes = document.getElementById('filtroMes').value || null;
-    const data = await fetchReportData(mes);
-    if (data.error) { alert('Error: ' + data.error); return; }
-    drawAll(data);
+    try {
+      const data = await fetchReportData(mes);
+      if (data.error) { alert('Error: ' + data.error); return; }
+      drawAll(data);
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
   });
 
   document.getElementById('filtroMes').addEventListener('change', async (e) => {
     const mes = e.target.value || null;
-    const data = await fetchReportData(mes);
-    if (data.error) { alert('Error: ' + data.error); return; }
-    drawAll(data);
+    try {
+      const data = await fetchReportData(mes);
+      if (data.error) { alert('Error: ' + data.error); return; }
+      drawAll(data);
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
   });
 });
 </script>
+
 {% endblock %}
