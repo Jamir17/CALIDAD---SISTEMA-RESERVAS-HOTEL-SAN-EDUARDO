@@ -10,6 +10,8 @@ import platform
 import socket
 import psutil
 import datetime
+from controladores.controlador_respaldo import crear_respaldo_manual, listar_respaldo_historial, subir_a_dropbox
+import os
 
 mantenimiento_bp = Blueprint('mantenimiento', __name__, url_prefix='/mantenimiento')
 
@@ -138,14 +140,51 @@ def detalle_log(id_actividad):
 
     return render_template('detalle_log_mantenimiento.html', log=log)
 
+
+
+
+
 @mantenimiento_bp.route('/ejecutar-respaldo', methods=['POST'])
 def ejecutar_respaldo_mantenimiento():
-    """Ejecuta la creación de un respaldo desde el panel de mantenimiento."""
-    ok = crear_respaldo_manual(subir_a_nube=False) # No subir a la nube desde aquí para una respuesta rápida
-    if ok:
-        return jsonify({'ok': True, 'message': 'Respaldo de base de datos iniciado correctamente.'})
-    else:
-        return jsonify({'ok': False, 'message': 'Error al iniciar el respaldo.'}), 500
+    """
+    Ejecuta la creación de un respaldo desde el panel de mantenimiento
+    y lo sube automáticamente a Dropbox.
+    """
+    try:
+        # 1️⃣ Generar el respaldo local
+        ok = crear_respaldo_manual(subir_a_nube=False)
+
+        if not ok:
+            return jsonify({'ok': False, 'message': '❌ Error al crear el respaldo local.'}), 500
+
+        # 2️⃣ Obtener el respaldo más reciente del historial
+        historial = listar_respaldo_historial()
+        if not historial:
+            return jsonify({'ok': False, 'message': '⚠️ No se encontró ningún respaldo generado.'}), 500
+
+        nombre_archivo = historial[0]['nombre']
+        ruta_backup = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'static', 'backups', nombre_archivo))
+
+        # 3️⃣ Subirlo a Dropbox
+        subido = subir_a_dropbox(ruta_backup, nombre_archivo)
+
+        if subido:
+            return jsonify({
+                'ok': True,
+                'message': f'✅ Respaldo creado y subido a Dropbox correctamente ({nombre_archivo}).'
+            })
+        else:
+            return jsonify({
+                'ok': True,
+                'message': f'⚠️ Respaldo creado localmente, pero no se pudo subir a Dropbox ({nombre_archivo}).'
+            })
+
+    except Exception as e:
+        print("❌ Error general en respaldo de mantenimiento:", e)
+        return jsonify({'ok': False, 'message': f'Error inesperado: {str(e)}'}), 500
+
+
+
 
 @mantenimiento_bp.route('/ejecutar-actualizaciones', methods=['POST'])
 def ejecutar_actualizaciones():
@@ -178,6 +217,9 @@ def ejecutar_actualizaciones():
         return jsonify({'ok': False, 'message': 'Error durante la actualización.', 'log': e.stderr}), 500
     except Exception as e:
         return jsonify({'ok': False, 'message': f'Error inesperado: {str(e)}'}), 500
+
+
+
 
 @mantenimiento_bp.route('/ejecutar-sql', methods=['POST'])
 def ejecutar_sql():
@@ -275,16 +317,23 @@ def guardar_contenido(clave):
     return jsonify({'ok': True, 'message': 'Anuncio guardado correctamente.'})
 
 
+
+
+
+
+
+
 @mantenimiento_bp.route('/api/salud', methods=['GET'])
 def api_salud_sistema():
-    """Devuelve el estado actual del sistema con datos precisos y legibles."""
-    import platform, socket, datetime
+    """Devuelve métricas actualizadas del sistema y la base de datos."""
+    import platform, socket, datetime, os
 
     try:
-        cpu_usage = psutil.cpu_percent(interval=None)
+        # CPU y memoria
+        cpu_usage = psutil.cpu_percent(interval=0.3)
         mem_usage = psutil.virtual_memory().percent
 
-        # 🔹 Tiempo activo exacto
+        # Tiempo activo
         boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
         delta = datetime.datetime.now() - boot_time
         dias = delta.days
@@ -292,33 +341,49 @@ def api_salud_sistema():
         minutos, _ = divmod(resto, 60)
         uptime_str = f"{dias} día{'s' if dias != 1 else ''}, {horas}h {minutos}m"
 
-        # 🔹 Sistema operativo limpio
+        # Sistema operativo
         so = platform.system()
         version = platform.release()
         if not version or "undefined" in version.lower():
             version = ""
         so_str = f"{so} {version}".strip()
 
-        # 🔹 Procesador mejor detectado
-        procesador = ""
+        # Procesador real (Windows o Linux)
+        procesador = "No identificado"
         try:
-            if platform.system() == "Windows":
-                procesador = platform.uname().processor
-            elif platform.system() == "Linux":
+            if os.name == "nt":  # Windows
+                import winreg
+                key = winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
+                )
+                procesador = winreg.QueryValueEx(key, "ProcessorNameString")[0].strip()
+                winreg.CloseKey(key)
+            elif os.path.exists("/proc/cpuinfo"):
                 with open("/proc/cpuinfo") as f:
                     for line in f:
                         if "model name" in line:
                             procesador = line.split(":")[1].strip()
                             break
-            if not procesador:
-                procesador = platform.processor() or "No identificado"
         except Exception:
-            procesador = "No identificado"
+            procesador = platform.processor() or "No identificado"
 
-        # Limpiar texto muy largo
-        procesador = procesador.replace("  ", " ").strip()
-        if len(procesador) > 60:
-            procesador = procesador[:57] + "..."
+        # Tamaño de base de datos
+        db_size_mb = 0
+        try:
+            con = obtener_conexion()
+            with con.cursor() as cur:
+                cur.execute("""
+                    SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2)
+                    FROM information_schema.TABLES
+                    WHERE table_schema = %s
+                """, ("bd_hotel_san_eduardo",))
+                res = cur.fetchone()
+                if res and list(res.values())[0] is not None:
+                    db_size_mb = float(list(res.values())[0])
+        finally:
+            if 'con' in locals() and con.open:
+                con.close()
 
         equipo = {
             "nombre_equipo": socket.gethostname(),
@@ -332,8 +397,10 @@ def api_salud_sistema():
             "ok": True,
             "cpu": round(cpu_usage, 1),
             "mem": round(mem_usage, 1),
+            "db_size": db_size_mb,
             "equipo": equipo
         })
 
     except Exception as e:
+        print("❌ Error en /api/salud:", e)
         return jsonify({"ok": False, "error": str(e)}), 500

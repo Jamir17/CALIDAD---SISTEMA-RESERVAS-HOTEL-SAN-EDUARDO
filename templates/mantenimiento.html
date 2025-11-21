@@ -322,53 +322,64 @@ CREATE TABLE contenido_dinamico (
             </div>
         </div>
 
-        <!-- Salud del Sistema -->
         <div class="tab-pane fade" id="health" role="tabpanel">
-            <div class="card-m">
-                <div class="card-m-header">
-                    <h2>Salud del sistema</h2>
-                    <p>Monitoreo en tiempo real del estado del sistema.</p>
-                </div>
-                <div class="card-m-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Indicadores clave</h5>
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between"><span>Uso de memoria</span><span>{{ "%.1f"|format(system_health.mem) }}%</span></div>
-                                <div class="progress-bar-container"><div class="progress-bar bg-primary" style="width: {{ system_health.mem }}%;"></div></div>
-                            </div>
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between"><span>Uso de CPU</span><span>{{ "%.1f"|format(system_health.cpu) }}%</span></div>
-                                <div class="progress-bar-container"><div class="progress-bar bg-success" style="width: {{ system_health.cpu }}%;"></div></div>
-                            </div>
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between"><span>Base de datos</span><span>{{ "%.2f"|format(system_health.db_size) }} MB</span></div>
-                                <div class="progress-bar-container"><div class="progress-bar bg-info" style="width: {{ (system_health.db_size / 1024) * 100 }}%;"></div></div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Alertas</h5>
-                             {% if system_health.mem > 80 %}
-                            <div class="alert-card warning" id="alerta-memoria">
-                                <div class="alert-icon">⚠️</div>
-                                <div>
-                                    <div class="alert-title">Advertencia</div>
-                                    <div class="alert-text">El uso de memoria es alto ({{ "%.1f"|format(system_health.mem) }}%). Considere reiniciar servicios.</div>
-                                </div>
-                            </div>
-                            {% endif %}
-                            <div class="alert-card info">
-                                <div class="alert-icon">ℹ️</div>
-                                <div>
-                                    <div class="alert-title">Información</div>
-                                    <div class="alert-text">Todos los servicios están funcionando normalmente.</div>
-                                </div>
-                            </div>
-                        </div>
+        <div class="card-m">
+            <div class="card-m-header">
+            <h2>Salud del sistema</h2>
+            <p>Monitoreo en tiempo real del estado del sistema.</p>
+            </div>
+            <div class="card-m-body">
+            <div class="row">
+                <div class="col-md-6">
+                <h5>Indicadores clave</h5>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                    <span>Uso de memoria</span>
+                    <span id="memPorc">—%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                    <div id="memBar" class="progress-bar bg-primary" style="width:0%"></div>
                     </div>
                 </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                    <span>Uso de CPU</span>
+                    <span id="cpuPorc">—%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                    <div id="cpuBar" class="progress-bar bg-success" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                    <span>Tamaño de base de datos</span>
+                    <span id="dbSize">— MB</span>
+                    </div>
+                    <div class="progress-bar-container">
+                    <div id="dbBar" class="progress-bar bg-info" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                    <span>Tiempo activo</span>
+                    <span id="uptimeText">—</span>
+                    </div>
+                </div>
+                </div>
+
+                <div class="col-md-6">
+                <h5>Alertas</h5>
+                <div id="alertContainer"></div>
+                </div>
+            </div>
             </div>
         </div>
+        </div>
+
 
         <!-- Consola Interactiva -->
         <div class="tab-pane fade" id="console" role="tabpanel">
@@ -564,52 +575,119 @@ function runTask(taskName) {
 }
 
 // =============================
-// 🔄 Actualización dinámica del panel
+// 🔄 Actualización de la VISIÓN GENERAL
 // =============================
-async function actualizarSaludSistema() {
+async function actualizarVisionGeneral() {
   try {
     const response = await fetch("{{ url_for('mantenimiento.api_salud_sistema') }}");
     const data = await response.json();
 
     if (!data.ok) return;
 
-    // Actualiza CPU y memoria
+    // --- Actualiza CPU y memoria ---
     document.getElementById("cpuValue").textContent = `${data.cpu}%`;
     document.getElementById("memValue").textContent = `${data.mem}%`;
 
-    // Cambia colores según estado
+    // --- Cambia el texto de estado ---
     const cpuStatus = document.getElementById("cpuStatus");
     const memStatus = document.getElementById("memStatus");
-    if (data.cpu > 80) cpuStatus.textContent = "Alto uso";
-    else if (data.cpu > 60) cpuStatus.textContent = "Moderado";
-    else cpuStatus.textContent = "Normal";
+    cpuStatus.textContent = data.cpu > 80 ? "Alto uso" : data.cpu > 60 ? "Moderado" : "Normal";
+    memStatus.textContent = data.mem > 80 ? "Alto" : data.mem > 60 ? "Normal" : "Óptimo";
 
-    if (data.mem > 80) memStatus.textContent = "Alto";
-    else if (data.mem > 60) memStatus.textContent = "Normal";
-    else memStatus.textContent = "Óptimo";
-
-    // Actualiza información del servidor
+    // --- Información del servidor ---
     const eq = data.equipo;
     const info = `
       <li class="list-group-item"><b>Equipo:</b> ${eq.nombre_equipo}</li>
-      <li class="list-group-item"><b>Sistema Operativo:</b> ${eq.so} ${eq.version_so}</li>
+      <li class="list-group-item"><b>Sistema Operativo:</b> ${eq.so}</li>
       <li class="list-group-item"><b>Arquitectura:</b> ${eq.arquitectura}</li>
       <li class="list-group-item"><b>Procesador:</b> ${eq.procesador}</li>
       <li class="list-group-item"><b>Tiempo activo:</b> ${eq.uptime}</li>
     `;
     document.getElementById("serverInfo").innerHTML = info;
 
-    // Tiempo de actividad global
+    // --- Tiempo de actividad global ---
     document.getElementById("uptimeValue").textContent = eq.uptime;
     document.getElementById("uptimeStatus").textContent = "Estable";
+
   } catch (err) {
-    console.error("Error al actualizar estado del sistema:", err);
+    console.error("Error al actualizar visión general:", err);
   }
 }
 
 // Ejecutar cada 5 segundos
-setInterval(actualizarSaludSistema, 5000);
-actualizarSaludSistema();
+setInterval(actualizarVisionGeneral, 5000);
+actualizarVisionGeneral();
+
+
+// =============================
+// 🔄 Actualización de la pestaña “SALUD DEL SISTEMA”
+// =============================
+async function actualizarPanelSalud() {
+  try {
+    const resp = await fetch("{{ url_for('mantenimiento.api_salud_sistema') }}");
+    const data = await resp.json();
+    if (!data.ok) return;
+
+    // --- Actualizar porcentajes ---
+    document.getElementById("memPorc").textContent = `${data.mem}%`;
+    document.getElementById("cpuPorc").textContent = `${data.cpu}%`;
+    document.getElementById("dbSize").textContent = `${data.db_size.toFixed(2)} MB`;
+    document.getElementById("uptimeText").textContent = data.equipo.uptime;
+
+    // --- Barras ---
+    document.getElementById("memBar").style.width = `${data.mem}%`;
+    document.getElementById("cpuBar").style.width = `${data.cpu}%`;
+    document.getElementById("dbBar").style.width = `${Math.min((data.db_size / 1024) * 100, 100)}%`;
+
+    // --- Alertas dinámicas ---
+    const alertContainer = document.getElementById("alertContainer");
+    alertContainer.innerHTML = "";
+
+    if (data.mem > 85) {
+      alertContainer.innerHTML += `
+        <div class="alert-card warning">
+          <div class="alert-icon">⚠️</div>
+          <div>
+            <div class="alert-title">Memoria alta</div>
+            <div class="alert-text">Uso de memoria: ${data.mem}%. Considere reiniciar servicios.</div>
+          </div>
+        </div>`;
+    }
+
+    if (data.cpu > 90) {
+      alertContainer.innerHTML += `
+        <div class="alert-card warning">
+          <div class="alert-icon">🔥</div>
+          <div>
+            <div class="alert-title">CPU elevada</div>
+            <div class="alert-text">El uso de CPU alcanzó ${data.cpu}%. Revise procesos activos.</div>
+          </div>
+        </div>`;
+    }
+
+    if (alertContainer.innerHTML === "") {
+      alertContainer.innerHTML = `
+        <div class="alert-card info">
+          <div class="alert-icon">ℹ️</div>
+          <div>
+            <div class="alert-title">Sistema estable</div>
+            <div class="alert-text">Todos los servicios funcionan normalmente.</div>
+          </div>
+        </div>`;
+    }
+
+  } catch (err) {
+    console.error("Error actualizando salud del sistema:", err);
+  }
+}
+
+// Solo actualizar la pestaña de salud cuando esté activa
+document.getElementById("health-tab").addEventListener("shown.bs.tab", actualizarPanelSalud);
+setInterval(() => {
+  if (document.getElementById("health-tab").classList.contains("active")) {
+    actualizarPanelSalud();
+  }
+}, 5000);
 
 </script>
 {% endblock %}

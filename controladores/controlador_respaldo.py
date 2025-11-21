@@ -412,17 +412,29 @@ import dropbox
 # ==============================================
 # ☁️ CONFIGURACIÓN DROPBOX
 # ==============================================
-DROPBOX_TOKEN = os.getenv("DROPBOX_TOKEN", "sl.u.AGELtIxf9Y4Qjjs4Wjpx774vIoy_OIO70B0vZLkC3IS31khOTq20XuOoW_5dNBCjqaL0A2zMLS9i-GCmCOIWJ_eMDjZPRU8xnHQ5rEMMAv1L6F0EOse4ObA7fFnhWenT7DqcjJJEIZKiJRR_4OOg2tStpzYSUDB5wMRSnbNTJyqiJ6kSPXKxhjeayQ_lQiXrV9Ux0Mipsj-_CdOcLuYH9BvExF3vkPvr6VdTzCeKHXHXOiNfRHdv9IS8Tco-BvdWKtnJNlTdmF0eDUvqovCygp78loer2fgZyL9gpftskgfKGq8OQYnkkFDMA3Cq2Nl9jw0ETwCATc_HfYbY-bEv2o8-D5Ir4AOnQNJkUHhqvtYdrRqbIsJkRCGr-mOaB77wises5pCl3_Mz_Goi_hOwoHnZHFtmkBTqjHPPDzF1ibQpHzD8sd_SJndjGCq8YTMRAv4OSDuRMEx6fRO7UBgAuOhycLtKfCDJLPJ7t6kjU5Mzd_GrLT5AhElodc1fYie3BVHFQ41HNVhOSrEcgUQDpON-aeAvzw_F7IbTCHvmfaUwmRmBckDUolk1OBEdb_2kHmbOh_jb6rTorTQr7Lpuz_PBvDRVC1Cg9WEJeA34EeK6W0MNrhXtl2PAJ7xm4QeacHR95xHqTuKjrPqn_f2M2QLiAr3dx4fnd8vgG-x4GnSxYxhGFIBI7DRI6uV4zGQBiNKhgFB9uIk4SVptHswnA4sv9KCMvSa0mT87NFQfp3zU9zmp4ynbmncmunB0BMnmzFoOF4hIzjsja7-jLg9w9yoFUuviv7pjfEyiuPF8wFerfTZkooLQYa8D7sbcU9-uY-oooEIZzf3Z0_KKj7QviED6NDgLo2xARM0b5aIvK7BqeS8Uhq73YbvcoVMOKuqTvt-VNhrfSHHZKLFt_J5kE8pr5z3-SWXYkZbt0Pd952ZAPIgalgViG_E4uvfT2r8tIdTxJl39ZfF_QKr3alUdJDA0WfOPrDAp632vy2VrE-8yq8PbyRCEOGgLk-caT6ZeCxY-U8uH80R8HLQcY2BbONFsy4fd0ECY81IXVRh2dSuQWGGY1azrpS2iYZtCPoXecWa3Pw_mLE5hY8450rPW_AEvn9fqX47GnKaFcRpeuXcjGQmsVA1ua6HEQb-4chPLR4KHYY-WGo5I6vATvJDvyuSa9TBwsrOiMUphSXYjpQNWgYd2BqoqtEdxggiW8qgTEb3k-bHks8zuPVr_mElOa7CpimUxGrOWFNV8yoVGksFeJtxMvHR8KolWvejsO-IPKEQvqDd7dpo6J6I4wXKqMjJavBC0NivwPaL9UUX7jwF3MLynlm8Z5S7iTygRBUUgQgjaxwxjkJQ977gZq4UJOGRg3glTa4G7eP0phdOn9J-aaZs4_Kq4GPPW5XIMWsFwNjCG-I3g_PbxZh1UvuaKgxtVuTnlrRYoLQKPBnnU5bWWVA")
+#DROPBOX_TOKEN = os.getenv("DROPBOX_TOKEN", "sl.u.AGFcwwBn1x45ENarhhf3mk3Rrm53gss95JX44aJ9EyZyYaRDkBZ-JnPHzm4xGpB4EtIVsCwdYrtco_YC917ypWTSMgY9FBkjI1zZB3gkJWR5jl_1UzDUIyUADaySUj58WoOzpHd-ggVgv2s_pGInGofqCuLbh4bBFLI2GKt8TZH4OrunhPnvmrB-q4pxJc2agj7gr_u_ZHTooRPUjoJ_RWYjAYDVOFo8Na2FuwPWKA5ysXsnTStbu5ECmrWxzxzThW5bfQSuT3HyTyfxVBI4qBqyx1ScW5_exfJC8L0wFsSGLMZm0gkogZJm2CUDQG-z4XWvLOZTAgVkkajwl2AwJlHEaWCBjVSlYODJSMG14yHjcBDfHYkQMTIQVHT8WjV4O9fFNswBokOeDfFHHUajoxytojQW0EXxQw-0I8ofeu_n9xXoVWVrDm2gtu9BXKqWb0jrV52ULkPwLovrqg2L-Neo4Y1a6KntVneL6xN6Sft66KosEDMhT9k5tUyJH43jESzjrELmqbrvCi-gEK3xkx81TE95ck4Wn2UaOTcs8zgWMl89ZLG_tFOEDfm8xJuwNQRhWTDeJxaXZUUNU8gRfyjnif1n803TLZND8dnB65QTELBPP2xVM5ssQJVL0MjXCKE-q99FxREZfaKWq40v3a5ZBWnpxjsUBg5V9bssjbk8NYLtdo8qk6loqQcFbcAAvb8xx9wbqQwfLDKkFhy6JWnjbRjxJebslfGmrSqEIgQilII1ZFn-VtSAEpmoMMRPNP-YybK-Hgm8VA12gNJcNDDztR77397IPhi_D3REtdtDhkF2Y1MLR0g1uV2MPkSFpU-XCoBNDqEJ3gnmmSGkAlisa3IZzRhZ0K8y4PVQXW4KjI2T2g07CgQpFtvlvmOOcjNULqhHkBijNA7f095ml8ZgpFOuV9yrUXZ15RhDqLlsYP0M0thy3_IDvLvB-L8pxrj-H9eqcMVIv_2DuxzdHB3wgTr1NOWVcmTyNYissF2fSWVs4QLlqr5YIIrt6YI4RjJ9qnq0bncbLk9uF05xnX6okvRV9mo6iRqGbLOGuk1Lu6b7B1I0CsayE8MQJcKUmihfF_JDbjMQ5zsn1YHVNsNFZuW_acacL8zhdqSQdwJhJDJlva3YVCsStVXkb1ICGB0zoOVkqFxmUWf1ArxN5UF5dE_VXSYcvzxkKYsfAjxBapDDn_aN0ObdpCM8f_YoTF-E8C51ou8cfNuK7vrE5_JRyzySba7D5BwaTeo0SOdMjI7ANMYb_2J-sW2PZiVnZfvr86kZXN_AwSlNCwpALBK6e0feggBBNB-V-Pz2tgVfwygY46mwhD8wdg1JKClcb8Fq5lXXJSQMY9aAOn5zrGaKnymozUMO9BK6b--BVCTGXi4Azok5jNuQHOPQB3esWGXAcRB1dmAAU18V0grvRg5-V7TpXBjFtPszLLshm6oEew")
 
 def subir_a_dropbox(ruta_local, nombre_archivo):
-    """Sube un archivo de respaldo a Dropbox en /backups/"""
+    """Sube archivo usando refresh token (token oficial que NO expira)."""
     try:
-        dbx = dropbox.Dropbox(DROPBOX_TOKEN)
+        dbx = dropbox.Dropbox(
+            oauth2_refresh_token=os.getenv("DROPBOX_REFRESH_TOKEN"),
+            app_key=os.getenv("DROPBOX_APP_KEY"),
+            app_secret=os.getenv("DROPBOX_APP_SECRET")
+        )
+
         destino = f"/backups/{nombre_archivo}"
+
         with open(ruta_local, "rb") as f:
-            dbx.files_upload(f.read(), destino, mode=dropbox.files.WriteMode("overwrite"))
+            dbx.files_upload(
+                f.read(),
+                destino,
+                mode=dropbox.files.WriteMode("overwrite")
+            )
+
         print(f"☁️ Respaldo subido a Dropbox: {destino}")
         return True
+
     except Exception as e:
         print(f"❌ Error al subir a Dropbox: {e}")
         return False
