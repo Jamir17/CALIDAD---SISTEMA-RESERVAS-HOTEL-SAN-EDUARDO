@@ -204,73 +204,86 @@ CREATE TABLE contenido_dinamico (
     <div class="tab-content" id="maintenanceTabsContent">
         <!-- Visión General -->
         <div class="tab-pane fade show active" id="overview" role="tabpanel">
-            <div class="stat-grid">
-                <div class="stat-card-m">
-                    <div class="stat-header"><h3>Tiempo de Actividad</h3></div>
-                    <div class="stat-value">99.9%</div>
-                    <div class="stat-footer text-success">Estable</div>
-                </div>
-                <div class="stat-card-m">
-                    <div class="stat-header"><h3>Uso de Memoria</h3></div>
-                    <div class="stat-value">{{ "%.1f"|format(system_health.mem) }}%</div>
-                    {% if system_health.mem > 80 %}
-                        <div class="stat-footer text-danger">Alto</div>
-                    {% elif system_health.mem > 60 %}
-                        <div class="stat-footer text-warning">Normal</div>
-                    {% else %}
-                        <div class="stat-footer text-success">Óptimo</div>
-                    {% endif %}
-                </div>
-                <div class="stat-card-m">
-                    <div class="stat-header"><h3>Uso de CPU</h3></div>
-                    <div class="stat-value">{{ "%.1f"|format(system_health.cpu) }}%</div>
-                    <div class="stat-footer text-success">Normal</div>
-                </div>
-                <div class="stat-card-m">
-                    <div class="stat-header"><h3>Último Respaldo</h3></div>
-                    <div class="stat-value" style="font-size: 1.1rem;">{{ ultimo_respaldo }}</div>
-                    <div class="stat-footer text-success">Reciente</div>
-                </div>
+        <div class="stat-grid">
+            <div class="stat-card-m">
+            <div class="stat-header"><h3>Tiempo de Actividad</h3></div>
+            <div id="uptimeValue" class="stat-value">—</div>
+            <div id="uptimeStatus" class="stat-footer text-success">Cargando...</div>
             </div>
-
-            <!-- Alertas dinámicas -->
-            {% include '_alertas_mantenimiento.html' %}
-
-            <div class="card-m">
-                <div class="card-m-header">
-                    <h2>Registro de mantenimiento</h2>
-                    <p>Historial de actividades de mantenimiento.</p>
-                </div>
-                <div class="card-m-body">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr><th>Fecha y Hora</th><th>Acción</th><th>Habitación</th><th>Cliente</th><th>Nuevo Estado</th><th>Acciones</th></tr>
-                        </thead>
-                        <tbody>
-                            {% for act in actividades %}
-                            <tr>
-                                <td>{{ act.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
-                                <td>
-                                    {% if act.accion == 'Check-in' %} <span class="badge bg-info text-dark">Check-in</span>
-                                    {% elif act.accion == 'Check-out' %} <span class="badge bg-warning text-dark">Check-out</span>
-                                    {% elif act.accion == 'Limpieza OK' %} <span class="badge bg-success">Limpieza</span>
-                                    {% else %} {{ act.accion }}
-                                    {% endif %}
-                                </td>
-                                <td>{{ act.habitacion_numero or 'N/A' }}</td>
-                                <td>{{ act.cliente_nombres or 'Sistema' }}</td>
-                                <td>{{ act.nuevo_estado_hab }}</td>
-                                <td>
-                                    <a href="{{ url_for('mantenimiento.detalle_log', id_actividad=act.id_actividad) }}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="6" class="text-center">No hay actividades recientes.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="stat-card-m">
+            <div class="stat-header"><h3>Uso de Memoria</h3></div>
+            <div id="memValue" class="stat-value">—</div>
+            <div id="memStatus" class="stat-footer text-muted">Cargando...</div>
             </div>
+            <div class="stat-card-m">
+            <div class="stat-header"><h3>Uso de CPU</h3></div>
+            <div id="cpuValue" class="stat-value">—</div>
+            <div id="cpuStatus" class="stat-footer text-muted">Cargando...</div>
+            </div>
+            <div class="stat-card-m">
+            <div class="stat-header"><h3>Último Respaldo</h3></div>
+            <div class="stat-value" style="font-size: 1.1rem;">{{ ultimo_respaldo }}</div>
+            <div class="stat-footer text-success">Reciente</div>
+            </div>
+        </div>
+
+        <!-- 🔹 Información dinámica del servidor -->
+        <div class="card-m mt-4">
+            <div class="card-m-header">
+            <h2>Información del Servidor</h2>
+            <p>Detalles del equipo donde se ejecuta el sistema.</p>
+            </div>
+            <div class="card-m-body">
+            <ul class="list-group list-group-flush" id="serverInfo">
+                <li class="list-group-item"><b>Equipo:</b> —</li>
+                <li class="list-group-item"><b>Sistema Operativo:</b> —</li>
+                <li class="list-group-item"><b>Arquitectura:</b> —</li>
+                <li class="list-group-item"><b>Procesador:</b> —</li>
+                <li class="list-group-item"><b>Tiempo activo:</b> —</li>
+            </ul>
+            </div>
+        </div>
+
+        <!-- Alertas dinámicas -->
+        {% include '_alertas_mantenimiento.html' %}
+
+        <div class="card-m">
+            <div class="card-m-header">
+            <h2>Registro de mantenimiento</h2>
+            <p>Historial de actividades de mantenimiento.</p>
+            </div>
+            <div class="card-m-body">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>Fecha y Hora</th><th>Acción</th><th>Habitación</th>
+                    <th>Cliente</th><th>Nuevo Estado</th><th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for act in actividades %}
+                <tr>
+                    <td>{{ act.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>
+                    {% if act.accion == 'Check-in' %}<span class="badge bg-info text-dark">Check-in</span>
+                    {% elif act.accion == 'Check-out' %}<span class="badge bg-warning text-dark">Check-out</span>
+                    {% elif act.accion == 'Limpieza OK' %}<span class="badge bg-success">Limpieza</span>
+                    {% else %}{{ act.accion }}{% endif %}
+                    </td>
+                    <td>{{ act.habitacion_numero or 'N/A' }}</td>
+                    <td>{{ act.cliente_nombres or 'Sistema' }}</td>
+                    <td>{{ act.nuevo_estado_hab }}</td>
+                    <td>
+                    <a href="{{ url_for('mantenimiento.detalle_log', id_actividad=act.id_actividad) }}" class="btn btn-sm btn-outline-primary">Ver detalles</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center">No hay actividades recientes.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
         </div>
 
         <!-- Tareas Programadas -->
@@ -549,5 +562,54 @@ function runTask(taskName) {
     })
     .catch(error => alert('❌ Error de red al ejecutar la tarea.'));
 }
+
+// =============================
+// 🔄 Actualización dinámica del panel
+// =============================
+async function actualizarSaludSistema() {
+  try {
+    const response = await fetch("{{ url_for('mantenimiento.api_salud_sistema') }}");
+    const data = await response.json();
+
+    if (!data.ok) return;
+
+    // Actualiza CPU y memoria
+    document.getElementById("cpuValue").textContent = `${data.cpu}%`;
+    document.getElementById("memValue").textContent = `${data.mem}%`;
+
+    // Cambia colores según estado
+    const cpuStatus = document.getElementById("cpuStatus");
+    const memStatus = document.getElementById("memStatus");
+    if (data.cpu > 80) cpuStatus.textContent = "Alto uso";
+    else if (data.cpu > 60) cpuStatus.textContent = "Moderado";
+    else cpuStatus.textContent = "Normal";
+
+    if (data.mem > 80) memStatus.textContent = "Alto";
+    else if (data.mem > 60) memStatus.textContent = "Normal";
+    else memStatus.textContent = "Óptimo";
+
+    // Actualiza información del servidor
+    const eq = data.equipo;
+    const info = `
+      <li class="list-group-item"><b>Equipo:</b> ${eq.nombre_equipo}</li>
+      <li class="list-group-item"><b>Sistema Operativo:</b> ${eq.so} ${eq.version_so}</li>
+      <li class="list-group-item"><b>Arquitectura:</b> ${eq.arquitectura}</li>
+      <li class="list-group-item"><b>Procesador:</b> ${eq.procesador}</li>
+      <li class="list-group-item"><b>Tiempo activo:</b> ${eq.uptime}</li>
+    `;
+    document.getElementById("serverInfo").innerHTML = info;
+
+    // Tiempo de actividad global
+    document.getElementById("uptimeValue").textContent = eq.uptime;
+    document.getElementById("uptimeStatus").textContent = "Estable";
+  } catch (err) {
+    console.error("Error al actualizar estado del sistema:", err);
+  }
+}
+
+// Ejecutar cada 5 segundos
+setInterval(actualizarSaludSistema, 5000);
+actualizarSaludSistema();
+
 </script>
 {% endblock %}

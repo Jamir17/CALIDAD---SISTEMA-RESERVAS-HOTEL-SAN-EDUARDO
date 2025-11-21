@@ -6,26 +6,44 @@ import pymysql
 import subprocess
 import sys
 import os
+import platform
+import socket
+import psutil
+import datetime
 
 mantenimiento_bp = Blueprint('mantenimiento', __name__, url_prefix='/mantenimiento')
 
 @mantenimiento_bp.route('/panel')
 def panel_mantenimiento():
-    """
-    Muestra el panel principal de mantenimiento con datos dinámicos del sistema y la BD.
-    """
     if session.get('rol') != 4:
         return redirect(url_for('index'))
 
-    # --- KPIs y Salud del Sistema ---
+    import platform
+    import socket
+    import datetime
+
+    # --- KPIs del sistema ---
     try:
         cpu_usage = psutil.cpu_percent(interval=1)
         memory_info = psutil.virtual_memory()
         mem_usage = memory_info.percent
+        uptime_seconds = psutil.boot_time()
+        uptime = datetime.datetime.now() - datetime.datetime.fromtimestamp(uptime_seconds)
+
+        equipo_info = {
+            "nombre_equipo": socket.gethostname(),
+            "so": platform.system(),
+            "version_so": platform.version(),
+            "arquitectura": platform.machine(),
+            "procesador": platform.processor(),
+            "uptime": str(uptime).split('.')[0]  # tiempo activo formateado
+        }
+
     except Exception as e:
         print(f"Error obteniendo métricas del sistema: {e}")
         cpu_usage = 0
         mem_usage = 0
+        equipo_info = {}
 
     # --- Último Respaldo ---
     ultimo_respaldo_info = listar_respaldo_historial()
@@ -33,12 +51,13 @@ def panel_mantenimiento():
 
     # --- Tamaño de la Base de Datos ---
     db_size_mb = 0
+    actividades = []
     try:
         con = obtener_conexion()
         with con.cursor() as cur:
             cur.execute("""
                 SELECT table_schema AS 'Database',
-                ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
+                       ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
                 FROM information_schema.TABLES
                 WHERE table_schema = %s
                 GROUP BY table_schema;
@@ -51,8 +70,8 @@ def panel_mantenimiento():
             cur.execute("""
                 SELECT 
                     a.id_actividad, a.accion, a.nuevo_estado_hab, a.fecha_hora,
-                    h.numero as habitacion_numero,
-                    c.nombres as cliente_nombres
+                    h.numero AS habitacion_numero,
+                    c.nombres AS cliente_nombres
                 FROM actividad a
                 LEFT JOIN habitaciones h ON a.id_habitacion = h.id_habitacion
                 LEFT JOIN reservas r ON a.id_reserva = r.id_reserva
@@ -64,7 +83,6 @@ def panel_mantenimiento():
 
     except Exception as e:
         print(f"Error de base de datos en panel de mantenimiento: {e}")
-        actividades = []
     finally:
         if 'con' in locals() and con.open:
             con.close()
@@ -80,8 +98,10 @@ def panel_mantenimiento():
         'mantenimiento.html',
         ultimo_respaldo=ultimo_respaldo,
         system_health=system_health,
-        actividades=actividades
+        actividades=actividades,
+        equipo_info=equipo_info
     )
+
 
 @mantenimiento_bp.route('/log/<int:id_actividad>')
 def detalle_log(id_actividad):
@@ -253,3 +273,67 @@ def guardar_contenido(clave):
             con.close()
             
     return jsonify({'ok': True, 'message': 'Anuncio guardado correctamente.'})
+
+
+@mantenimiento_bp.route('/api/salud', methods=['GET'])
+def api_salud_sistema():
+    """Devuelve el estado actual del sistema con datos precisos y legibles."""
+    import platform, socket, datetime
+
+    try:
+        cpu_usage = psutil.cpu_percent(interval=None)
+        mem_usage = psutil.virtual_memory().percent
+
+        # 🔹 Tiempo activo exacto
+        boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
+        delta = datetime.datetime.now() - boot_time
+        dias = delta.days
+        horas, resto = divmod(delta.seconds, 3600)
+        minutos, _ = divmod(resto, 60)
+        uptime_str = f"{dias} día{'s' if dias != 1 else ''}, {horas}h {minutos}m"
+
+        # 🔹 Sistema operativo limpio
+        so = platform.system()
+        version = platform.release()
+        if not version or "undefined" in version.lower():
+            version = ""
+        so_str = f"{so} {version}".strip()
+
+        # 🔹 Procesador mejor detectado
+        procesador = ""
+        try:
+            if platform.system() == "Windows":
+                procesador = platform.uname().processor
+            elif platform.system() == "Linux":
+                with open("/proc/cpuinfo") as f:
+                    for line in f:
+                        if "model name" in line:
+                            procesador = line.split(":")[1].strip()
+                            break
+            if not procesador:
+                procesador = platform.processor() or "No identificado"
+        except Exception:
+            procesador = "No identificado"
+
+        # Limpiar texto muy largo
+        procesador = procesador.replace("  ", " ").strip()
+        if len(procesador) > 60:
+            procesador = procesador[:57] + "..."
+
+        equipo = {
+            "nombre_equipo": socket.gethostname(),
+            "so": so_str,
+            "arquitectura": platform.machine(),
+            "procesador": procesador,
+            "uptime": uptime_str
+        }
+
+        return jsonify({
+            "ok": True,
+            "cpu": round(cpu_usage, 1),
+            "mem": round(mem_usage, 1),
+            "equipo": equipo
+        })
+
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
